@@ -34,44 +34,126 @@
   ^-  path
   /testnet
 ::
+++  get-ind-desk
+  |=  [=project:zig desk-name=@tas]
+  ^-  (unit (pair @ud desk:zig))
+  =|  index=@ud
+  |-
+  ?~  desks.project  ~
+  =*  desk  i.desks.project
+  ?:  ?=(desk-name p.desk)  `[index desk]
+  $(index +(index), desks.project t.desks.project)
+::
+++  get-desk
+  |=  [=project:zig desk-name=@tas]
+  ^-  (unit desk:zig)
+  ?~  ind-desk=(get-ind-desk project desk-name)  ~
+  `q.ind-desk
+::
+++  has-desk
+  |=  [=project:zig desk-name=@tas]
+  ^-  ?
+  ?=(^ (get-ind-desk project desk-name))
+::
+++  got-ind-desk
+  |=  [=project:zig desk-name=@tas]
+  ^-  (pair @ud desk:zig)
+  (need (get-ind-desk project desk-name))
+::
+++  got-desk
+  |=  [=project:zig desk-name=@tas]
+  ^-  desk:zig
+  (need (get-desk project desk-name))
+::
+++  put-desk
+  |=  [=project:zig desk-name=@tas =desk:zig]
+  ^-  project:zig
+  %=  project
+      desks
+    ?~  ind-desk=(get-ind-desk project desk-name)
+      (snoc desks.project [desk-name desk])
+    (snap desks.project p.u.ind-desk [desk-name desk])
+  ==
+::
 ++  make-compile-contracts
-  |=  [project-name=@t request-id=(unit @t)]
+  |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
   ^-  card
   %-  ~(poke-self pass:io /self-wire)
   :-  %ziggurat-action
-  !>(`action:zig`project-name^request-id^[%compile-contracts ~])
-::
-++  make-watch-for-file-changes
-  |=  project-name=@tas
-  ^-  card
-  %-  ~(warp-our pass:io /clay/[project-name])
-  [project-name ~ %next %v da+now.bowl /]
-::
-++  make-cancel-watch-for-file-changes
-  |=  project-name=@tas
-  ^-  card
-  %-  ~(warp-our pass:io /clay/[project-name])
-  [project-name ~]
+  !>  ^-  action:zig
+  :^  project-name  desk-name  request-id
+  [%compile-contracts ~]
 ::
 ++  make-read-desk
-  |=  [project-name=@t request-id=(unit @t)]
+  |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
   ^-  card
   %-  ~(poke-self pass:io /self-wire)
   :-  %ziggurat-action
-  !>(`action:zig`project-name^request-id^[%read-desk ~])
+  !>  ^-  action:zig
+  :^  project-name  desk-name  request-id
+  [%read-desk ~]
+::
+++  make-run-queue
+  |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
+  ^-  card
+  %-  ~(poke-self pass:io /self-wire)
+  :-  %ziggurat-action
+  !>  ^-  action:zig
+  :^  project-name  desk-name  request-id
+  [%run-queue ~]
+::
+++  make-delete-test
+  |=  $:  id=@ux
+          project-name=@t
+          desk-name=@tas
+          request-id=(unit @t)
+      ==
+  ^-  card
+  %-  ~(poke-self pass:io /self-wire)
+  :-  %ziggurat-action
+  !>  ^-  action:zig
+  [project-name desk-name request-id [%delete-test id]]
+::
+++  make-recompile-custom-steps-cards
+  |=  $:  project-name=@t
+          desk-name=@tas
+          test-id=@ux
+          =custom-step-definitions:zig
+          request-id=(unit @t)
+      ==
+  ^-  (list card)
+  %+  turn  ~(tap by custom-step-definitions)
+  |=  [tag=@tas [p=path *]]
+  :^  %pass  /self-wire  %agent
+  :^  [our dap]:bowl  %poke  %ziggurat-action
+  !>  ^-  action:zig
+  :^  project-name  desk-name  request-id
+  [%add-custom-step test-id tag p]
+::
+++  make-watch-for-file-changes
+  |=  desk-name=@tas
+  ^-  card
+  %-  ~(warp-our pass:io /clay/[desk-name])
+  [desk-name ~ %next %v da+now.bowl /]
+::
+++  make-cancel-watch-for-file-changes
+  |=  desk-name=@tas
+  ^-  card
+  %-  ~(warp-our pass:io /clay/[desk-name])
+  [desk-name ~]
 ::
 ++  make-save-jam
-  |=  [project-name=@t file=path non=*]
+  |=  [desk-name=@tas file=path non=*]
   ^-  card
   ?>  ?=(%jam (rear file))
   %-  ~(arvo pass:io /save-wire)
   :+  %c  %info
-  [`@tas`project-name %& [file %ins %noun !>(`@`(jam non))]~]
+  [`@tas`desk-name %& [file %ins %noun !>(`@`(jam non))]~]
 ::
 ++  make-save-file
   |=  [=update-info:zig file=path text=@t]
   ^-  card
-  =*  project-name  project-name.update-info
+  =*  desk-name  desk-name.update-info
   =/  file-type=@tas  (rear file)
   |^
   =/  supported-file-types=(set @tas)
@@ -81,7 +163,7 @@
   =/  is-mark-found=?
     .^  ?
         %cu
-        %+  weld  /(scot %p our.bowl)/[project-name]
+        %+  weld  /(scot %p our.bowl)/[desk-name]
         /(scot %da now.bowl)/mar/[file-type]/hoon
     ==
   ?:  is-mark-found                               make-card
@@ -94,7 +176,7 @@
       " supported file marks are"
       " {<`(set @tas)`supported-file-types>}"
       " and marks with %mime grow arms in"
-      " {<`path`/[project-name]/mar>}"
+      " {<`path`/[desk-name]/mar>}"
   ==
   ::
   ++  make-card
@@ -107,7 +189,7 @@
       (star ;~(pose (cold '\0a' (jest '\0d\0a')) next))
     %-  ~(arvo pass:io /save-wire)
     :-  %c
-    :^  %info  `@tas`project-name  %&
+    :^  %info  desk-name  %&
     :_  ~  :+  file  %ins
     =*  reamed-text  q:(slap !>(~) (ream text))  ::  =* in case text unreamable
     ?+    file-type  [%mime !>(mym)] :: don't need to know mar if we have bytes :^)
@@ -120,20 +202,6 @@
       ;;((list clause:dock) reamed-text)
     ==
   --
-::
-++  make-run-queue
-  |=  [project-name=@t request-id=(unit @t)]
-  ^-  card
-  %-  ~(poke-self pass:io /self-wire)
-  :-  %ziggurat-action
-  !>(`action:zig`project-name^request-id^[%run-queue ~])
-::
-++  make-delete-test
-  |=  [id=@ux project-name=@t request-id=(unit @t)]
-  ^-  card
-  %-  ~(poke-self pass:io /self-wire)
-  :-  %ziggurat-action
-  !>(`action:zig`project-name^request-id^[%delete-test id])
 ::
 ++  make-test-steps-file
   |=  =test:zig
@@ -321,7 +389,7 @@
   `path`(welp /con/compiled +.contract-hoon-path)
 ::
 ++  save-compiled-contracts
-  |=  $:  project-name=@t
+  |=  $:  desk-name=@t
           build-results=(list [p=path q=build-result:zig])
       ==
   ^-  [(list card) (list [path @t])]
@@ -332,7 +400,7 @@
   =*  contract-path       p.i.build-results
   =/  =build-result:zig   q.i.build-results
   =/  save-result=(each card [path @t])
-    %^  save-compiled-contract  project-name  contract-path
+    %^  save-compiled-contract  desk-name  contract-path
     build-result
   ?:  ?=(%| -.save-result)
     %=  $
@@ -345,7 +413,7 @@
   ==
 ::
 ++  save-compiled-contract
-  |=  $:  project-name=@t
+  |=  $:  desk-name=@tas
           contract-path=path
           =build-result:zig
       ==
@@ -355,7 +423,7 @@
   =/  contract-jam-path=path
     (need (convert-contract-hoon-to-jam contract-path))
   :-  %&
-  %^  make-save-jam  project-name  contract-jam-path
+  %^  make-save-jam  desk-name  contract-jam-path
   p.build-result
 ::
 ++  build-contract-projects
@@ -512,10 +580,26 @@
 ++  show-project
   |=  =project:zig
   ^-  shown-project:zig
-  :*  dir=dir.project
-      user-files=user-files.project
-      to-compile=to-compile.project
-      tests=(show-tests tests.project)
+  :*  desks=(show-desks desks.project)
+      pyro-ships=pyro-ships.project
+      most-recent-snap=most-recent-snap.project
+      saved-test-queue=saved-test-queue.project
+  ==
+::
+++  show-desks
+  |=  desks=(list (pair @tas desk:zig))
+  ^-  (list (pair @tas shown-desk:zig))
+  %+  turn  desks
+  |=  [desk-name=@tas =desk:zig]
+  [desk-name (show-desk desk)]
+::
+++  show-desk
+  |=  =desk:zig
+  ^-  shown-desk:zig
+  :*  dir=dir.desk
+      user-files=user-files.desk
+      to-compile=to-compile.desk
+      tests=(show-tests tests.desk)
   ==
 ::
 ++  show-tests
@@ -574,20 +658,6 @@
     (crip noah-state)
   (get-formatted-error (sell state) ~)
 ::
-++  show-state-update
-  |=  =update:zig
-  ^-  (unit shown-agent-state:zig)
-  ?.  ?=(%pyro-agent-state -.update)  ~
-  ?:  ?=(%| -.payload.update)         ~
-  :-  ~
-  :~  -.update
-      [project-name source request-id]:update
-      :^    %&
-          (show-state agent-state.p.payload.update)
-        wex.p.payload.update
-      sup.p.payload.update
-  ==
-::
 ++  mule-slam-transform
   |=  [transform=vase payload=vase]
   ^-  (each vase @t)
@@ -615,23 +685,10 @@
     hoon-compilation-result
   (mule-slap-subject p.hoon-compilation-result (ream arm))
 ::
-++  make-recompile-custom-steps-cards
-  |=  $:  project-name=@t
-          test-id=@ux
-          =custom-step-definitions:zig
-          request-id=(unit @t)
-      ==
-  ^-  (list card)
-  %+  turn  ~(tap by custom-step-definitions)
-  |=  [tag=@tas [p=path *]]
-  :^  %pass  /self-wire  %agent
-  :^  [our dap]:bowl  %poke  %ziggurat-action
-  !>  ^-  action:zig
-  project-name^request-id^[%add-custom-step test-id tag p]
-::
 ++  add-custom-step
   |=  $:  =test:zig
-          project-name=@tas
+          project-name=@t
+          desk-name=@tas
           tag=@tas
           p=path
           request-id=(unit @t)
@@ -639,10 +696,11 @@
   ^-  [(list card) test:zig]
   =/  add-custom-error
     %~  add-custom-step  make-error-vase
-    [[project-name %add-custom-step request-id] %error]
+    :_  %error
+    [project-name desk-name %add-custom-step request-id]
   =/  file-scry-path=path
     :-  (scot %p our.bowl)
-    (weld /[project-name]/(scot %da now.bowl) p)
+    (weld /[desk-name]/(scot %da now.bowl) p)
   ?.  .^(? %cu file-scry-path)
     :_  test
     :_  ~
@@ -757,12 +815,12 @@
 ::  scry %ca or fetch from local cache
 ::
 ++  scry-or-cache-ca
-  |=  [project-desk=@tas p=path =ca-scry-cache:zig]
+  |=  [desk-name=@tas p=path =ca-scry-cache:zig]
   |^  ^-  (unit [vase ca-scry-cache:zig])
   =/  scry-path=path
     :-  (scot %p our.bowl)
-    (weld /[project-desk]/(scot %da now.bowl) p)
-  ?~  cache=(~(get by ca-scry-cache) [project-desk p])
+    (weld /[desk-name]/(scot %da now.bowl) p)
+  ?~  cache=(~(get by ca-scry-cache) [desk-name p])
     scry-and-cache-ca
   ?.  =(p.u.cache .^(@ %cz scry-path))  scry-and-cache-ca
   `[q.u.cache ca-scry-cache]
@@ -774,10 +832,10 @@
       |.
       =/  scry-path=path
         :-  (scot %p our.bowl)
-        (weld /[project-desk]/(scot %da now.bowl) p)
+        (weld /[desk-name]/(scot %da now.bowl) p)
       =/  scry-vase=vase  .^(vase %ca scry-path)
       :-  scry-vase
-      %+  ~(put by ca-scry-cache)  [project-desk p]
+      %+  ~(put by ca-scry-cache)  [desk-name p]
       [`@ux`.^(@ %cz scry-path) scry-vase]
     ?:  ?=(%& -.scry-result)  `p.scry-result
     ~&  %ziggurat^%scry-and-cache-ca-fail
@@ -837,26 +895,26 @@
   ^-  (list card)
   %-  zing
   %+  turn  ~(tap by sync-desk-to-vship)
-  |=  [desk=@tas whos=(set @p)]
+  |=  [desk-name=@tas whos=(set @p)]
   %+  turn  ~(tap in whos)
-  |=(who=@p (sync-desk-to-virtualship-card who desk))
+  |=(who=@p (sync-desk-to-virtualship-card who desk-name))
 ::
 ++  sync-desk-to-virtualship-card
-  |=  [who=@p project-name=@tas]
+  |=  [who=@p desk-name=@tas]
   ^-  card
   %+  %~  poke-our  pass:io
-      /sync/(scot %da now.bowl)/[project-name]/(scot %p who)
+      /sync/(scot %da now.bowl)/[desk-name]/(scot %p who)
     %pyro
-  (sync-desk-to-virtualship-cage who project-name)
+  (sync-desk-to-virtualship-cage who desk-name)
 ::
 ++  sync-desk-to-virtualship-cage
-  |=  [who=@p project-name=@tas]
+  |=  [who=@p desk-name=@tas]
   ^-  cage
   :-  %pyro-events
   !>  ^-  (list pyro-event:pyro)
   :_  ~
   :+  who  /c/commit/(scot %p who)
-  (park:pyro-lib our.bowl project-name %da now.bowl)
+  (park:pyro-lib our.bowl desk-name %da now.bowl)
 ::
 ++  send-pyro-dojo-card
   |=  [who=@p command=tape]
@@ -874,36 +932,36 @@
   (dojo-events:pyro-lib who command)
 ::
 ++  make-cis-running
-  |=  [ships=(list @p) project-name=@t]
+  |=  [ships=(list @p) desk-name=@tas]
   ^-  (map @p [@t ?])
   %-  ~(gas by *(map @p [@t ?]))
   %+  turn  ships
   |=  who=@p
   :-  who
   :_  %.n
-  (rap 3 'setup-' project-name '-' (scot %p who) ~)
+  (rap 3 'setup-' desk-name '-' (scot %p who) ~)
 ::
 ++  get-final-app-to-install
-  |=  [desk=@tas now=@da]
+  |=  [desk-name=@tas now=@da]
   ^-  @tas
   =/  bill-path=path
     :-  (scot %p our.bowl)
-    /[desk]/(scot %da now)/desk/bill
+    /[desk-name]/(scot %da now)/desk/bill
   (rear .^((list @tas) %cx bill-path))
 ::
 ++  read-test-file
-  |=  [project-name=@tas p=path state=inflated-state-0:zig]
+  |=  [desk-name=@tas p=path state=inflated-state-0:zig]
   ^-  $:  (each (trel (list [@tas path]) vase test-steps:zig) @t)
           inflated-state-0:zig
       ==
   =/  file-scry-path=path
     :-  (scot %p our.bowl)
-    (weld /[project-name]/(scot %da now.bowl) p)
+    (weld /[desk-name]/(scot %da now.bowl) p)
   =/  file-cord=@t  .^(@t %cx file-scry-path)
   =/  [imports=(list [face=@tas =path]) payload=hoon]
     (parse-pile:conq file-scry-path (trip file-cord))
   =^  subject=(each vase @t)  state
-    (compile-test-imports project-name imports state)
+    (compile-test-imports desk-name imports state)
   :_  state
   ?:  ?=(%| -.subject)
     :-  %|
@@ -1002,7 +1060,7 @@
         %+  ~(jab by cis-running.status)  who
         |=([cis-running=@t is-done=?] [cis-running %.y])
       (pure:m !>(`status:zig`status))
-    ?>  ?=(%changing-project-links -.status)
+    ?>  ?=(%changing-project-desks -.status)
     =.  project-cis-running.status
       %+  ~(put by project-cis-running.status)  desk
       %+  %~  jab  by
@@ -1021,31 +1079,25 @@
   --
 ::
 ++  make-status-card
-  |=  [=status:zig desk=@tas]
+  |=  [=status:zig desk-name=@tas]
   ^-  card
   %-  update-vase-to-card
   %.  status
   %~  status  make-update-vase
-  [desk %cis ~]
+  ['' desk-name %cis ~]
 ::
 ++  make-done-cards
-  |=  [=status:zig desk=@tas]
+  |=  [=status:zig desk-name=@tas]
   |^  ^-  (list card)
-  :^    (make-status-card status desk)
+  :^    (make-status-card status desk-name)
       make-watch-cis-setup-done-card
-    make-run-card
+    (make-run-queue '' desk-name ~)
   ~
-  ::
-  ++  make-run-card
-    ^-  card
-    %-  ~(poke-self pass:io /self-wire)
-    :-  %ziggurat-action
-    !>(`action:zig`desk^~^[%run-queue ~])
   ::
   ++  make-watch-cis-setup-done-card
     ^-  card
     %.  [%ziggurat /project]
-    ~(watch-our pass:io /cis-setup-done/[desk])
+    ~(watch-our pass:io /cis-setup-done/[desk-name])
   --
 ::
 ++  loud-ream
@@ -1062,19 +1114,19 @@
   --
 ::
 ++  compile-test-imports
-  |=  $:  project-desk=@tas
+  |=  $:  desk-name=@tas
           imports=(list [face=@tas =path])
           state=inflated-state-0:zig
       ==
   ^-  [(each vase @t) inflated-state-0:zig]
   =^  subject=(each vase @t)  state
-    (compile-imports project-desk imports state)
+    (compile-imports desk-name imports state)
   :_  state
   ?:  ?=(%| -.subject)  subject
   =/  initial-test-globals=vase
     !>  ^-  test-globals:zig
     :^  our.bowl  now.bowl  *test-results:zig
-    [project-desk configs:state]
+    [desk-name configs:state]
   :-  %&
   %+  slop
     %=  initial-test-globals
@@ -1083,7 +1135,7 @@
   p.subject
 ::
 ++  compile-imports
-  |=  $:  project-desk=@tas
+  |=  $:  desk-name=@tas
           imports=(list [face=@tas =path])
           state=inflated-state-0:zig
       ==
@@ -1098,7 +1150,7 @@
         !!  ::  TODO: do better  [[%| '%test-globals face is reserved'] state]
       =^  sur-hoon=vase  ca-scry-cache
         %-  need  ::  TODO: handle error
-        %^  scry-or-cache-ca  project-desk
+        %^  scry-or-cache-ca  desk-name
         (snoc sur %hoon)  ca-scry-cache
       :_  ca-scry-cache
       %-  slop  :_  subject
@@ -1132,12 +1184,13 @@
   |=  [=update-info:zig state=inflated-state-0:zig]
   ^-  [(list card) (unit configuration-file-output:zig) inflated-state-0:zig]
   =*  project-name  project-name.update-info
+  =*  desk-name     desk-name.update-info
   =/  new-project-error
     %~  new-project  make-error-vase
     [update-info(source %load-configuration-file) %error]
   =/  config-file-path=path
-    %+  weld  /(scot %p our.bowl)/[project-name]
-    /(scot %da now.bowl)/zig/configs/[project-name]/hoon
+    %+  weld  /(scot %p our.bowl)/[desk-name]
+    /(scot %da now.bowl)/zig/configs/[desk-name]/hoon
   |^
   ?.  .^(? %cu config-file-path)
     =/  =configuration-file-output:zig
@@ -1158,7 +1211,7 @@
     =/  [imports=(list [face=@tas =path]) payload=hoon]
       (parse-pile:conq config-file-path (trip file-cord))
     =^  subject=(each vase @t)  state
-      (compile-test-imports project-name imports state)
+      (compile-test-imports desk-name imports state)
     ?:  ?=(%| -.subject)
       %+  make-error  p.subject
       'config imports compilation failed with error:\0a'
@@ -1248,7 +1301,7 @@
           " are set to sync. The following will not be run:"
           " {<setups-not-run>}. To have them run, add to"
           " +make-virtualships-to-sync in /zig/configs"
-          "/{<project-name>} and run %new-project again"
+          "/{<desk-name>} and run %new-project again"
         ==
       :_  ~
       %-  update-vase-to-card
@@ -1257,7 +1310,7 @@
     ::   in place to satisfy compiler
     =/  new-status=status:zig
       :-  %commit-install-starting
-      (make-cis-running virtualships-to-sync project-name)
+      (make-cis-running virtualships-to-sync desk-name)
     ?>  ?=(%commit-install-starting -.new-status)
     =*  cis-running  cis-running.new-status
     =.  cards
@@ -1271,6 +1324,7 @@
       :-  %ziggurat-action
       !>  ^-  action:zig
       :*  project-name
+          desk-name
           `cis-name
           %add-and-queue-test
           `cis-name
@@ -1281,7 +1335,7 @@
       |-
       ?~  virtualships-to-sync  cards
       =*  who   i.virtualships-to-sync
-      =*  desk  project-name
+      =*  desk  desk-name
       =/  cis-cards=(list card)
         :_  ~
         %+  cis-thread  /cis-done/(scot %p who)/[desk]
@@ -1299,22 +1353,24 @@
       !<  update:zig
       %.  state-views
       %~  state-views  make-update-vase
-      [project-name %load-configuration-file ~]
+      [project-name desk-name %load-configuration-file ~]
     :-  :_  cards
         %-  update-vase-to-card
         %.  new-status
         %~  status  make-update-vase
-        [project-name %load-configuration-file ~]
+        [project-name desk-name %load-configuration-file ~]
     =.  projects.state
-      %+  ~(put by projects.state)  project-name
-      =/  =project:zig
-        (~(gut by projects.state) project-name *project:zig)
-      project(pyro-ships virtualships-to-sync)
-    =.  state
-      %^  change-state-linked-projects
-        focused-project.state  state
-      |=  =project:zig
-      project(saved-test-queue test-queue.state)
+      %-  ~(gas by projects.state)
+      :+  =/  =project:zig
+            %+  ~(gut by projects.state)  project-name
+            *project:zig
+          :-  project-name
+          project(pyro-ships virtualships-to-sync)
+        =/  =project:zig
+          (~(got by projects.state) focused-desk.state)
+        :-  focused-desk.state
+        project(saved-test-queue test-queue.state)
+      ~
     %=  state
         test-queue   ~
         status       new-status
@@ -1322,7 +1378,7 @@
         sync-desk-to-vship
       %-  ~(gas ju sync-desk-to-vship.state)
       %+  turn  virtualships-to-sync
-      |=(who=@p [project-name who])
+      |=(who=@p [desk-name who])
     ::
         configs
       %+  ~(put by configs.state)  project-name
@@ -1330,26 +1386,6 @@
       ~(gas by (~(gut by configs.state) project-name ~))
     ==
   --
-::
-++  change-state-linked-projects
-  |=  $:  project-name=@t
-          state=inflated-state-0:zig
-          transition=$-(project:zig project:zig)
-      ==
-  ^-  _state
-  ::  linked-projects is, at a minimum, project-name
-  =/  linked-projects=(list @t)
-    %~  tap  in
-    %.  project-name
-    ~(put in (~(get ju linked-projects.state) project-name))
-  |-
-  ?~  linked-projects  state
-  ?~  next=(~(get by projects.state) i.linked-projects)
-    $(linked-projects t.linked-projects)
-  =.  projects.state
-    %+  ~(put by projects.state)  i.linked-projects
-    (transition u.next)
-  $(linked-projects t.linked-projects, state state)
 ::
 ++  add-test-error-to-edit-test
   |=  add-test-card=card
@@ -1968,8 +2004,9 @@
     ^-  json
     ?~  update  ~
     =/  update-info=(list [@t json])
-      :-  [%type %s -.update]
-      :^    ['project_name' %s project-name.update]
+      :+  [%type %s -.update]
+        ['project_name' %s project-name.update]
+      :^    ['desk_name' %s desk-name.update]
           ['source' %s source.update]
         :-  'request_id'
         ?~(request-id.update ~ [%s u.request-id.update])
@@ -2114,11 +2151,11 @@
       :_  ~
       :-  'data'
       %-  pairs
-      :^    [%focused-project %s focused-project.up]
+      :^    [%focused-desk %s focused-desk.up]
           :-  %linked-projects
           (linked-projects linked-projects.up)
-        :-  %unfocused-project-snaps
-        (unfocused-project-snaps unfocused-project-snaps.up)
+        :-  %unfocused-desk-snaps
+        (unfocused-desk-snaps unfocused-desk-snaps.up)
       ~
     ::
         %save-file
@@ -2161,11 +2198,11 @@
     %+  turn  ~(tap in links)
     |=(link=@t [%s link])
   ::
-  ++  unfocused-project-snaps
-    |=  unfocused-project-snaps=(map (set @t) ^path)
+  ++  unfocused-desk-snaps
+    |=  unfocused-desk-snaps=(map (set @t) ^path)
     ^-  json
     %-  pairs
-    %+  turn  ~(tap by unfocused-project-snaps)
+    %+  turn  ~(tap by unfocused-desk-snaps)
     |=  [links=(set @t) p=^path]
     :-  (spat p)
     :-  %a
@@ -2189,7 +2226,7 @@
         [%is-done %b is-done]
       ~
     ::
-        %changing-project-links
+        %changing-project-desks
       %-  pairs
       %+  turn  ~(tap by project-cis-running.status)
       |=  [project-name=@t cis-running=(map @p [@t ?])]
@@ -2222,10 +2259,28 @@
     |=  p=project:zig
     ^-  json
     %-  pairs
-    :~  ['dir' (dir dir.p)]
-        ['user_files' (dir ~(tap in user-files.p))]
-        ['to_compile' (dir ~(tap in to-compile.p))]
-        ['tests' (tests tests.p)]
+    :~  ['desks' (desks desks.p)]
+        ['pyro_ships' (list-ships pyro-ships.p)]
+        ['most_recent_snap' (path most-recent-snap.p)]
+        ['saved_test_queue' (test-queue saved-test-queue.p)]
+    ==
+  ::
+  ++  desks
+    |=  ds=(list (pair @tas desk:zig))
+    ^-  json
+    :-  %a
+    %+  turn  ds
+    |=  [desk-name=@tas d=desk:zig]
+    [%a ~[[%s desk-name] (desk d)]]
+  ::
+  ++  desk
+    |=  d=desk:zig
+    ^-  json
+    %-  pairs
+    :~  ['dir' (dir dir.d)]
+        ['user_files' (dir ~(tap in user-files.d))]
+        ['to_compile' (dir ~(tap in to-compile.d))]
+        ['tests' (tests tests.d)]
     ==
   ::
   ++  shown-projects
@@ -2240,10 +2295,35 @@
     |=  p=shown-project:zig
     ^-  json
     %-  pairs
-    :~  ['dir' (dir dir.p)]
-        ['user_files' (dir ~(tap in user-files.p))]
-        ['to_compile' (dir ~(tap in to-compile.p))]
-        ['tests' (shown-tests tests.p)]
+    :~  ['desks' (shown-desks desks.p)]
+        ['pyro_ships' (list-ships pyro-ships.p)]
+        ['most_recent_snap' (path most-recent-snap.p)]
+        ['saved_test_queue' (test-queue saved-test-queue.p)]
+    ==
+  ::
+  ++  list-ships
+  |=  ss=(list @p)
+  ^-  json
+  :-  %a
+  %+  turn  ss
+  |=  s=@p  [%s (scot %p s)]
+  ::
+  ++  shown-desks
+    |=  ds=(list (pair @tas shown-desk:zig))
+    ^-  json
+    :-  %a
+    %+  turn  ds
+    |=  [desk-name=@tas desk=shown-desk:zig]
+    [%a ~[[%s desk-name] (shown-desk desk)]]
+  ::
+  ++  shown-desk
+    |=  d=shown-desk:zig
+    ^-  json
+    %-  pairs
+    :~  ['dir' (dir dir.d)]
+        ['user_files' (dir ~(tap in user-files.d))]
+        ['to_compile' (dir ~(tap in to-compile.d))]
+        ['tests' (shown-tests tests.d)]
     ==
   ::
   ++  pyro-chain-state
@@ -2605,7 +2685,8 @@
   ++  uber-action
     ^-  $-(json action:zig)
     %-  ot
-    :~  [%project so]
+    :~  [%project-name so]
+        [%desk-name so]
         [%request-id so:dejs-soft:format]
         [%action action]
     ==
@@ -2618,6 +2699,10 @@
     ::
         [%add-sync-desk-vships add-sync-desk-vships]
         [%delete-sync-desk-vships (ot ~[[%ships (ar (se %p))]])]
+    ::
+        [%change-focus ul]
+        :: [%add-project-link ul]
+        :: [%delete-project-link ul]
     ::
         [%save-file (ot ~[[%file pa] [%text so]])]
         [%delete-file (ot ~[[%file pa]])]
@@ -2667,10 +2752,6 @@
     ::
         [%pyro-agent-state pyro-agent-state]
         [%pyro-chain-state pyro-chain-state]
-    ::
-        [%change-focus ul]
-        [%add-project-link ul]
-        [%delete-project-link ul]
     ::
         [%cis-panic ul]
     ::
