@@ -69,7 +69,8 @@
     :*  our.bowl
         now.bowl
         test-results
-        project.old
+        project-name.old
+        desk-name.old
         ?^(configs u.configs configs.old)
     ==
   =/  base-subject=vase
