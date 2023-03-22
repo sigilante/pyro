@@ -1123,9 +1123,10 @@
           :-  ~
           :^  `tid  byk.bowl(r da+now.bowl)
             %ziggurat-test-run
-          !>  ^-  (unit [@t @ux test-steps:zig vase (list @p)])
+          !>  ^-  (unit [@t @tas @ux test-steps:zig vase (list @p)])
           :*  ~
               next-project-name
+              next-desk-name
               next-test-id
               steps.test
               p.subject.test

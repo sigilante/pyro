@@ -21,7 +21,8 @@
 |^  ted
 ::
 +$  arg-mold
-  $:  project-id=@t
+  $:  project-name=@t
+      desk-name=@tas
       test-id=@ux
       =test-steps:zig
       subject=vase
@@ -242,7 +243,7 @@
   --
 ::
 ++  take-snapshot
-  |=  $:  project-id=@t
+  |=  $:  project-name=@t
           test-id=(unit @ux)
           step=@ud
           snapshot-ships=(list @p)
@@ -255,13 +256,13 @@
     :-  %pyro-action
     !>  ^-  action:pyro
     :+  %snap-ships
-      ?~  test-id  /[project-id]/(scot %ud step)
-      /[project-id]/(scot %ux u.test-id)/(scot %ud step)
+      ?~  test-id  /[project-name]/(scot %ud step)
+      /[project-name]/(scot %ux u.test-id)/(scot %ud step)
     snapshot-ships
   (pure:m ~)
 ::
 ++  block-on-previous-step
-  |=  [done-duration=@dr project-id=@t]
+  |=  [done-duration=@dr project-name=@t]
   =/  m  (strand:spider ,~)
   ^-  form:m
   ;<  ~  bind:m  (sleep `@dr`1)
@@ -273,7 +274,7 @@
   ;<  =bowl:strand  bind:m  get-bowl
   =*  now  now.bowl
   =/  timers=(list [@da duct])
-    (get-real-and-virtual-timers project-id [our now]:bowl)
+    (get-real-and-virtual-timers project-name [our now]:bowl)
   ?~  timers                                       (pure:m ~)
   =*  soonest-timer  -.i.timers
   ?:  (lth (add now done-duration) soonest-timer)  (pure:m ~)
@@ -324,11 +325,11 @@
   timer
 ::
 ++  get-virtualship-timers
-  |=  [project-id=@t our=@p now=@da]
+  |=  [project-name=@t our=@p now=@da]
   ^-  (list [@da duct])
   =/  now-ta=@ta  (scot %da now)
   =/  ships=(list @p)
-    (get-virtualships-synced-for-project project-id our now)
+    (get-virtualships-synced-for-project project-name our now)
   %+  roll  ships
   |=  [who=@p all-timers=(list [@da duct])]
   =/  who-ta=@ta  (scot %p who)
@@ -341,7 +342,7 @@
   (weld timers all-timers)
 ::
 ++  get-virtualships-synced-for-project
-  |=  [project-id=@t our=@p now=@da]
+  |=  [project-name=@t our=@p now=@da]
   ^-  (list @p)
   =+  .^  =update:zig
           %gx
@@ -352,7 +353,7 @@
   ?.  ?=(%sync-desk-to-vship -.update)  ~  ::  TODO: throw error?
   ?:  ?=(%| -.payload.update)           ~  ::  "
   =*  sync-desk-to-vship  p.payload.update
-  ~(tap in (~(get ju sync-desk-to-vship) project-id))
+  ~(tap in (~(get ju sync-desk-to-vship) project-name))
 ::
 ++  get-realship-timers
   |=  [our=@p now=@da]
@@ -363,7 +364,7 @@
   ==
 ::
 ++  get-real-and-virtual-timers
-  |=  [project-id=@t our=@p now=@da]
+  |=  [project-name=@t our=@p now=@da]
   ^-  (list [@da duct])
   %-  sort
   :_  |=([a=(pair @da duct) b=(pair @da duct)] (lth p.a p.b))
@@ -371,10 +372,11 @@
     %^  filter-timers  now  ignored-realship-timer-prefixes
     (get-realship-timers our now)
   %^  filter-timers  now  ignored-virtualship-timer-prefixes
-  (get-virtualship-timers project-id our now)
+  (get-virtualship-timers project-name our now)
 ::
 ++  run-steps
-  |=  $:  project-id=@t
+  |=  $:  project-name=@t
+          desk-name=@tas
           test-id=@ux
           =test-steps:zig
           snapshot-ships=(list @p)
@@ -384,11 +386,11 @@
   =|  =test-results:zig
   =|  step-number=@ud
   |-
-  ;<  ~  bind:m  (block-on-previous-step ~m1 project-id)  :: TODO: unhardcode; are these good numbers?
+  ;<  ~  bind:m  (block-on-previous-step ~m1 project-name)  :: TODO: unhardcode; are these good numbers?
   ;<  ~  bind:m
     ?~  snapshot-ships  (pure:(strand ,~) ~)
     %:  take-snapshot
-        project-id
+        project-name
         `test-id
         step-number
         snapshot-ships
@@ -416,8 +418,8 @@
     ;<  ~  bind:m  (send-pyro-dojo payload.test-step)
     ;<  result-from-expected=(each (pair test-results:zig configs:zig) @t)
         bind:m
-      %-  run-steps
-      :^  project-id  test-id
+      %+  run-steps  project-name
+      :^  desk-name  test-id
       `test-steps:zig`expected.test-step  ~
     ?:  ?=(%| -.result-from-expected)
       (pure:m [%| p.result-from-expected])
@@ -443,8 +445,8 @@
     ?:  ?=(%| -.poke-result)  (pure:m [%| p.poke-result])
     ;<  result-from-expected=(each (pair test-results:zig configs:zig) @t)
         bind:m
-      %-  run-steps
-      :^  project-id  test-id
+      %+  run-steps  project-name
+      :^  desk-name  test-id
       `test-steps:zig`expected.test-step  ~
     ?:  ?=(%| -.result-from-expected)
       (pure:m [%| p.result-from-expected])
@@ -497,8 +499,8 @@
     ;<  ~  bind:m  (send-pyro-subscription payload.test-step)
     ;<  result-from-expected=(each (pair test-results:zig configs:zig) @t)
         bind:m
-      %-  run-steps
-      :^  project-id  test-id
+      %+  run-steps  project-name
+      :^  desk-name  test-id
       `test-steps:zig`expected.test-step  ~
     ?:  ?=(%| -.result-from-expected)  !!
     =*  trs  p.p.result-from-expected
@@ -513,8 +515,8 @@
       %custom-read
     ;<  transform=vase  bind:m
       %+  scry  vase
-      %+  weld  /gx/ziggurat/custom-step-compiled/[project-id]
-      /(scot %ux test-id)/[tag.test-step]/noun
+      %+  weld  /gx/ziggurat/custom-step-compiled/[project-name]
+      /[desk-name]/(scot %ux test-id)/[tag.test-step]/noun
     =/  transform-error
       %-  mule  |.  !<(update:zig transform)
     ?:  ?=(%& -.transform-error)
@@ -560,8 +562,8 @@
       %custom-write
     ;<  transform=vase  bind:m
       %+  scry  vase
-      %+  weld  /gx/ziggurat/custom-step-compiled/[project-id]
-      /(scot %ux test-id)/[tag.test-step]/noun
+      %+  weld  /gx/ziggurat/custom-step-compiled/[project-name]
+      /[desk-name]/(scot %ux test-id)/[tag.test-step]/noun
     =/  transform-error
       %-  mule  |.  !<(update:zig transform)
     ?:  ?=(%& -.transform-error)
@@ -612,10 +614,11 @@
   =/  args  !<((unit arg-mold) args-vase)
   ?~  args
     ~&  >>>  "Usage:"
-    ~&  >>>  "-zig!ziggurat-test-run project-id=@t test-id=@ux test-steps:zig subject=vase (list @p)"
+    ~&  >>>  "-zig!ziggurat-test-run project-name=@t desk-name=@tas test-id=@ux test-steps:zig subject=vase (list @p)"
     ~&  >>>  "producing snapshots if second argument is non-null"
     (pure:m !>(~))
-  =*  project-id      project-id.u.args
+  =*  project-name    project-name.u.args
+  =*  desk-name       desk-name.u.args
   =*  test-id         test-id.u.args
   =*  test-steps      test-steps.u.args
   =*  snapshot-ships  snapshot-ships.u.args
@@ -626,7 +629,7 @@
   ;<  ~  bind:m  (watch-our /effect %pyro /effect)
   ;<  result=(each [test-results:zig configs:zig] @t)
       bind:m
-    (run-steps project-id test-id test-steps snapshot-ships)
+    (run-steps project-name desk-name test-id test-steps snapshot-ships)
   %-  pure:m
   !>(`(each [test-results:zig configs:zig] @t)`result)
 --
