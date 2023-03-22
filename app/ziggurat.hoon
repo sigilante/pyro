@@ -681,13 +681,39 @@
       ~
     ::
         %add-project-desk
-      ?.  =(focused-project project-name.act)  !!  :: TODO
+      =/  add-project-desk-error
+        %~  add-project-desk  make-error-vase:zig-lib
+        [update-info %error]
+      ?.  =(focused-project project-name.act)
+        :_  state
+        :_  ~
+        %-  update-vase-to-card:zig-lib
+        %-  add-project-desk-error
+        %-  crip
+        ;:  weld
+            "focused-project ({<`@tas`focused-project>})"
+            " must be same as project-name"
+            " ({<`@tas`project-name.act>}); retry after"
+            " %change-focus"
+        ==
       =/  =project:zig  (~(got by projects) project-name.act)
-      ?:  (has-desk:zig-lib project desk-name.act)  `state :: TODO
+      ?:  (has-desk:zig-lib project desk-name.act)
+        :_  state
+        :_  ~
+        %-  update-vase-to-card:zig-lib
+        %-  add-project-desk-error(level %warning)
+        %-  crip
+        %+  weld  "project {<`@tas`project-name.act>}"
+        " already has desk {<`@tas`desk-name.act>}"
       =*  desk-names-scry-path
         /(scot %p our.bowl)//(scot %da now.bowl)
       =+  .^(desk-names=(set @t) %cd desk-names-scry-path)
-      ?.  (~(has in desk-names) desk-name.act)  `state :: TODO
+      ?.  (~(has in desk-names) desk-name.act)
+        :_  state
+        :_  ~
+        %-  update-vase-to-card:zig-lib
+        %-  add-project-desk-error
+        (crip "desk {<`@tas`desk-name.act>} does not exist")
       =.  desks.project
         ?~  index.act
           (snoc desks.project [desk-name.act *desk:zig])
@@ -696,9 +722,30 @@
       (update-project-from-desk-change update-info project)
     ::
         %delete-project-desk
-      ?.  =(focused-project project-name.act)  !!  :: TODO
+      =/  delete-project-desk-error
+        %~  delete-project-desk  make-error-vase:zig-lib
+        [update-info %error]
+      ?.  =(focused-project project-name.act)
+        :_  state
+        :_  ~
+        %-  update-vase-to-card:zig-lib
+        %-  delete-project-desk-error(level %warning)
+        %-  crip
+        ;:  weld
+            "focused-project ({<`@tas`focused-project>})"
+            " must be same as project-name"
+            " ({<`@tas`project-name.act>}); retry after"
+            " %change-focus"
+        ==
       =/  =project:zig  (~(got by projects) project-name.act)
-      ?.  (has-desk:zig-lib project desk-name.act)  `state :: TODO
+      ?.  (has-desk:zig-lib project desk-name.act)
+        :_  state
+        :_  ~
+        %-  update-vase-to-card:zig-lib
+        %-  delete-project-desk-error(level %warning)
+        %-  crip
+        %+  weld  "project {<`@tas`project-name.act>}"
+        " doesn't have desk {<`@tas`desk-name.act>}"
       =.  project  (del-desk:zig-lib project desk-name.act)
       (update-project-from-desk-change update-info project)
     ::

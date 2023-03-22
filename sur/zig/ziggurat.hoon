@@ -236,6 +236,8 @@
       %save-file
       %settings
       %state-views
+      %add-project-desk
+      %delete-project-desk
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -280,6 +282,8 @@
       [%save-file update-info payload=(data path) ~]
       [%settings update-info payload=(data settings) ~]
       [%state-views update-info payload=(data (list [@p (unit @tas) path])) ~]
+      [%add-project-desk update-info payload=(data ~) ~]
+      [%delete-project-desk update-info payload=(data ~) ~]
   ==
 ::
 +$  shown-projects  (map @t shown-project)

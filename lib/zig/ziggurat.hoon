@@ -2026,6 +2026,18 @@
     ^-  vase
     !>  ^-  update:zig
     [%save-file update-info [%| level message] ~]
+  ::
+  ++  add-project-desk
+    |=  message=@t
+    ^-  vase
+    !>  ^-  update:zig
+    [%add-project-desk update-info [%| level message] ~]
+  ::
+  ++  delete-project-desk
+    |=  message=@t
+    ^-  vase
+    !>  ^-  update:zig
+    [%delete-project-desk update-info [%| level message] ~]
   --
 ::
 ::  json
@@ -2190,6 +2202,12 @@
       :_  ~
       :-  'data'
       (state-views project-name.update p.payload.update)
+    ::
+        %add-project-desk
+      ['data' ~]~
+    ::
+        %delete-project-desk
+      ['data' ~]~
     ==
   ::
   ++  settings
