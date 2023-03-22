@@ -626,6 +626,7 @@
       ~
     ::
         %add-project-desk
+      ?.  =(focused-project project-name.act)  !!  :: TODO
       =/  =project:zig  (~(got by projects) project-name.act)
       ?:  (has-desk:zig-lib project desk-name.act)  `state :: TODO
       =*  desk-names-scry-path
@@ -633,7 +634,10 @@
       =+  .^(desk-names=(set @t) %cd desk-names-scry-path)
       ?.  (~(has in desk-names) desk-name.act)  `state :: TODO
       =.  desks.project
-        (snoc desks.project [desk-name.act *desk:zig])
+        ?~  index.act
+          (snoc desks.project [desk-name.act *desk:zig])
+        %^  into  desks.project  u.index.act
+        [desk-name.act *desk:zig]
       =/  [[cards=(list card) project-cis-running=(mip:mip @tas @p [@t ?]) ships=(set @p)] modified-state=_state]
         %+  roll  (turn desks.project |=([p=@tas *] p))
         |=  [desk-name=@tas [[cards=(list card) project-cis-running=(mip:mip @tas @p [@t ?]) ships=(set @p)] modified-state=_state]]
