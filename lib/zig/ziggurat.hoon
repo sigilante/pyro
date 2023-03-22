@@ -92,6 +92,38 @@
   ?~  ind-desk=(get-ind-desk project desk-name)  project
   project(desks (oust [p.u.ind-desk 1] desks.project))
 ::
+::  +make-new-desk based on https://github.com/urbit/urbit/blob/0b95645134f9b3902fa5ec8d2aad825f2e64ed8d/pkg/arvo/gen/hood/new-desk.hoon
+::
+++  make-new-desk
+  |=  desk-name=@tas
+  ^-  card
+  %-  ~(arvo pass:io /make-new-desk/[desk-name])
+  %^  new-desk:cloy  desk-name  ~
+  %-  ~(gas by *(map path page:clay))
+  %+  turn
+    ^-  (list path)
+    :~  /mar/noun/hoon
+        /mar/hoon/hoon
+        /mar/txt/hoon
+        /mar/kelvin/hoon
+        /sys/kelvin
+    ==
+  |=  p=path
+  :-  p
+  ^-  page:clay
+  :-  (rear p)
+  ~|  [%missing-source-file %base p]
+  .^  *
+      %cx
+      %-  weld  :_  p
+      /(scot %p our.bowl)/base/(scot %da now.bowl)
+  ==
+::
+++  get-dev-desk
+  |=  [who=@p desk-name=@tas]
+  %-  ~(arvo pass:io /get-dev-desk/[desk-name])
+  [%c %merg desk-name who desk-name da+now.bowl %only-that]
+::
 ++  make-compile-contracts
   |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
   ^-  card
@@ -2038,6 +2070,12 @@
     ^-  vase
     !>  ^-  update:zig
     [%delete-project-desk update-info [%| level message] ~]
+  ::
+  ++  get-dev-desk
+    |=  message=@t
+    ^-  vase
+    !>  ^-  update:zig
+    [%get-dev-desk update-info [%| level message] ~]
   --
 ::
 ::  json
@@ -2207,6 +2245,9 @@
       ['data' ~]~
     ::
         %delete-project-desk
+      ['data' ~]~
+    ::
+        %get-dev-desk
       ['data' ~]~
     ==
   ::
@@ -2775,6 +2816,8 @@
         [%cis-panic ul]
     ::
         [%change-settings change-settings]
+    ::
+        [%get-dev-desk (se %p)]
     ==
   ::
   ++  change-settings

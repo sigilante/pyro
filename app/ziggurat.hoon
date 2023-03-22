@@ -1545,6 +1545,12 @@
     ::
         %change-settings
       `state(settings settings.act)
+    ::
+        %get-dev-desk
+      :_  state
+      :+  (make-new-desk:zig-lib desk-name.act)
+        (get-dev-desk:zig-lib [who desk-name]:act)
+      ~
     ==
   --
 ::
@@ -1725,6 +1731,15 @@
         desk-name
     ~&  >>>  "failed to make new desk"
     `this
+  ::
+      [%get-dev-desk @ ~]
+    ?:  ?=([%clay %mere %.y ~] sign-arvo)  `this
+    :_  this
+    :_  ~
+    %-  update-vase-to-card:zig-lib
+    %.  (crip "merge fail: {<sign-arvo>}")
+    %~  get-dev-desk  make-error-vase:zig-lib
+    [['' i.t.w %get-dev-desk ~] %error]
   ::
       [%clay @ @ ~]
     ?>  ?=([%clay %writ *] sign-arvo)

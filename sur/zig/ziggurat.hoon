@@ -200,6 +200,8 @@
           [%cis-panic ~]
       ::
           [%change-settings =settings]
+      ::
+          [%get-dev-desk who=@p]
       ==
   ==
 ::
@@ -238,6 +240,7 @@
       %state-views
       %add-project-desk
       %delete-project-desk
+      %get-dev-desk
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -284,6 +287,7 @@
       [%state-views update-info payload=(data (list [@p (unit @tas) path])) ~]
       [%add-project-desk update-info payload=(data ~) ~]
       [%delete-project-desk update-info payload=(data ~) ~]
+      [%get-dev-desk update-info payload=(data ~) ~]
   ==
 ::
 +$  shown-projects  (map @t shown-project)
