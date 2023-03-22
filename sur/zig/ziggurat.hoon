@@ -35,7 +35,7 @@
 +$  status
   $%  [%running-test-steps ~]
       [%commit-install-starting cis-running=(map @p [@t ?])]
-      [%changing-project-desks project-cis-running=(mip:mip @t @p [@t ?])]
+      [%changing-project-desks project-cis-running=(mip:mip @tas @p [@t ?])]
       [%ready ~]
       [%uninitialized ~]  ::  last is default
   ==
@@ -145,7 +145,7 @@
           [%delete-sync-desk-vships ships=(list @p)]
       ::
           [%change-focus ~]
-          :: [%add-project-desk ~] :: TODO
+          [%add-project-desk ~]
       ::
           [%save-file file=path text=@t]  ::  generates new file or overwrites existing
           [%delete-file file=path]

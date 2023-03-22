@@ -954,11 +954,12 @@
 ::
 ++  get-final-app-to-install
   |=  [desk-name=@tas now=@da]
-  ^-  @tas
+  ^-  (unit @tas)
   =/  bill-path=path
     :-  (scot %p our.bowl)
     /[desk-name]/(scot %da now)/desk/bill
-  (rear .^((list @tas) %cx bill-path))
+  ?.  .^(? %cu bill-path)  ~
+  `(rear .^((list @tas) %cx bill-path))
 ::
 ++  read-test-file
   |=  $:  project-name=@t
@@ -1039,9 +1040,12 @@
     |-
     ;<  ~  bind:m  (sleep:strandio install-poll-duration)
     ;<  now=@da  bind:m  get-time:strandio
-    =/  app=@tas  (get-final-app-to-install desk-name now)
+    =/  app=(unit @tas)
+      (get-final-app-to-install desk-name now)
+    ::  if no desk.bill (i.e. get ~), -> install done
+    ?~  app  (pure:m)
     ::  if the final app is installed -> install done
-    ?.  (virtualship-is-running-app who app now)  $
+    ?.  (virtualship-is-running-app who u.app now)  $
     (pure:m ~)
   ::
   ++  do-start-apps
@@ -1071,6 +1075,7 @@
     =/  m  (strand ,vase)
     ^-  form:m
     ;<  =status:zig  bind:m  get-status
+    ~&  %z^%cis-thread^%who^who^%wire^w^%status^status
     ?:  ?=(%commit-install-starting -.status)
       =.  cis-running.status
         %+  ~(jab by cis-running.status)  who
@@ -1095,17 +1100,17 @@
   --
 ::
 ++  make-status-card
-  |=  [=status:zig desk-name=@tas]
+  |=  [=status:zig project-name=@t desk-name=@tas]
   ^-  card
   %-  update-vase-to-card
   %.  status
   %~  status  make-update-vase
-  ['' desk-name %cis ~]
+  [project-name desk-name %cis ~]
 ::
 ++  make-done-cards
   |=  [=status:zig project-name=@t desk-name=@tas]
   |^  ^-  (list card)
-  :^    (make-status-card status desk-name)
+  :^    (make-status-card status project-name desk-name)
       make-watch-cis-setup-done-card
     (make-run-queue '' desk-name ~)
   ~
@@ -1185,12 +1190,17 @@
   :(weld ~(ram re in) "\0a" out)
 ::
 ++  build-default-configuration
-  |=  =config:zig
+  |=  [=config:zig desk-name=@tas]
   ^-  configuration-file-output:zig
   =*  ships  default-ships
   :*  config
       ships
-      %.y
+  ::
+      =/  bill-path=path
+        :-  (scot %p our.bowl)
+        /[desk-name]/(scot %da now.bowl)/desk/bill
+      .^(? %cu bill-path)
+  ::
       ~
       ~
       ~
@@ -1200,7 +1210,7 @@
 ++  load-configuration-file
   !.
   |=  [=update-info:zig state=inflated-state-0:zig]
-  ^-  [(list card) (unit configuration-file-output:zig) inflated-state-0:zig]
+  ^-  [[(list card) (unit configuration-file-output:zig)] inflated-state-0:zig]
   =*  project-name  project-name.update-info
   =*  desk-name     desk-name.update-info
   =/  new-project-error
@@ -1212,16 +1222,16 @@
   |^
   ?.  .^(? %cu config-file-path)
     =/  =configuration-file-output:zig
-      (build-default-configuration ~)
+      (build-default-configuration ~ desk-name)
     =^  cards=(list card)  state
       (build-cards-and-state configuration-file-output)
-    [cards `configuration-file-output state]
+    [[cards `configuration-file-output] state]
   =/  result  get-configuration-from-file
-  ?:  ?=(%| -.result)  [-.p.result ~ +.p.result]
+  ?:  ?=(%| -.result)  [[-.p.result ~] +.p.result]
   =*  configuration-file-output  p.result
   =^  cards=(list card)  state
     (build-cards-and-state configuration-file-output)
-  [cards `configuration-file-output state]
+  [[cards `configuration-file-output] state]
   ::
   ++  get-configuration-from-file
     |^  ^-  (each configuration-file-output:zig [(list card) inflated-state-0:zig])
@@ -1435,7 +1445,7 @@
 ::  files we delete from zig desk to make new gall desk
 ::
 ++  clean-desk
-  |=  name=@t
+  |=  name=@tas
   :~  [/app/indexer/hoon %del ~]
       [/app/rollup/hoon %del ~]
       [/app/sequencer/hoon %del ~]
@@ -2214,8 +2224,8 @@
         %changing-project-desks
       %-  pairs
       %+  turn  ~(tap by project-cis-running.status)
-      |=  [project-name=@t cis-running=(map @p [@t ?])]
-      :-  project-name
+      |=  [desk-name=@tas cis-running=(map @p [@t ?])]
+      :-  desk-name
       %-  pairs
       %+  turn  ~(tap by cis-running)
       |=  [who=@p cis-done=@t is-done=?]
@@ -2672,7 +2682,7 @@
     ^-  $-(json action:zig)
     %-  ot
     :~  [%project-name so]
-        [%desk-name so]
+        [%desk-name (se %tas)]
         [%request-id so:dejs-soft:format]
         [%action action]
     ==
@@ -2687,10 +2697,13 @@
         [%delete-sync-desk-vships (ot ~[[%ships (ar (se %p))]])]
     ::
         [%change-focus ul]
-        :: [%add-project-desk ~] :: TODO
+        [%add-project-desk ul]
     ::
         [%save-file (ot ~[[%file pa] [%text so]])]
         [%delete-file (ot ~[[%file pa]])]
+    ::
+        [%add-config (ot ~[[%who (se %p)] [%what (se %tas)] [%item ni]])]
+        [%delete-config (ot ~[[%who (se %p)] [%what (se %tas)]])]
     ::
         [%register-contract-for-compilation (ot ~[[%file pa]])]
         [%unregister-contract-for-compilation (ot ~[[%file pa]])]
@@ -2699,9 +2712,6 @@
         [%compile-contracts ul]
         [%compile-contract (ot ~[[%path pa]])]
         [%read-desk ul]
-    ::
-        [%add-config (ot ~[[%who (se %p)] [%what (se %tas)] [%item ni]])]
-        [%delete-config (ot ~[[%who (se %p)] [%what (se %tas)]])]
     ::
         [%add-test add-test]
         [%add-and-run-test add-test]
