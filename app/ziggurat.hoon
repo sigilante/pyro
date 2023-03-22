@@ -464,10 +464,10 @@
         |=(who=@p [project-name.act who])
       ::  merge new desk, mount desk
       ::  currently using ziggurat desk as template -- should refine this
-      =/  merge-task  [%merg `@tas`project-name.act our.bowl q.byk.bowl da+now.bowl %init]
-      =/  mount-task  [%mont `@tas`project-name.act [our.bowl `@tas`project-name.act da+now.bowl] /]
-      =/  bill-task   [%info `@tas`project-name.act %& [/desk/bill %ins %bill !>(~[project-name.act])]~]
-      =/  deletions-task  [%info `@tas`project-name.act %& (clean-desk:zig-lib project-name.act)]
+      =/  merge-task  [%merg desk-name.act our.bowl q.byk.bowl da+now.bowl %init]
+      =/  mount-task  [%mont desk-name.act [our.bowl `@tas`project-name.act da+now.bowl] /]
+      =/  bill-task   [%info desk-name.act %& [/desk/bill %ins %bill !>(~[project-name.act])]~]
+      =/  deletions-task  [%info desk-name.act %& (clean-desk:zig-lib desk-name.act)]
       =/  snap-cards=(list card)
         %^  make-snap-cards  project-name.act  request-id.act
         (~(gas in *(set @p)) sync-ships.act)
