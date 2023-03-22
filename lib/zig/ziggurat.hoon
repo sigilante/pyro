@@ -86,6 +86,12 @@
     (snap desks.project p.u.ind-desk [desk-name desk])
   ==
 ::
+++  del-desk
+  |=  [=project:zig desk-name=@tas]
+  ^-  project:zig
+  ?~  ind-desk=(get-ind-desk project desk-name)  project
+  project(desks (oust [p.u.ind-desk 1] desks.project))
+::
 ++  make-compile-contracts
   |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
   ^-  card
@@ -1075,7 +1081,6 @@
     =/  m  (strand ,vase)
     ^-  form:m
     ;<  =status:zig  bind:m  get-status
-    ~&  %z^%cis-thread^%who^who^%wire^w^%status^status
     ?:  ?=(%commit-install-starting -.status)
       =.  cis-running.status
         %+  ~(jab by cis-running.status)  who
@@ -2697,7 +2702,8 @@
         [%delete-sync-desk-vships (ot ~[[%ships (ar (se %p))]])]
     ::
         [%change-focus ul]
-        [%add-project-desk ul]
+        [%add-project-desk ni:dejs-soft:format]
+        [%delete-project-desk ul]
     ::
         [%save-file (ot ~[[%file pa] [%text so]])]
         [%delete-file (ot ~[[%file pa]])]

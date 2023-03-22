@@ -145,7 +145,8 @@
           [%delete-sync-desk-vships ships=(list @p)]
       ::
           [%change-focus ~]
-          [%add-project-desk ~]
+          [%add-project-desk index=(unit @ud)]  ::  ~ -> add to end
+          [%delete-project-desk ~]
       ::
           [%save-file file=path text=@t]  ::  generates new file or overwrites existing
           [%delete-file file=path]
