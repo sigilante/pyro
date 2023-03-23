@@ -2753,7 +2753,7 @@
   ::
   ++  action
     %-  of
-    :~  [%new-project (ot ~[[%sync-ships (ar (se %p))]])]
+    :~  [%new-project (ot ~[[%sync-ships (ar (se %p))] [%fetch-data-from-remote-ship (se-soft %p)]])]
         [%delete-project ul]
         [%save-config-to-file ul]
     ::
@@ -2828,6 +2828,11 @@
         [%compiler-error-num-lines ni]
         [%code-max-characters ni]
     ==
+  ::
+  ++  se-soft
+    |=  aur=@tas
+    |=  jon=json
+    ?.(?=([%s *] jon) ~ (some (slav aur p.jon)))
   ::
   ++  docket
     ^-  $-(json [@t @t @ux @t [@ud @ud @ud] @t @t])

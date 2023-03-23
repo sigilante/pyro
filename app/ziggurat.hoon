@@ -489,6 +489,30 @@
         =.  projects  (~(put by projects) 'zig' *project:zig)
         %+  start-ships-then-rerun  default-ships:zig-lib
         [project-name desk-name request-id]:act
+      ?^  fetch-desk-from-remote-ship.act
+        :_  state
+        :_  ~
+        %-  %~  arvo  pass:io
+            /new-project-from-remote/[desk-name.act]
+        :^  %k  %lard  q.byk.bowl
+        =/  m  (strand ,vase)
+        ^-  form:m
+        ;<  ~  bind:m
+          %+  poke-our:strandio  %ziggurat
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  ''  desk-name.act  request-id.act
+          [%get-dev-desk u.fetch-desk-from-remote-ship.act]
+        ::  if no sleep, get crash;
+        ::   TODO: replace with better, non-hacky solution
+        ;<  ~  bind:m  (sleep:strandio ~s1)
+        ;<  ~  bind:m
+          %+  poke-our:strandio  %ziggurat
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  project-name.act  desk-name.act  request-id.act
+          [%new-project sync-ships.act ~]
+        (pure:m !>(`?`%.y))
       =/  desks=(set desk)
         .^  (set desk)
             %cd
@@ -1699,6 +1723,9 @@
   |=  [w=wire =sign-arvo:agent:gall]
   |^  ^-  (quip card _this)
   ?+    w  (on-arvo:def w sign-arvo)
+      [%new-project-from-remote @ ~]  `this
+      :: [%get-dev-desk @ ~]             `this
+  ::
       [%on-init-zig-setup ~]
     =*  our  (scot %p our.bowl)
     =*  now  (scot %da now.bowl)
@@ -1707,7 +1734,7 @@
     :_  ~
     %-  ~(poke-self pass:io /self-wire)
     :-  %ziggurat-action
-    !>(`action:zig`['zig' %zig ~ %new-project ~])
+    !>(`action:zig`['zig' %zig ~ %new-project ~ ~])
   ::
       [%on-new-project-ship-rerun @ @ ~]
     =*  mark           i.t.w

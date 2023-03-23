@@ -137,7 +137,7 @@
   $:  project-name=@t
       desk-name=@tas
       request-id=(unit @t)
-      $%  [%new-project sync-ships=(list @p)]
+      $%  [%new-project sync-ships=(list @p) fetch-desk-from-remote-ship=(unit @p)]
           [%delete-project ~]
           [%save-config-to-file ~]
       ::
