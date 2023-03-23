@@ -242,6 +242,7 @@
       %add-project-desk
       %delete-project-desk
       %get-dev-desk
+      %suspend-uninstall-to-make-dev-desk
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -289,6 +290,7 @@
       [%add-project-desk update-info payload=(data ~) ~]
       [%delete-project-desk update-info payload=(data ~) ~]
       [%get-dev-desk update-info payload=(data ~) ~]
+      [%suspend-uninstall-to-make-dev-desk update-info payload=(data ~) ~]
   ==
 ::
 +$  shown-projects  (map @t shown-project)

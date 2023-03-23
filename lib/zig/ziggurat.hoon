@@ -1973,12 +1973,6 @@
     ^-  vase
     !>  ^-  update:zig
     [%status update-info [%& status] ~]
-  :: ::
-  :: ++  focused-linked
-  ::   |=  data=focused-linked-data:zig
-  ::   ^-  vase
-  ::   !>  ^-  update:zig
-  ::   [%focused-linked update-info [%& data] ~]
   ::
   ++  settings
     |=  =settings:zig
@@ -2089,6 +2083,13 @@
     ^-  vase
     !>  ^-  update:zig
     [%get-dev-desk update-info [%| level message] ~]
+  ::
+  ++  suspend-uninstall-to-make-dev-desk
+    |=  message=@t
+    ^-  vase
+    !>  ^-  update:zig
+    :^  %suspend-uninstall-to-make-dev-desk  update-info
+    [%| level message]  ~
   --
 ::
 ::  json
@@ -2261,6 +2262,9 @@
       ['data' ~]~
     ::
         %get-dev-desk
+      ['data' ~]~
+    ::
+        %suspend-uninstall-to-make-dev-desk
       ['data' ~]~
     ==
   ::

@@ -489,6 +489,7 @@
         =.  projects  (~(put by projects) 'zig' *project:zig)
         %+  start-ships-then-rerun  default-ships:zig-lib
         [project-name desk-name request-id]:act
+      ::  is requested desk remote?
       ?^  fetch-desk-from-remote-ship.act
         :_  state
         :_  ~
@@ -512,6 +513,41 @@
           !>  ^-  action:zig
           :^  project-name.act  desk-name.act  request-id.act
           [%new-project sync-ships.act ~]
+        (pure:m !>(`?`%.y))
+      ::  is requested desk already installed?
+      =/  apps-running=(set [@tas ?])
+        .^  (set [@tas ?])
+            %ge
+            :-  (scot %p our.bowl)
+            /[desk-name.act]/(scot %da now.bowl)
+        ==
+      ?:  ?&  !=(0 ~(wyt in apps-running))
+              (~(any in apps-running) |=([@tas r=?] r))
+          ==
+        ::  TODO: should this be interactive?
+        :_  state
+        :_  ~
+        %-  %~  arvo  pass:io
+            /new-project-uninstall/[desk-name.act]
+        :^  %k  %lard  q.byk.bowl
+        =/  m  (strand ,vase)
+        ^-  form:m
+        ;<  ~  bind:m
+          %+  poke-our:strandio  %ziggurat
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  project-name.act  desk-name.act  request-id.act
+          [%suspend-uninstall-to-make-dev-desk ~]
+        ::  if no sleep, get crash;
+        ::   TODO: replace with better, non-hacky solution
+        ;<  ~  bind:m  (sleep:strandio ~s1)
+        ;<  ~  bind:m
+          %+  poke-our:strandio  %ziggurat
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  project-name.act  desk-name.act  request-id.act
+          :-  %new-project
+          [sync-ships fetch-desk-from-remote-ship]:act
         (pure:m !>(`?`%.y))
       =/  desks=(set desk)
         .^  (set desk)
@@ -1578,8 +1614,12 @@
     ::
         %suspend-uninstall-to-make-dev-desk
       :_  state
-      :+  (suspend-desk:zig-lib desk-name.act)
-        (uninstall-desk:zig-lib desk-name.act)
+      :^    (suspend-desk:zig-lib desk-name.act)
+          (uninstall-desk:zig-lib desk-name.act)
+        %-  update-vase-to-card:zig-lib
+        %.  'suspending and unsyncing dev desk'
+        %~  suspend-uninstall-to-make-dev-desk
+        make-error-vase:zig-lib  [update-info %warning]
       ~
     ==
   --
@@ -1730,7 +1770,7 @@
   |^  ^-  (quip card _this)
   ?+    w  (on-arvo:def w sign-arvo)
       [%new-project-from-remote @ ~]  `this
-      :: [%get-dev-desk @ ~]             `this
+      [%new-project-uninstall @ ~]    `this
   ::
       [%on-init-zig-setup ~]
     =*  our  (scot %p our.bowl)
