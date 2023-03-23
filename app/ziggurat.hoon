@@ -1575,6 +1575,12 @@
       :+  (make-new-desk:zig-lib desk-name.act)
         (get-dev-desk:zig-lib [who desk-name]:act)
       ~
+    ::
+        %suspend-uninstall-to-make-dev-desk
+      :_  state
+      :+  (suspend-desk:zig-lib desk-name.act)
+        (uninstall-desk:zig-lib desk-name.act)
+      ~
     ==
   --
 ::

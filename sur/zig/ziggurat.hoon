@@ -202,6 +202,7 @@
           [%change-settings =settings]
       ::
           [%get-dev-desk who=@p]
+          [%suspend-uninstall-to-make-dev-desk ~]
       ==
   ==
 ::

@@ -121,8 +121,21 @@
 ::
 ++  get-dev-desk
   |=  [who=@p desk-name=@tas]
+  ^-  card
   %-  ~(arvo pass:io /get-dev-desk/[desk-name])
   [%c %merg desk-name who desk-name da+now.bowl %only-that]
+::
+++  suspend-desk
+  |=  desk-name=@tas
+  ^-  card
+  %-  ~(arvo pass:io /suspend-desk/[desk-name])
+  [%c %zest desk-name %dead]
+::
+++  uninstall-desk
+  |=  desk-name=@tas
+  ^-  card
+  %+  ~(poke-our pass:io /uninstall-desk/[desk-name])  %hood
+  [%kiln-uninstall !>(`@tas`desk-name)]
 ::
 ++  make-compile-contracts
   |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
@@ -2818,6 +2831,7 @@
         [%change-settings change-settings]
     ::
         [%get-dev-desk (se %p)]
+        [%suspend-uninstall-to-make-dev-desk ul]
     ==
   ::
   ++  change-settings
