@@ -4,10 +4,12 @@
     zig=zig-ziggurat
 /+  strandio,
     pyro-lib=pyro-pyro,
-    smart=zig-sys-smart
+    smart=zig-sys-smart,
+    zig-lib=zig-ziggurat
 ::
 =*  strand    strand:spider
 =*  get-bowl  get-bowl:strandio
+=*  get-time  get-time:strandio
 =*  poke-our  poke-our:strandio
 =*  scry      scry:strandio
 =*  sleep     sleep:strandio
@@ -17,6 +19,15 @@
         desk-name=@tas
         ship-to-address=(map @p @ux)
     ==
+++  send-discrete-pyro-dojo
+  |=  [who=@p payload=@t project-name=@t]
+  =/  m  (strand ,~)
+  ^-  form:m
+  ;<  ~  bind:m  (send-pyro-dojo who payload)
+  ::  ensure %pyro dojo send has completed before moving on
+  ;<  ~  bind:m  (block-on-previous-step prject-name)
+  (pure:m ~)
+::
 ++  send-pyro-dojo
   |=  [who=@p payload=@t]
   =/  m  (strand ,~)
@@ -68,6 +79,21 @@
 ::   ^-  form:m
 ::   ;<  ~  bind:m  (subscribe:pyro-lib payload)
 ::   (pure:m ~)
+::
+++  send-discrete-pyro-poke
+  |=  $:  who=@p
+          to=@p
+          app=@tas
+          mark=@tas
+          payload=vase
+          project-name=@t
+      ==
+  =/  m  (strand ,~)
+  ^-  form:m
+  ;<  ~  bind:m  (send-pyro-poke who to app mark payload)
+  ::  ensure %pyro poke send has completed before moving on
+  ;<  ~  bind:m  (block-on-previous-step project-name)
+  (pure:m ~)
 ::
 ++  send-pyro-poke
   |=  [who=@p to=@p app=@tas mark=@tas payload=vase]
@@ -356,5 +382,154 @@
       (get-realship-timers our now)
     %^  filter-timers  now  ignored-virtualship-timer-prefixes
     (get-virtualship-timers project-name our now)
+  --
+++  setup-desk
+  |=  $:  project-name=@t
+          desk-name=@tas
+          request-id=(unit @t)
+          =config:zig
+          =state-views:zig
+          whos=(list @p)
+          install=?
+          start-apps=(list @tas)
+      ==
+  =/  commit-poll-duration=@dr   ~s1
+  =/  install-poll-duration=@dr  ~s1
+  =/  start-poll-duration=@dr    (div ~s1 10)
+  |^
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ;<  ~  bind:m
+    %+  poke-our  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:ziggurat
+    [project-name desk-name request-id %set-config config]
+  ;<  ~  bind:m
+    %+  poke-our  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:ziggurat
+    :^  project-name  desk-name  request-id
+    [%set-sync-desk-to-vship whos]
+  ;<  ~  bind:m
+    %+  poke-our  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:ziggurat
+    :^  project-name  desk-name  request-id
+    [%send-state-views state-views]
+  ;<  =bowl:strand  bind:m  get-bowl
+  ;<  ~  bind:m
+    (commit:pyro-lib whos our.bowl desk-name %da now.bowl)
+  ;<  ~  bind:m  (iterate-over-whos block-on-commit)
+  ?.  install  finish
+  ;<  ~  bind:m  (iterate-over-whos install-desk)
+  ;<  ~  bind:m  (iterate-over-whos do-start-apps)
+  finish
+  ::
+  ++  iterate-over-whos
+    =/  m  (strand ,~)
+    |=  gate=$-(@p form:m)
+    ^-  form:m
+    |-
+    ?~  whos  (pure:m ~)
+    =*  who  i.whos
+    ;<  ~  bind:m  (gate who)
+    $(whos t.whos)
+  ::
+  ++  block-on-commit
+    |=  who=@p
+    =/  m  (strand ,~)
+    ^-  form:m
+    |-
+    ;<  ~  bind:m  (sleep commit-poll-duration)
+    :: ;<  now=@da  bind:m  get-time
+    :: ?.  (virtualship-desk-exists who now desk-name)  $
+    ;<  does-exist=?  bind:m
+      (virtualship-desk-exists who desk-name)
+    ?.  does-exist  $
+    (pure:m ~)
+  ::
+  ++  install-desk
+    |=  who=@p
+    =/  m  (strand ,~)
+    ^-  form:m
+    %+  send-pyro-dojo  who
+    (crip "|install our {<desk-name>}")
+  ::
+  ++  block-on-install
+    |=  who=@p
+    =/  m  (strand ,~)
+    ^-  form:m
+    |-
+    ;<  ~  bind:m  (sleep install-poll-duration)
+    ;<  =bowl:strand  bind:m  get-bowl
+    =/  app=(unit @tas)
+      (get-final-app-to-install desk-name [our now]:bowl)
+    ::  if no desk.bill (i.e. get ~), -> install done
+    ?~  app  (pure:m)
+    ::  if the final app is installed -> install done
+    ;<  is-running=?  bind:m
+      (virtualship-is-running-app who u.app)
+    ?.  is-running  $
+    (pure:m ~)
+  ::
+  ++  do-start-apps
+    |=  who=@p
+    =/  m  (strand ,~)
+    ^-  form:m
+    |-
+    ?~  start-apps  (pure:m ~)
+    =*  next-app  i.start-apps
+    ;<  ~  bind:m
+      %+  send-pyro-dojo  who
+      (crip "|start {<`@tas`desk-name>} {<`@tas`next-app>}")
+    ;<  ~  bind:m  (block-on-start who next-app)
+    $(start-apps t.start-apps)
+  ::
+  ++  block-on-start
+    |=  [who=@p next-app=@tas]
+    =/  m  (strand ,~)
+    ^-  form:m
+    |-
+    ;<  ~  bind:m  (sleep start-poll-duration)
+    ;<  is-running=?  bind:m
+      (virtualship-is-running-app who next-app)
+    ?.  is-running  $
+    (pure:m ~)
+  ::
+  ++  finish
+    =/  m  (strand ,vase)
+    ^-  form:m
+    (pure:m !>(~))
+  ::
+  ++  scry-virtualship-desks
+    |=  who=@p
+    =/  m  (strand ,(set @tas))
+    ^-  form:m
+    =/  w=@ta  (scot %p who)
+    (scry (set @tas) /gx/pyro/i/[w]/cd/[w]//0/noun)
+  ::
+  ++  virtualship-desk-exists
+    :: |=  [who=@p now=@da desk=@tas]
+    |=  [who=@p desk-name=@tas]
+    =/  m  (strand ,?)
+    ^-  form:m
+    ;<  desk-names=(set @tas)  bind:m
+      (scry-virtualship-desks who)
+    (pure:m (~(has in desk-names) desk-name))
+  ::
+  ++  virtualship-is-running-app
+    |=  [who=@p app=@tas]
+    =/  m  (strand ,?)
+    ^-  form:m
+    =/  w=@ta    (scot %p who)
+    (scry ? /gx/pyro/i/[w]/gu/[w]/[app]/0/noun)
+  ::
+  ++  get-final-app-to-install
+    |=  [desk-name=@tas our=@p now=@da]
+    ^-  (unit @tas)
+    =/  bill-path=path
+      /(scot %p our)/[desk-name]/(scot %da now)/desk/bill
+    ?.  .^(? %cu bill-path)  ~
+    `(rear .^((list @tas) %cx bill-path))
   --
 --

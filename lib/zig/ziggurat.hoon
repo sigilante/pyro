@@ -164,34 +164,6 @@
   :^  project-name  desk-name  request-id
   [%run-queue ~]
 ::
-++  make-delete-test
-  |=  $:  id=@ux
-          project-name=@t
-          desk-name=@tas
-          request-id=(unit @t)
-      ==
-  ^-  card
-  %-  ~(poke-self pass:io /self-wire)
-  :-  %ziggurat-action
-  !>  ^-  action:zig
-  [project-name desk-name request-id [%delete-test id]]
-::
-++  make-recompile-custom-steps-cards
-  |=  $:  project-name=@t
-          desk-name=@tas
-          test-id=@ux
-          =custom-step-definitions:zig
-          request-id=(unit @t)
-      ==
-  ^-  (list card)
-  %+  turn  ~(tap by custom-step-definitions)
-  |=  [tag=@tas [p=path *]]
-  :^  %pass  /self-wire  %agent
-  :^  [our dap]:bowl  %poke  %ziggurat-action
-  !>  ^-  action:zig
-  :^  project-name  desk-name  request-id
-  [%add-custom-step test-id tag p]
-::
 ++  make-watch-for-file-changes
   |=  [project-name=@t desk-name=@tas]
   ^-  card
@@ -264,58 +236,59 @@
       ;;((list clause:dock) reamed-text)
     ==
   --
-::
-++  make-test-steps-file
-  |=  =test:zig
-  ^-  @t
-  %+  rap  3
-  :~
-  ::  imports
-    %+  roll  ~(tap by test-imports.test)
-    |=  [[face=@tas file=path] imports=@t]
-    %+  rap  3
-    :~  imports
-        '/=  '
-        face
-        '  '
-        (crip (noah !>(file)))
-        '\0a'
-    ==
-  ::  infix
-    '''
-    ::
-    |%
-    ++  $
-      ^-  test-steps:zig
-      :~
-
-    '''
-  ::  test-steps
-    %+  roll  steps.test
-    |=  [=test-step:zig test-steps-text=@t]
-    %+  rap  3
-    :~  test-steps-text
-        '  ::\0a'
-        '    '
-        (crip (noah !>(test-step)))
-        '\0a'
-    ==
-  ::  suffix
-    '''
-      ==
-    --
-
-    '''
-  ==
+:: ::
+:: ++  make-test-steps-file
+::   |=  =test:zig
+::   ^-  @t
+::   %+  rap  3
+::   :~
+::   ::  imports
+::     %+  roll  ~(tap by test-imports.test)
+::     |=  [[face=@tas file=path] imports=@t]
+::     %+  rap  3
+::     :~  imports
+::         '/=  '
+::         face
+::         '  '
+::         (crip (noah !>(file)))
+::         '\0a'
+::     ==
+::   ::  infix
+::     '''
+::     ::
+::     |%
+::     ++  $
+::       ^-  test-steps:zig
+::       :~
+:: 
+::     '''
+::   ::  test-steps
+::     %+  roll  steps.test
+::     |=  [=test-step:zig test-steps-text=@t]
+::     %+  rap  3
+::     :~  test-steps-text
+::         '  ::\0a'
+::         '    '
+::         (crip (noah !>(test-step)))
+::         '\0a'
+::     ==
+::   ::  suffix
+::     '''
+::       ==
+::     --
+:: 
+::     '''
+::   ==
 ::
 ++  make-configs-file
-  |=  $:  =config:zig
+  |=  $:  imports-list=(list [@tas path])
+          =config:zig
           vships-to-sync=(list @p)
           install=?
           start-apps=(list @tas)
           state-views=(list [@p (unit @tas) path])
-          setup=(map @p test-steps:zig)
-          imports-list=(list [@tas path])
+          :: setup=(map @p test-steps:zig)
+          setup=(map @p thread-path=path)
       ==
   |^  ^-  @t
   %+  rap  3
@@ -394,7 +367,7 @@
       '''
       ::
       ++  make-setup
-        ^-  (map @p test-steps:zig)
+        ^-  (map @p thread-path=path)
         ~
 
       '''
@@ -631,84 +604,6 @@
   |=  =tank
   (of-wall:format (wash [0 80] tank))
 ::
-++  show-projects
-  |=  =projects:zig
-  ^-  shown-projects:zig
-  %-  ~(gas by *shown-projects:zig)
-  %+  turn  ~(tap by projects)
-  |=  [project-name=@t =project:zig]
-  [project-name (show-project project)]
-::
-++  show-project
-  |=  =project:zig
-  ^-  shown-project:zig
-  :*  desks=(show-desks desks.project)
-      pyro-ships=pyro-ships.project
-      most-recent-snap=most-recent-snap.project
-      saved-test-queue=saved-test-queue.project
-  ==
-::
-++  show-desks
-  |=  desks=(list (pair @tas desk:zig))
-  ^-  (list (pair @tas shown-desk:zig))
-  %+  turn  desks
-  |=  [desk-name=@tas =desk:zig]
-  [desk-name (show-desk desk)]
-::
-++  show-desk
-  |=  =desk:zig
-  ^-  shown-desk:zig
-  :*  dir=dir.desk
-      user-files=user-files.desk
-      to-compile=to-compile.desk
-      tests=(show-tests tests.desk)
-  ==
-::
-++  show-tests
-  |=  =tests:zig
-  ^-  shown-tests:zig
-  %-  ~(gas by *shown-tests:zig)
-  %+  turn  ~(tap by tests)
-  |=  [test-id=@ux =test:zig]
-  [test-id (show-test test test-id)]
-::
-++  show-test
-  |=  [=test:zig test-id=@ux]
-  ^-  shown-test:zig
-  :*  name=name.test
-      test-steps-file=test-steps-file.test
-      test-imports=test-imports.test
-      subject=?:(?=(%& -.subject.test) [%& *vase] subject.test)
-      custom-step-definitions=(show-custom-step-definitions custom-step-definitions.test)
-      steps=steps.test
-      results=(show-test-results results.test)
-      test-id=test-id
-  ==
-::
-++  show-custom-step-definitions
-  |=  =custom-step-definitions:zig
-  ^-  custom-step-definitions:zig
-  %-  ~(run by custom-step-definitions)
-  |=  [p=path c=custom-step-compiled:zig]
-  :-  p
-  ?:  ?=(%& -.c)  [%& *vase]  c
-::
-++  show-test-results
-  |=  =test-results:zig
-  ^-  shown-test-results:zig
-  (turn test-results show-test-result)
-::
-++  show-test-result
-  |=  =test-result:zig
-  ^-  shown-test-result:zig
-  %+  turn  test-result
-  |=  [success=? expected=@t result=vase]
-  =/  res-text=@t  (crip (noah result))
-  :+  success  expected
-  ?:  (lte test-result-num-characters.settings (met 3 res-text))
-    '<elided>'
-  res-text
-::
 ++  show-state
   |=  state=vase
   ^-  @t
@@ -746,58 +641,6 @@
   ?:  ?=(%| -.hoon-compilation-result)
     hoon-compilation-result
   (mule-slap-subject p.hoon-compilation-result (ream arm))
-::
-++  add-custom-step
-  |=  $:  =test:zig
-          project-name=@t
-          desk-name=@tas
-          tag=@tas
-          p=path
-          request-id=(unit @t)
-      ==
-  ^-  [(list card) test:zig]
-  =/  add-custom-error
-    %~  add-custom-step  make-error-vase
-    :_  %error
-    [project-name desk-name %add-custom-step request-id]
-  =/  file-scry-path=path
-    :-  (scot %p our.bowl)
-    (weld /[desk-name]/(scot %da now.bowl) p)
-  ?.  .^(? %cu file-scry-path)
-    :_  test
-    :_  ~
-    %-  update-vase-to-card
-    %+  add-custom-error(level %warning)
-      [`@ux`(sham test) tag]
-    (crip "file {<`path`p>} not found")
-  =/  file-cord=@t  .^(@t %cx file-scry-path)
-  =/  [imports=(list [face=@tas =path]) payload=hoon]
-    (parse-pile:conq file-scry-path (trip file-cord))
-  ?:  ?=(%| -.subject.test)
-    :_  test
-    :_  ~
-    %-  update-vase-to-card
-    %+  add-custom-error  [`@ux`(sham test) tag]
-    %^  cat  3  'subject must compile from imports before'
-    ' adding custom step'
-  =/  compilation-result=(each vase @t)
-    (compile-and-call-arm '$' p.subject.test payload)
-    :: %-  of-wain:format
-    :: (slag (dec p.hair) (to-wain:format file-cord))
-  ?:  ?=(%| -.compilation-result)
-    :_  test
-    :_  ~
-    %-  update-vase-to-card
-    %+  add-custom-error  [`@ux`(sham test) tag]
-    %^  cat  3
-      'custom-step compilation failed with error:\0a'
-    p.compilation-result
-  :-  ~
-  %=  test
-      custom-step-definitions
-    %+  ~(put by custom-step-definitions.test)  tag
-    [p compilation-result]
-  ==
 ::
 ++  get-chain-state
   |=  [project-name=@t =configs:zig]
@@ -925,74 +768,6 @@
     town-id-to-sequencer
   (get-town-id-to-sequencer-map 'global' configs)
 ::
-++  scry-virtualship-desks
-  |=  [virtualship=@p now-da=@da]
-  ^-  (set @tas)
-  =/  now=@ta  (scot %da now-da)
-  =/  who=@ta  (scot %p virtualship)
-  .^  (set @tas)
-      %gx
-      :-  (scot %p our.bowl)
-      /pyro/[now]/i/[who]/cd/[who]/base/[now]/noun
-  ==
-::
-++  virtualship-desk-exists
-  |=  [virtualship=@p now=@da desk=@tas]
-  ^-  ?
-  (~(has in (scry-virtualship-desks virtualship now)) desk)
-::
-++  virtualship-is-running-app
-  |=  [virtualship=@p app=@tas now-da=@da]
-  ^-  ?
-  =/  now=@ta  (scot %da now-da)
-  =/  who=@ta  (scot %p virtualship)
-  .^  ?
-      %gx
-      :-  (scot %p our.bowl)
-      /pyro/[now]/i/[who]/gu/[who]/[app]/[now]/noun
-  ==
-::
-++  sync-all-desks-cards
-  |=  =sync-desk-to-vship:zig
-  ^-  (list card)
-  %-  zing
-  %+  turn  ~(tap by sync-desk-to-vship)
-  |=  [desk-name=@tas whos=(set @p)]
-  %+  turn  ~(tap in whos)
-  |=(who=@p (sync-desk-to-virtualship-card who desk-name))
-::
-++  sync-desk-to-virtualship-card
-  |=  [who=@p desk-name=@tas]
-  ^-  card
-  %+  %~  poke-our  pass:io
-      /sync/(scot %da now.bowl)/[desk-name]/(scot %p who)
-    %pyro
-  (sync-desk-to-virtualship-cage who desk-name)
-::
-++  sync-desk-to-virtualship-cage
-  |=  [who=@p desk-name=@tas]
-  ^-  cage
-  :-  %pyro-events
-  !>  ^-  (list pyro-event:pyro)
-  :_  ~
-  :+  who  /c/commit/(scot %p who)
-  (park:pyro-lib our.bowl desk-name %da now.bowl)
-::
-++  send-pyro-dojo-card
-  |=  [who=@p command=tape]
-  ^-  card
-  %+  %~  poke-our  pass:io
-      /dojo/(scot %p who)/(scot %ux `@ux`(jam command))
-    %pyro
-  (send-pyro-dojo-cage who command)
-::
-++  send-pyro-dojo-cage
-  |=  [who=@p command=tape]
-  ^-  cage
-  :-  %pyro-events
-  !>  ^-  (list pyro-event:pyro)
-  (dojo-events:pyro-lib who command)
-::
 ++  make-cis-running
   |=  [ships=(list @p) desk-name=@tas]
   ^-  (map @p [@t ?])
@@ -1002,152 +777,6 @@
   :-  who
   :_  %.n
   (rap 3 'setup-' desk-name '-' (scot %p who) ~)
-::
-++  get-final-app-to-install
-  |=  [desk-name=@tas now=@da]
-  ^-  (unit @tas)
-  =/  bill-path=path
-    :-  (scot %p our.bowl)
-    /[desk-name]/(scot %da now)/desk/bill
-  ?.  .^(? %cu bill-path)  ~
-  `(rear .^((list @tas) %cx bill-path))
-::
-++  read-test-file
-  |=  $:  project-name=@t
-          desk-name=@tas
-          p=path
-          state=inflated-state-0:zig
-      ==
-  ^-  $:  (each (trel (list [@tas path]) vase test-steps:zig) @t)
-          inflated-state-0:zig
-      ==
-  =/  file-scry-path=path
-    :-  (scot %p our.bowl)
-    (weld /[desk-name]/(scot %da now.bowl) p)
-  =/  file-cord=@t  .^(@t %cx file-scry-path)
-  =/  [imports=(list [face=@tas =path]) payload=hoon]
-    (parse-pile:conq file-scry-path (trip file-cord))
-  =^  subject=(each vase @t)  state
-    %-  compile-test-imports
-    [project-name desk-name imports state]
-  :_  state
-  ?:  ?=(%| -.subject)
-    :-  %|
-    %^  cat  3  'compilation of test-imports failed:\0a'
-    p.subject
-  =/  test-steps-compilation-result=(each vase @t)
-    (compile-and-call-arm '$' p.subject payload)
-  ?:  ?=(%| -.test-steps-compilation-result)
-    :-  %|
-    %-  crip
-    ;:  weld
-        "test-steps compilation failed for"
-        " {<`path`p>} with error:\0a"
-        (trip p.test-steps-compilation-result)
-    ==
-  :^  %&  imports  p.subject
-  !<(test-steps:zig p.test-steps-compilation-result)
-::
-++  cis-thread
-  |=  $:  w=wire
-          who=@p
-          desk-name=@tas
-          install=?
-          start-apps=(list @tas)
-          =status:zig
-      ==
-  =/  commit-poll-duration=@dr   ~s1
-  =/  install-poll-duration=@dr  ~s1
-  =/  start-poll-duration=@dr    (div ~s1 10)
-  |^  ^-  card
-  %-  ~(arvo pass:io w)
-  :^  %k  %lard  q.byk.bowl
-  =/  m  (strand ,vase)
-  ^-  form:m
-  ;<  ~  bind:m
-    %+  poke-our:strandio  %pyro
-    (sync-desk-to-virtualship-cage who desk-name)
-  ;<  ~  bind:m  block-on-commit
-  ?.  install  finish
-  ;<  ~  bind:m
-    %+  poke-our:strandio  %pyro
-    (send-pyro-dojo-cage who "|install our {<desk-name>}")
-  ;<  ~  bind:m  block-on-install
-  ;<  ~  bind:m  do-start-apps
-  finish
-  ::
-  ++  block-on-commit
-    =/  m  (strand ,~)
-    ^-  form:m
-    |-
-    ;<  ~  bind:m  (sleep:strandio commit-poll-duration)
-    ;<  now=@da  bind:m  get-time:strandio
-    ?.  (virtualship-desk-exists who now desk-name)  $
-    (pure:m ~)
-  ::
-  ++  block-on-install
-    =/  m  (strand ,~)
-    ^-  form:m
-    |-
-    ;<  ~  bind:m  (sleep:strandio install-poll-duration)
-    ;<  now=@da  bind:m  get-time:strandio
-    =/  app=(unit @tas)
-      (get-final-app-to-install desk-name now)
-    ::  if no desk.bill (i.e. get ~), -> install done
-    ?~  app  (pure:m)
-    ::  if the final app is installed -> install done
-    ?.  (virtualship-is-running-app who u.app now)  $
-    (pure:m ~)
-  ::
-  ++  do-start-apps
-    =/  m  (strand ,~)
-    ^-  form:m
-    |-
-    ?~  start-apps  (pure:m ~)
-    =*  next-app  i.start-apps
-    ;<  ~  bind:m
-      %+  poke-our:strandio  %pyro
-      %+  send-pyro-dojo-cage  who
-      "|start {<`@tas`desk-name>} {<`@tas`next-app>}"
-    ;<  ~  bind:m  (block-on-start next-app)
-    $(start-apps t.start-apps)
-  ::
-  ++  block-on-start
-    |=  next-app=@tas
-    =/  m  (strand ,~)
-    ^-  form:m
-    |-
-    ;<  ~  bind:m  (sleep:strandio start-poll-duration)
-    ;<  now=@da  bind:m  get-time:strandio
-    ?.  (virtualship-is-running-app who next-app now)  $
-    (pure:m ~)
-  ::
-  ++  finish
-    =/  m  (strand ,vase)
-    ^-  form:m
-    ;<  =status:zig  bind:m  get-status
-    ?:  ?=(%commit-install-starting -.status)
-      =.  cis-running.status
-        %+  ~(jab by cis-running.status)  who
-        |=([cis-running=@t is-done=?] [cis-running %.y])
-      (pure:m !>(`status:zig`status))
-    ?>  ?=(%changing-project-desks -.status)
-    =.  project-cis-running.status
-      %+  ~(put by project-cis-running.status)  desk-name
-      %+  %~  jab  by
-          (~(got by project-cis-running.status) desk-name)
-        who
-      |=([cis-running=@t is-done=?] [cis-running %.y])
-    (pure:m !>(`status:zig`status))
-  ::
-  ++  get-status
-    =/  m  (strand ,status:zig)
-    ^-  form:m
-    ;<  =update:zig  bind:m
-      (scry:strandio update:zig /gx/ziggurat/status/noun)
-    ?>  &(?=(%status -.update) ?=(%& -.payload.update))  ::  TODO: better error handling?
-    (pure:m p.payload.update)
-  --
 ::
 ++  make-status-card
   |=  [=status:zig project-name=@t desk-name=@tas]
@@ -1185,30 +814,9 @@
     (ifix [gay gay] tall:(vang %.y error-path))
   --
 ::
-++  compile-test-imports
+++  compile-imports
   |=  $:  project-name=@t
           desk-name=@tas
-          imports=(list [face=@tas =path])
-          state=inflated-state-0:zig
-      ==
-  ^-  [(each vase @t) inflated-state-0:zig]
-  =^  subject=(each vase @t)  state
-    (compile-imports desk-name imports state)
-  :_  state
-  ?:  ?=(%| -.subject)  subject
-  =/  initial-test-globals=vase
-    !>  ^-  test-globals:zig
-    :^  our.bowl  now.bowl  *test-results:zig
-    [project-name desk-name configs:state]
-  :-  %&
-  %+  slop
-    %=  initial-test-globals
-      p  [%face %test-globals p.initial-test-globals]
-    ==
-  p.subject
-::
-++  compile-imports
-  |=  $:  desk-name=@tas
           imports=(list [face=@tas =path])
           state=inflated-state-0:zig
       ==
@@ -1219,8 +827,6 @@
     =/  [subject=vase c=ca-scry-cache:zig]
       %+  roll  imports
       |:  [[face=`@tas`%$ sur=`path`/] [subject=`vase`!>(..zuse) ca-scry-cache=ca-scry-cache:state]]
-      ?:  =(%test-globals face)
-        !!  ::  TODO: do better  [[%| '%test-globals face is reserved'] state]
       =^  sur-hoon=vase  ca-scry-cache
         %-  need  ::  TODO: handle error
         %^  scry-or-cache-ca  desk-name
@@ -1254,11 +860,10 @@
       ~
       ~
       ~
-      [%zig /sur/zig/ziggurat]~
   ==
 ::
 ++  load-configuration-file
-  !.
+  :: !.
   |=  [=update-info:zig state=inflated-state-0:zig]
   ^-  [[(list card) (unit configuration-file-output:zig)] inflated-state-0:zig]
   =*  project-name  project-name.update-info
@@ -1289,7 +894,7 @@
     =/  [imports=(list [face=@tas =path]) payload=hoon]
       (parse-pile:conq config-file-path (trip file-cord))
     =^  subject=(each vase @t)  state
-      %-  compile-test-imports
+      %-  compile-imports
       [project-name desk-name imports state]
     ?:  ?=(%| -.subject)
       %+  make-error  p.subject
@@ -1345,8 +950,7 @@
         !<(? p.install-result)
         !<((list @tas) p.start-apps-result)
         !<((list [@p (unit @tas) path]) p.state-views-result)
-        !<((map @p test-steps:zig) p.setup-result)
-        imports
+        !<((map @p thread-path=path) p.setup-result)
     ==
     ::
     ++  make-error
@@ -1365,8 +969,7 @@
             install=?
             start-apps=(list @tas)
             state-views=(list [who=@p app=(unit @tas) file=path])
-            setups=(map @p test-steps:zig)
-            imports=(list [@tas path])
+            setups=(map @p thread-path=path)
         ==
     ^-  [(list card) inflated-state-0:zig]
     =/  setups-not-run=(set @p)
@@ -1405,24 +1008,22 @@
       :*  project-name
           desk-name
           `cis-name
-          %add-and-queue-test
-          `cis-name
-          (~(gas by *test-imports:zig) imports)
+          %queue-thread
           u.setup
       ==
-    =.  cards
-      |-
-      ?~  virtualships-to-sync  cards
-      =*  who   i.virtualships-to-sync
-      =/  cis-cards=(list card)
-        :_  ~
-        %+  cis-thread
-          /cis-done/(scot %p who)/[project-name]/[desk-name]
-        [who desk-name install start-apps new-status]
-      %=  $
-          virtualships-to-sync  t.virtualships-to-sync
-          cards                 (weld cards cis-cards)
-      ==
+    :: =.  cards
+    ::   |-
+    ::   ?~  virtualships-to-sync  cards
+    ::   =*  who   i.virtualships-to-sync
+    ::   =/  cis-cards=(list card)
+    ::     :_  ~
+    ::     %+  cis-thread
+    ::       /cis-done/(scot %p who)/[project-name]/[desk-name]
+    ::     [who desk-name install start-apps new-status]
+    ::   %=  $
+    ::       virtualships-to-sync  t.virtualships-to-sync
+    ::       cards                 (weld cards cis-cards)
+    ::   ==
     =.  cards
       :_  cards
       %-  fact:io  :_  ~[/project]
@@ -1449,10 +1050,10 @@
         (~(get by projects.state) focused-project.state)
       ?~  project  projects.state
       %+  ~(put by projects.state)  focused-project.state
-      u.project(saved-test-queue test-queue.state)
+      u.project(saved-thread-queue thread-queue.state)
     %=  state
-        test-queue   ~
-        status       new-status
+        thread-queue   ~
+        status         new-status
     ::
         sync-desk-to-vship
       %-  ~(gas ju sync-desk-to-vship.state)
@@ -1465,22 +1066,6 @@
       ~(gas by (~(gut by configs.state) project-name ~))
     ==
   --
-::
-++  add-test-error-to-edit-test
-  |=  add-test-card=card
-  ^-  card
-  ?.  ?=(%give -.add-test-card)    add-test-card
-  ?.  ?=(%fact -.p.add-test-card)  add-test-card
-  %=  add-test-card
-      cage.p
-    =*  cage  cage.p.add-test-card
-    :-  p.cage
-    !>  ^-  update:zig
-    =+  !<(=update:zig q.cage)
-    ?~  update  ~
-    ?.  ?=(%add-test -.update)  update
-    :-  %edit-test  +.update
-  ==
 ::
 ++  uni-configs
   |=  [olds=configs:zig news=configs:zig]
@@ -1819,13 +1404,13 @@
     |=  =projects:zig
     ^-  vase
     !>  ^-  update:zig
-    [%projects update-info [%& ~] (show-projects projects)]
+    [%projects update-info [%& ~] projects]
   ::
   ++  project
     |=  =project:zig
     ^-  vase
     !>  ^-  update:zig
-    [%project update-info [%& ~] (show-project project)]
+    [%project update-info [%& ~] project]
   ::
   ++  new-project
     |=  =sync-desk-to-vship:zig
@@ -1845,47 +1430,15 @@
     !>  ^-  update:zig
     [%delete-config update-info [%& who what] ~]
   ::
-  ++  add-test
-    |=  [=test:zig test-id=@ux]
-    ^-  vase
-    !>  ^-  update:zig
-    :^  %add-test  update-info
-    [%& (show-test test test-id)]  test-id
-  ::
   ++  compile-contract
     ^-  vase
     !>  ^-  update:zig
     [%compile-contract update-info [%& ~] ~]
   ::
-  ++  edit-test
-    |=  [=test:zig test-id=@ux]
-    ^-  vase
-    !>  ^-  update:zig
-    :^  %edit-test  update-info
-    [%& (show-test test test-id)]  test-id
-  ::
-  ++  delete-test
-    |=  test-id=@ux
-    ^-  vase
-    !>  ^-  update:zig
-    [%delete-test update-info [%& ~] test-id]
-  ::
   ++  run-queue
     ^-  vase
     !>  ^-  update:zig
     [%run-queue update-info [%& ~] ~]
-  ::
-  ++  add-custom-step
-    |=  [test-id=@ux tag=@tas]
-    ^-  vase
-    !>  ^-  update:zig
-    [%add-custom-step update-info [%& ~] test-id tag]
-  ::
-  ++  delete-custom-step
-    |=  [test-id=@ux tag=@tas]
-    ^-  vase
-    !>  ^-  update:zig
-    [%delete-custom-step update-info [%& ~] test-id tag]
   ::
   ++  add-user-file
     |=  file=path
@@ -1899,19 +1452,6 @@
     !>  ^-  update:zig
     [%delete-user-file update-info [%& ~] file]
   ::
-  ++  custom-step-compiled
-    |=  [test-id=@ux tag=@tas]
-    ^-  vase
-    !>  ^-  update:zig
-    [%custom-step-compiled update-info [%& ~] test-id tag]
-  ::
-  ++  test-results
-    |=  [=shown-test-results:zig test-id=@ux thread-id=@t =test-steps:zig]
-    ^-  vase
-    !>  ^-  update:zig
-    :^  %test-results  update-info  [%& shown-test-results]
-    [test-id thread-id test-steps]
-  ::
   ++  dir
     |=  dir=(list path)
     ^-  vase
@@ -1923,11 +1463,11 @@
     !>  ^-  update:zig
     [%poke update-info [%& ~] ~]
   ::
-  ++  test-queue
-    |=  queue=(qeu [@t @tas @ux])
+  ++  thread-queue
+    |=  queue=(qeu [@t @tas path])
     ^-  vase
     !>  ^-  update:zig
-    [%test-queue update-info [%& queue] ~]
+    [%thread-queue update-info [%& queue] ~]
   ::
   ++  pyro-agent-state
     |=  [agent-state=vase wex=boat:gall sup=bitt:gall]
@@ -1999,12 +1539,6 @@
     !>  ^-  update:zig
     [%new-project update-info [%| level message] ~]
   ::
-  ++  add-test
-    |=  [test-id=@ux message=@t]
-    ^-  vase
-    !>  ^-  update:zig
-    [%add-test update-info [%| level message] test-id]
-  ::
   ++  compile-contract
     |=  message=@t
     ^-  vase
@@ -2016,25 +1550,6 @@
     ^-  vase
     !>  ^-  update:zig
     [%run-queue update-info [%| level message] ~]
-  ::
-  ++  add-custom-step
-    |=  [[test-id=@ux tag=@tas] message=@t]
-    ^-  vase
-    !>  ^-  update:zig
-    [%add-custom-step update-info [%| level message] test-id tag]
-  ::
-  ++  custom-step-compiled
-    |=  [[test-id=@ux tag=@tas] message=@t]
-    ^-  vase
-    !>  ^-  update:zig
-    [%custom-step-compiled update-info [%| level message] test-id tag]
-  ::
-  ++  test-results
-    |=  [[test-id=@ux thread-id=@t =test-steps:zig] message=@t]
-    ^-  vase
-    !>  ^-  update:zig
-    :^  %test-results  update-info  [%| level message]
-    [test-id thread-id test-steps]
   ::
   ++  poke
     |=  message=@t
@@ -2119,12 +1634,12 @@
       ~
     ::
         %projects
-      :+  ['projects' (shown-projects projects.update)]
+      :+  ['projects' (projects projects.update)]
         [%data ~]
       ~
     ::
         %project
-      :+  ['project' (shown-project +.+.+.update)]
+      :+  ['project' (project +.+.+.update)]
         [%data ~]
       ~
     ::
@@ -2154,43 +1669,10 @@
         ['what' %s what.p.payload.update]
       ~
     ::
-        %add-test
-      :+  ['test_id' %s (scot %ux test-id.update)]
-        :-  'data'
-        (frond %test (shown-test [p.payload test-id]:update))
-      ~
-    ::
-        %edit-test
-      :+  ['test_id' %s (scot %ux test-id.update)]
-        :-  'data'
-        (frond %test (shown-test [p.payload test-id]:update))
-      ~
-    ::
-        %delete-test
-      :+  ['test_id' %s (scot %ux test-id.update)]
-        ['data' ~]
-      ~
-    ::
-        ?(%add-custom-step %delete-custom-step %custom-step-compiled)
-      :^    ['tag' %s tag.update]
-          ['test_id' %s (scot %ux test-id.update)]
-        ['data' ~]
-      ~
-    ::
         ?(%add-user-file %delete-user-file)
       :+  ['file' (path file.update)]
         ['data' ~]
       ~
-    ::
-        %test-results
-      :~  ['test_id' %s (scot %ux test-id.update)]
-          ['thread_id' %s thread-id.update]
-          ['test_steps' (test-steps test-steps.update)]
-      ::
-          :-  'data'
-          %+  frond  %test-results
-          (shown-test-results p.payload.update)
-      ==
     ::
         %dir
       `(list [@t json])`['data' (frond %dir (dir p.payload.update))]~
@@ -2198,11 +1680,11 @@
         %poke
       ['data' ~]~
     ::
-        %test-queue
+        %thread-queue
       :_  ~
       :-  'data'
-      %+  frond  %test-queue
-      (test-queue p.payload.update)
+      %+  frond  %thread-queue
+      (thread-queue p.payload.update)
     ::
         %pyro-agent-state
       :_  ~
@@ -2289,9 +1771,9 @@
     |=  =status:zig
     ^-  json
     ?-    -.status
-        %running-test-steps  [%s -.status]
-        %ready               [%s -.status]
-        %uninitialized       [%s -.status]
+        %running-thread  [%s -.status]
+        %ready           [%s -.status]
+        %uninitialized   [%s -.status]
         %commit-install-starting
       %-  pairs
       %+  turn  ~(tap by cis-running.status)
@@ -2338,7 +1820,7 @@
     :~  ['desks' (desks desks.p)]
         ['pyro_ships' (list-ships pyro-ships.p)]
         ['most_recent_snap' (path most-recent-snap.p)]
-        ['saved_test_queue' (test-queue saved-test-queue.p)]
+        ['saved_thread_queue' (thread-queue saved-thread-queue.p)]
     ==
   ::
   ++  desks
@@ -2356,26 +1838,15 @@
     :~  ['dir' (dir dir.d)]
         ['user_files' (dir ~(tap in user-files.d))]
         ['to_compile' (dir ~(tap in to-compile.d))]
-        ['tests' (tests tests.d)]
+        ['threads' (threads threads.d)]
     ==
   ::
-  ++  shown-projects
-    |=  ps=shown-projects:zig
+  ++  threads
+    |=  threads=(set ^path)
     ^-  json
-    %-  pairs
-    %+  turn  ~(tap by ps)
-    |=  [p-name=@t p=shown-project:zig]
-    [p-name (shown-project p)]
-  ::
-  ++  shown-project
-    |=  p=shown-project:zig
-    ^-  json
-    %-  pairs
-    :~  ['desks' (shown-desks desks.p)]
-        ['pyro_ships' (list-ships pyro-ships.p)]
-        ['most_recent_snap' (path most-recent-snap.p)]
-        ['saved_test_queue' (test-queue saved-test-queue.p)]
-    ==
+    :-  %a
+    %+  turn  ~(tap in threads)
+    |=  thread=^path  (path thread)
   ::
   ++  list-ships
   |=  ss=(list @p)
@@ -2383,24 +1854,6 @@
   :-  %a
   %+  turn  ss
   |=  s=@p  [%s (scot %p s)]
-  ::
-  ++  shown-desks
-    |=  ds=(list (pair @tas shown-desk:zig))
-    ^-  json
-    :-  %a
-    %+  turn  ds
-    |=  [desk-name=@tas desk=shown-desk:zig]
-    [%a ~[[%s desk-name] (shown-desk desk)]]
-  ::
-  ++  shown-desk
-    |=  d=shown-desk:zig
-    ^-  json
-    %-  pairs
-    :~  ['dir' (dir dir.d)]
-        ['user_files' (dir ~(tap in user-files.d))]
-        ['to_compile' (dir ~(tap in to-compile.d))]
-        ['tests' (shown-tests tests.d)]
-    ==
   ::
   ++  pyro-chain-state
     |=  state=(map @ux batch:ui)
@@ -2410,54 +1863,11 @@
     |=  [town-id=@ux =batch:ui]
     [(scot %ux town-id) (batch:enjs:ui-lib batch)]
   ::
-  ++  tests
-    |=  =tests:zig
+  ++  imports
+    |=  =imports:zig
     ^-  json
     %-  pairs
-    %+  turn  ~(tap by tests)
-    |=  [id=@ux t=test:zig]
-    [(scot %ux id) (test t)]
-  ::
-  ++  test
-    |=  =test:zig
-    ^-  json
-    %-  pairs
-    :~  ['name' %s ?~(name.test '' u.name.test)]
-        ['test_steps_file' (path test-steps-file.test)]
-        ['test_imports' (test-imports test-imports.test)]
-        ['subject' %s ?:(?=(%& -.subject.test) '' p.subject.test)]
-        ['custom_step_definitions' (custom-step-definitions custom-step-definitions.test)]
-        ['test_steps' (test-steps steps.test)]
-        ['test_results' (test-results results.test)]
-    ==
-  ::
-  ++  shown-tests
-    |=  tests=shown-tests:zig
-    ^-  json
-    %-  pairs
-    %+  turn  ~(tap by tests)
-    |=  [id=@ux t=shown-test:zig]
-    [(scot %ux id) (shown-test t id)]
-  ::
-  ++  shown-test
-    |=  [test=shown-test:zig test-id=@ux]
-    ^-  json
-    %-  pairs
-    :~  ['name' %s ?~(name.test '' u.name.test)]
-        ['test_steps_file' (path test-steps-file.test)]
-        ['test_imports' (test-imports test-imports.test)]
-        ['subject' %s ?:(?=(%& -.subject.test) '' p.subject.test)]
-        ['custom_step_definitions' (custom-step-definitions custom-step-definitions.test)]
-        ['test_steps' (test-steps steps.test)]
-        ['test_results' (shown-test-results results.test)]
-        ['test_id' %s (scot %ux test-id)]
-    ==
-  ::
-  ++  test-imports
-    |=  =test-imports:zig
-    ^-  json
-    %-  pairs
-    %+  turn  ~(tap by test-imports)
+    %+  turn  ~(tap by imports)
     |=  [face=@tas p=^path]
     [face (path p)]
   ::
@@ -2467,206 +1877,6 @@
     :-  %a
     %+  turn  dir
     |=(p=^path (path p))
-  ::
-  ++  custom-step-definitions
-    |=  =custom-step-definitions:zig
-    ^-  json
-    %-  pairs
-    %+  turn  ~(tap by custom-step-definitions)
-    |=  [id=@tas p=^path com=custom-step-compiled:zig]
-    :-  id
-    %-  pairs
-    :+  ['path' (path p)]
-      ['custom_step_compiled' (custom-step-compiled com)]
-    ~
-  ::
-  ++  custom-step-compiled
-    |=  =custom-step-compiled:zig
-    ^-  json
-    %-  pairs
-    :+  ['compiled_successfully' %b ?=(%& -.custom-step-compiled)]
-      ['compile_error' %s ?:(?=(%& -.custom-step-compiled) '' p.custom-step-compiled)]
-    ~
-  ::
-  ++  test-steps
-    |=  =test-steps:zig
-    ^-  json
-    :-  %a
-    %+  turn  test-steps
-    |=([ts=test-step:zig] (test-step ts))
-  ::
-  ++  test-step
-    |=  =test-step:zig
-    ^-  json
-    ?:  ?=(?(%dojo %poke %subscribe %custom-write) -.test-step)
-      (test-write-step test-step)
-    ?>  ?=(?(%scry %read-subscription %wait %custom-read) -.test-step)
-    (test-read-step test-step)
-  ::
-  ++  test-write-step
-    |=  test-step=test-write-step:zig
-    ^-  json
-    ?-    -.test-step
-        %dojo
-      %-  pairs
-      :~  ['type' %s -.test-step]
-          ['result-face' (result-face result-face.test-step)]
-          ['payload' (dojo-payload payload.test-step)]
-          ['expected' (write-expected expected.test-step)]
-      ==
-    ::
-        %poke
-      %-  pairs
-      :~  ['type' %s -.test-step]
-          ['result-face' (result-face result-face.test-step)]
-          ['payload' (poke-payload payload.test-step)]
-          ['expected' (write-expected expected.test-step)]
-      ==
-    ::
-        %subscribe
-      %-  pairs
-      :~  ['type' %s -.test-step]
-          ['result-face' (result-face result-face.test-step)]
-          ['payload' (sub-payload payload.test-step)]
-          ['expected' (write-expected expected.test-step)]
-      ==
-    ::
-        %custom-write
-      %-  pairs
-      :~  ['type' %s -.test-step]
-          ['tag' %s tag.test-step]
-          ['result-face' (result-face result-face.test-step)]
-          ['payload' %s payload.test-step]
-          ['expected' (write-expected expected.test-step)]
-      ==
-    ==
-  ::
-  ++  test-read-step
-    |=  test-step=test-read-step:zig
-    ^-  json
-    ?-    -.test-step
-        %scry
-      %-  pairs
-      :~  ['type' %s -.test-step]
-          ['result-face' (result-face result-face.test-step)]
-          ['payload' (scry-payload payload.test-step)]
-          ['expected' %s expected.test-step]
-      ==
-    ::
-        %read-subscription
-      %-  pairs
-      :~  ['type' %s -.test-step]
-          ['result-face' (result-face result-face.test-step)]
-          ['payload' (sub-payload payload.test-step)]
-          ['expected' %s expected.test-step]
-      ==
-    ::
-        %wait
-      %-  pairs
-      :+  ['type' %s -.test-step]
-        ['until' %s (scot %dr until.test-step)]
-      ~
-    ::
-        %custom-read
-      %-  pairs
-      :~  ['type' %s -.test-step]
-          ['tag' %s tag.test-step]
-          ['result-face' (result-face result-face.test-step)]
-          ['payload' %s payload.test-step]
-          ['expected' %s expected.test-step]
-      ==
-    ==
-  ::
-  ++  result-face
-    |=  =result-face:zig
-    ^-  json
-    ?~  result-face  ~  [%s u.result-face]
-  ::
-  ++  scry-payload
-    |=  payload=scry-payload:zig
-    ^-  json
-    %-  pairs
-    :~  ['who' %s (scot %p who.payload)]
-        ['mold-name' %s mold-name.payload]
-        ['care' %s care.payload]
-        ['app' %s app.payload]
-        ['path' %s path.payload]
-    ==
-  ::
-  ++  poke-payload
-    |=  payload=poke-payload:zig
-    ^-  json
-    %-  pairs
-    :~  ['who' %s (scot %p who.payload)]
-        ['to' %s (scot %p to.payload)]
-        ['app' %s app.payload]
-        ['mark' %s mark.payload]
-        ['payload' %s payload.payload]
-    ==
-  ::
-  ++  dojo-payload
-    |=  payload=dojo-payload:zig
-    ^-  json
-    %-  pairs
-    :+  ['who' %s (scot %p who.payload)]
-      ['payload' %s payload.payload]
-    ~
-  ::
-  ++  sub-payload
-    |=  payload=sub-payload:zig
-    ^-  json
-    %-  pairs
-    :~  ['who' %s (scot %p who.payload)]
-        ['to' %s (scot %p to.payload)]
-        ['app' %s app.payload]
-        ['path' (path path.payload)]
-    ==
-  ::
-  ++  write-expected
-    |=  test-read-steps=(list test-read-step:zig)
-    ^-  json
-    :-  %a
-    %+  turn  test-read-steps
-    |=  [trs=test-read-step:zig]
-    (test-read-step trs)
-  ::
-  ++  test-results
-    |=  =test-results:zig
-    ^-  json
-    :-  %a
-    %+  turn  test-results
-    |=([tr=test-result:zig] (test-result tr))
-  ::
-  ++  test-result
-    |=  =test-result:zig
-    ^-  json
-    :-  %a
-    %+  turn  test-result
-    |=  [success=? expected=@t result=vase]
-    %-  pairs
-    :^    ['success' %b success]
-        ['expected' %s expected]
-      ['result' %s (crip (noah result))]
-    ~
-  ::
-  ++  shown-test-results
-    |=  =shown-test-results:zig
-    ^-  json
-    :-  %a
-    %+  turn  shown-test-results
-    |=([str=shown-test-result:zig] (shown-test-result str))
-  ::
-  ++  shown-test-result
-    |=  =shown-test-result:zig
-    ^-  json
-    :-  %a
-    %+  turn  shown-test-result
-    |=  [success=? expected=@t result=@t]
-    %-  pairs
-    :^    ['success' %b success]
-        ['expected' %s expected]
-      ['result' %s result]
-    ~
   ::
   ++  set-cords
     |=  cords=(set @t)
@@ -2685,16 +1895,16 @@
     %+  turn  ~(tap in ships)
     |=(who=@p [%s (scot %p who)])
   ::
-  ++  test-queue
-    |=  test-queue=(qeu [@t @tas @ux])
+  ++  thread-queue
+    |=  thread-queue=(qeu [@t @tas ^path])
     ^-  json
     :-  %a
-    %+  turn  ~(tap to test-queue)
-    |=  [project-name=@t desk-name=@tas test-id=@ux]
+    %+  turn  ~(tap to thread-queue)
+    |=  [project-name=@t desk-name=@tas p=^path]
     %-  pairs
     :^    [%project-name %s project-name]
         [%desk-name %s desk-name]
-      [%test-id %s (scot %ux test-id)]
+      [%thread-path (path p)]
     ~
   ::
   ++  boat
@@ -2795,24 +2005,8 @@
         [%compile-contract (ot ~[[%path pa]])]
         [%read-desk ul]
     ::
-        [%add-test add-test]
-        [%add-and-run-test add-test]
-        [%add-and-queue-test add-test]
-        [%edit-test edit-test]
-        [%save-test-to-file (ot ~[[%id (se %ux)] [%path pa]])]
-    ::
-        [%add-test-file add-test-file]
-        [%add-and-run-test-file add-test-file]
-        [%add-and-queue-test-file add-test-file]
-    ::
-        [%delete-test (ot ~[[%id (se %ux)]])]
-        [%run-test (ot ~[[%id (se %ux)]])]
-        [%run-queue ul]
-        [%clear-queue ul]
-        [%queue-test (ot ~[[%id (se %ux)]])]
-    ::
-        [%add-custom-step add-custom-step]
-        [%delete-custom-step (ot ~[[%test-id (se %ux)] [%tag (se %tas)]])]
+        :: [%run-queue ul]
+        :: [%clear-queue ul]
     ::
         [%stop-pyro-ships ul]
         [%start-pyro-ships (ot ~[[%ships (ar (se %p))]])]
@@ -2879,126 +2073,17 @@
       [%start-apps (ar (se %tas))]
     ~
   ::
-  ++  add-test
-    ^-  $-(json [(unit @t) test-imports:zig test-steps:zig])
-    %-  ot
-    :^    [%name so:dejs-soft:format]
-        [%test-imports (om pa)]
-      [%test-steps (ar test-step)]
-    ~
-  ::
-  ++  edit-test
-    ^-  $-(json [@ux (unit @t) test-imports:zig test-steps:zig])
-    %-  ot
-    :*  [%id (se %ux)]
-        [%name so:dejs-soft:format]
-        [%test-imports (om pa)]
-        [%test-steps (ar test-step)]
-        ~
-    ==
-  ::
-  ++  add-test-file
-    ^-  $-(json [name=(unit @t) test-steps-path=path])
-    %-  ot
-    :+  [%name so:dejs-soft:format]
-      [%path pa]
-    ~
-  ::
-  ++  test-step
-    ^-  $-(json test-step:zig)
-    %-  of
-    (welp test-read-step-inner test-write-step-inner)
-  ::
-  ++  test-read-step
-    ^-  $-(json test-read-step:zig)
-    (of test-read-step-inner)
-  ::
-  ++  test-read-step-inner
-    :~  [%scry (ot ~[[%result-face result-face] [%payload scry-payload] [%expected so]])]
-        [%read-subscription (ot ~[[%result-face result-face] [%payload read-sub-payload] [%expected so]])]
-        [%wait (ot ~[[%until (se %dr)]])]
-        [%custom-read (ot ~[[%tag (se %tas)] [%result-face result-face] [%payload so] [%expected so]])]
-    ==
-  ::
-  ++  scry-payload
-    ^-  $-(json scry-payload:zig)
-    %-  ot
-    :~  [%who (se %p)]
-        [%mold-name so]
-        [%care (se %tas)]
-        [%app (se %tas)]
-        [%path so]
-    ==
-  ::
-  ++  read-sub-payload
-    ^-  $-(json read-sub-payload:zig)
-    %-  ot
-    :~  [%who (se %p)]
-        [%to (se %p)]
-        [%app (se %tas)]
-        [%path pa]
-    ==
-  ::
-  ++  test-write-step
-    ^-  $-(json test-write-step:zig)
-    (of test-write-step-inner)
-  ::
-  ++  test-write-step-inner
-    :~  [%dojo (ot ~[[%result-face result-face] [%payload dojo-payload] [%expected (ar test-read-step)]])]
-        [%poke (ot ~[[%result-face result-face] [%payload poke-payload] [%expected (ar test-read-step)]])]
-        [%subscribe (ot ~[[%result-face result-face] [%payload subscribe-payload] [%expected (ar test-read-step)]])]
-        [%custom-write (ot ~[[%tag (se %tas)] [%result-face result-face] [%payload so] [%expected (ar test-read-step)]])]
-    ==
-  ::
-  ++  result-face
-    ^-  $-(json (unit @tas))
-    so:dejs-soft:format
-  ::
-  ++  dojo-payload
-    ^-  $-(json dojo-payload:zig)
-    %-  ot
-    :+  [%who (se %p)]
-      [%payload so]
-    ~
-  ::
-  ++  poke-payload
-    ^-  $-(json poke-payload:zig)
-    %-  ot
-    :~  [%who (se %p)]
-        [%to (se %p)]
-        [%app (se %tas)]
-        [%mark (se %tas)]
-        [%payload so]
-    ==
-  ::
-  ++  subscribe-payload
-    ^-  $-(json sub-payload:zig)
-    %-  ot
-    :~  [%who (se %p)]
-        [%to (se %p)]
-        [%app (se %tas)]
-        [%path pa]
-    ==
-  ::
-  ++  add-custom-step
-    ^-  $-(json [test-id=@ux tag=@tas custom-step-file=path])
-    %-  ot
-    :^    [%test-id (se %ux)]
-        [%tag (se %tas)]
-      [%path pa]
-    ~
-  ::
   ++  pyro-agent-state
-    ^-  $-(json [who=@p app=@tas =test-imports:zig grab=@t])
+    ^-  $-(json [who=@p app=@tas =imports:zig grab=@t])
     %-  ot
     :~  [%who (se %p)]
         [%app (se %tas)]
-        [%test-imports (om pa)]
+        [%imports (om pa)]
         [%grab so]
     ==
   ::
   ++  pyro-chain-state
-    ^-  $-(json [=test-imports:zig grab=@t])
-    (ot ~[[%test-imports (om pa)] [%grab so]])
+    ^-  $-(json [=imports:zig grab=@t])
+    (ot ~[[%imports (om pa)] [%grab so]])
   --
 --
