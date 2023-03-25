@@ -14,7 +14,7 @@
       =sync-desk-to-vship
       focused-project=@t
       :: test-queue=(qeu [project-name=@t desk-name=@tas test-id=@ux])
-      thread-queue=(qeu [project-name=@t desk-name=@tas thread-path=path])
+      =thread-queue
       =status
       =settings
   ==
@@ -26,6 +26,15 @@
   ==
 +$  ca-scry-cache  (map [@tas path] (pair @ux vase))
 +$  eng  $_  ~(engine engine-lib !>(0) *(map * @) jets:zink %.y %.n)  ::  sigs off, hints off
+::
++$  thread-queue
+  (qeu thread-queue-item)
++$  thread-queue-item
+  $:  project-name=@t
+      desk-name=@tas
+      thread-path=path
+      thread-args=vase
+  ==
 ::
 +$  settings
   $:  test-result-num-characters=@ud
@@ -49,7 +58,7 @@
       pyro-ships=(list @p)
       most-recent-snap=path
       :: saved-test-queue=(qeu [project-name=@t desk-name=@tas test-id=@ux])
-      saved-thread-queue=(qeu [project-name=@t desk-name=@tas thread-path=path])
+      saved-thread-queue=thread-queue
   ==
 +$  desk
   $:  dir=(list path)
@@ -146,16 +155,18 @@
   $:  project-name=@t
       desk-name=@tas
       request-id=(unit @t)
-      $%  [%new-project sync-ships=(list @p) fetch-desk-from-remote-ship=(unit @p)]
+      $%  [%new-project sync-ships=(list @p) fetch-desk-from-remote-ship=(unit @p) special-configuration-args=vase]
           [%delete-project ~]
           [%save-config-to-file ~]
       ::
           [%add-sync-desk-vships ships=(list @p) install=? start-apps=(list @tas)]
           [%delete-sync-desk-vships ships=(list @p)]
       ::
-          [%set-config =config:zig]
+          [%set-config =config]
           [%set-sync-desk-to-vship ships=(list @p)]
           [%send-state-views =state-views]
+          [%set-ziggurat-state new-state=state-0]
+          [%send-update =update]
       ::
           [%change-focus ~]
           [%add-project-desk index=(unit @ud)]  ::  ~ -> add to end
@@ -175,7 +186,7 @@
           [%compile-contract =path]  ::  path of form /con/foo/hoon within project desk
           [%read-desk ~]
       ::
-          [%queue-thread thread-path=path]
+          [%queue-thread thread-path=path thread-args=vase]
           :: [%save-thread thread-path=path ] :: TODO; take in test-steps(?) and convert to thread
           :: [%edit-thread old=path new=path ] :: TODO: delete old, create new w/ %save-thread
       ::
@@ -226,7 +237,8 @@
 ::  subscription update types
 ::
 +$  update-tag
-  $?  %project-names
+  $?  %focused-project
+      %project-names
       %projects
       %project
       %new-project
@@ -261,6 +273,7 @@
       %delete-project-desk
       %get-dev-desk
       %suspend-uninstall-to-make-dev-desk
+      %ziggurat-state
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -275,7 +288,8 @@
 ::
 +$  update
   $@  ~
-  $%  [%project-names update-info payload=(data ~) project-names=(set @t)]
+  $%  [%focused-project update-info payload=(data @t) ~]
+      [%project-names update-info payload=(data ~) project-names=(set @t)]
       [%projects update-info payload=(data ~) =projects]
       [%project update-info payload=(data ~) =project]
       [%new-project update-info payload=(data =sync-desk-to-vship) ~]
@@ -294,7 +308,7 @@
       :: [%test-results update-info payload=(data shown-test-results) test-id=@ux thread-id=@t =test-steps]
       [%dir update-info payload=(data (list path)) ~]
       [%poke update-info payload=(data ~) ~]
-      [%thread-queue update-info payload=(data (qeu [@t @tas path])) ~]
+      [%thread-queue update-info payload=(data thread-queue) ~]
       :: [%test-queue update-info payload=(data (qeu [@t @tas @ux])) ~]
       [%pyro-agent-state update-info payload=(data [agent-state=vase wex=boat:gall sup=bitt:gall]) ~]
       [%shown-pyro-agent-state update-info payload=(data [agent-state=@t wex=boat:gall sup=bitt:gall]) ~]
@@ -310,6 +324,7 @@
       [%delete-project-desk update-info payload=(data ~) ~]
       [%get-dev-desk update-info payload=(data ~) ~]
       [%suspend-uninstall-to-make-dev-desk update-info payload=(data ~) ~]
+      [%ziggurat-state update-info payload=(data state-0) ~]
   ==
 ::
 :: +$  shown-projects  (map @t shown-project)

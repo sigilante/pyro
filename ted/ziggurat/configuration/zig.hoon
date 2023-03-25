@@ -46,7 +46,10 @@
   ~[%subscriber]
 ::
 ++  run-setup-desk
-  |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
+  |=  $:  project-name=@t
+          desk-name=@tas
+          request-id=(unit @t)
+      ==
   =/  m  (strand ,vase)
   ^-  form:m
   %:  setup-desk:zig-threads
@@ -71,26 +74,31 @@
   (pure:m !>(~))
   ::
   ++  setup-nec
+    =/  m  (strand ,~)
+    ^-  form:m
     =/  who=@p  ~nec
     ;<  ~  bind:m
-      %+  send-discrete-pyro-dojo:zig-threads  who
-      ':rollup|activate'
+      %^  send-discrete-pyro-dojo:zig-threads  project-name
+      who  ':rollup|activate'
     ;<  ~  bind:m
-      %-  send-pyro-poke
+      %-  send-pyro-poke:zig-threads
       :^  who  who  %indexer
       :-  %indexer-action
       !>(`action:ui`[%set-sequencer ~nec %sequencer])
     ;<  ~  bind:m
-      %-  send-discrete-pyro-poke
+      %-  send-discrete-pyro-poke:zig-threads
+      :-  project-name
       :^  who  who  %indexer
       :-  %indexer-action
       !>(`action:ui`[%set-rollup ~nec %rollup])
     ;<  ~  bind:m
-      %+  send-discrete-pyro-dojo:zig-threads  who
+      %^  send-discrete-pyro-dojo:zig-threads  project-name
+        who
       %-  crip
-      ":sequencer|init our {<twn-id>} {<sequencer-address>}"
+      ":sequencer|init our {<town-id>} {<sequencer-address>}"
     ;<  ~  bind:m
-      %-  send-discrete-pyro-poke
+      %-  send-discrete-pyro-poke:zig-threads
+      :-  project-name
       :^  who  who  %uqbar
       :-  %wallet-poke
       !>  ^-  wallet-poke:w
@@ -98,10 +106,13 @@
     (pure:m ~)
   ::
   ++  setup-bud
+    =/  m  (strand ,~)
+    ^-  form:m
     =/  who=@p  ~bud
     ;<  ~  bind:m  (make-setup-chain-user who)
     ;<  ~  bind:m
-      %-  send-discrete-pyro-poke
+      %-  send-discrete-pyro-poke:zig-threads
+      :-  project-name
       :^  who  who  %uqbar
       :-  %wallet-poke
       !>  ^-  wallet-poke:w
@@ -109,10 +120,13 @@
     (pure:m ~)
   ::
   ++  setup-wes
+    =/  m  (strand ,~)
+    ^-  form:m
     =/  who=@p  ~wes
     ;<  ~  bind:m  (make-setup-chain-user who)
     ;<  ~  bind:m
-      %-  send-discrete-pyro-poke
+      %-  send-discrete-pyro-poke:zig-threads
+      :-  project-name
       :^  who  who  %uqbar
       :-  %wallet-poke
       !>  ^-  wallet-poke:w
@@ -121,21 +135,25 @@
   ::
   ++  make-setup-chain-user
     |=  who=@p
+    =/  m  (strand ,~)
+    ^-  form:m
     ;<  ~  bind:m
-      %-  send-pyro-poke
+      %-  send-pyro-poke:zig-threads
       :^  who  who  %indexer
       :-  %indexer-action
       !>(`action:ui`[%set-sequencer ~nec %sequencer])
     ;<  ~  bind:m
-      %-  send-discrete-pyro-poke
+      %-  send-discrete-pyro-poke:zig-threads
+      :-  project-name
       :^  who  who  %indexer
       :-  %indexer-action
       !>(`action:ui`[%set-rollup ~nec %rollup])
     ;<  ~  bind:m
-      %-  send-discrete-pyro-poke
+      %-  send-discrete-pyro-poke:zig-threads
+      :-  project-name
       :^  who  who  %indexer
       :-  %indexer-action
-      !>(`action:ui`[%btstrap ~nec %indexer])
+      !>(`action:ui`[%bootstrap ~nec %indexer])
     (pure:m ~)
   ::
   ++  town-id
@@ -172,9 +190,12 @@
   =*  desk-name     desk-name.u.args
   =*  request-id    request-id.u.args
   ::
+  ~&  %zcz^%top^%0
   ;<  setup-desk-result=vase  bind:m
     (run-setup-desk project-name desk-name request-id)
-  ;<  ~  bind:m  (setup-virtualship-state project-name)
-  %-  pure:m
-  !>(`(each ~ @t)`[%.y ~])
+  ~&  %zcz^%top^%1
+  ;<  setup-ships-result=vase  bind:m
+    (setup-virtualship-state project-name)
+  ~&  %zcz^%top^%2
+  (pure:m !>(`(each ~ @t)`[%.y ~]))
 --

@@ -7,12 +7,14 @@
 /+  agentio,
     mip,
     strandio,
-    conq=zink-conq,
     dock=docket,
+    engine=zig-sys-engine,
     pyro-lib=pyro-pyro,
     smart=zig-sys-smart,
     ui-lib=zig-indexer,
     zink=zink-zink
+/*  smart-lib-noun  %noun  /lib/zig/sys/smart-lib/noun
+/*  triv-txt        %hoon  /con/trivial/hoon
 |_  [=bowl:gall =settings:zig]
 +*  this    .
     io      ~(. agentio bowl)
@@ -473,7 +475,7 @@
   [p (build-contract-project smart-lib desk p)]
 ::
 ++  build-contract-project
-  !.
+  :: !.
   |=  [smart-lib=vase desk=path to-compile=path]
   ^-  build-result:zig
   ::
@@ -768,6 +770,38 @@
     town-id-to-sequencer
   (get-town-id-to-sequencer-map 'global' configs)
 ::
+++  sync-desk-to-virtualship-card
+  |=  [who=@p project-name=@tas]
+  ^-  card
+  %+  %~  poke-our  pass:io
+      /sync/(scot %da now.bowl)/[project-name]/(scot %p who)
+    %pyro
+  (sync-desk-to-virtualship-cage who project-name)
+::
+++  sync-desk-to-virtualship-cage
+  |=  [who=@p project-name=@tas]
+  ^-  cage
+  :-  %pyro-events
+  !>  ^-  (list pyro-event:pyro)
+  :_  ~
+  :+  who  /c/commit/(scot %p who)
+  (park:pyro-lib our.bowl project-name %da now.bowl)
+::
+++  send-pyro-dojo-card
+  |=  [who=@p command=tape]
+  ^-  card
+  %+  %~  poke-our  pass:io
+      /dojo/(scot %p who)/(scot %ux `@ux`(jam command))
+    %pyro
+  (send-pyro-dojo-cage who command)
+::
+++  send-pyro-dojo-cage
+  |=  [who=@p command=tape]
+  ^-  cage
+  :-  %pyro-events
+  !>  ^-  (list pyro-event:pyro)
+  (dojo-events:pyro-lib who command)
+::
 ++  make-cis-running
   |=  [ships=(list @p) desk-name=@tas]
   ^-  (map @p [@t ?])
@@ -844,228 +878,98 @@
   %+  roll  p.compilation-result
   |=  [in=tank out=tape]
   :(weld ~(ram re in) "\0a" out)
-::
-++  build-default-configuration
-  |=  [=config:zig desk-name=@tas]
-  ^-  configuration-file-output:zig
-  =*  ships  default-ships
-  :*  config
-      ships
-  ::
-      =/  bill-path=path
-        :-  (scot %p our.bowl)
-        /[desk-name]/(scot %da now.bowl)/desk/bill
-      .^(? %cu bill-path)
-  ::
-      ~
-      ~
-      ~
-  ==
-::
-++  load-configuration-file
-  :: !.
-  |=  [=update-info:zig state=inflated-state-0:zig]
-  ^-  [[(list card) (unit configuration-file-output:zig)] inflated-state-0:zig]
-  =*  project-name  project-name.update-info
-  =*  desk-name     desk-name.update-info
-  =/  new-project-error
-    %~  new-project  make-error-vase
-    [update-info(source %load-configuration-file) %error]
-  =/  config-file-path=path
-    %+  weld  /(scot %p our.bowl)/[desk-name]
-    /(scot %da now.bowl)/zig/configs/[desk-name]/hoon
-  |^
-  ?.  .^(? %cu config-file-path)
-    =/  =configuration-file-output:zig
-      (build-default-configuration ~ desk-name)
-    =^  cards=(list card)  state
-      (build-cards-and-state configuration-file-output)
-    [[cards `configuration-file-output] state]
-  =/  result  get-configuration-from-file
-  ?:  ?=(%| -.result)  [[-.p.result ~] +.p.result]
-  =*  configuration-file-output  p.result
-  =^  cards=(list card)  state
-    (build-cards-and-state configuration-file-output)
-  [[cards `configuration-file-output] state]
-  ::
-  ++  get-configuration-from-file
-    |^  ^-  (each configuration-file-output:zig [(list card) inflated-state-0:zig])
-    =/  file-cord=@t  .^(@t %cx config-file-path)
-    =/  [imports=(list [face=@tas =path]) payload=hoon]
-      (parse-pile:conq config-file-path (trip file-cord))
-    =^  subject=(each vase @t)  state
-      %-  compile-imports
-      [project-name desk-name imports state]
-    ?:  ?=(%| -.subject)
-      %+  make-error  p.subject
-      'config imports compilation failed with error:\0a'
-    =/  config-core
-      (mule-slap-subject p.subject payload)
-    ?:  ?=(%| -.config-core)
-      %+  make-error  p.config-core
-      'config compilation failed with:\0a'
-    ::
-    =/  config-result
-      (mule-slap-subject p.config-core (ream %make-config))
-    ?:  ?=(%| -.config-result)
-      %+  make-error  p.config-result
-      'failed to call +make-config arm:\0a'
-    ::
-    =/  virtualships-to-sync-result
-      %+  mule-slap-subject  p.config-core
-      (ream %make-virtualships-to-sync)
-    ?:  ?=(%| -.virtualships-to-sync-result)
-      %+  make-error  p.virtualships-to-sync-result
-      'failed to call +make-virtualships-to-sync arm:\0a'
-    ::
-    =/  install-result
-      (mule-slap-subject p.config-core (ream %make-install))
-    ?:  ?=(%| -.install-result)
-      %+  make-error  p.install-result
-      'failed to call +make-install arm:\0a'
-    ::
-    =/  start-apps-result
-      %+  mule-slap-subject  p.config-core
-      (ream %make-start-apps)
-    ?:  ?=(%| -.start-apps-result)
-      %+  make-error  p.start-apps-result
-      'failed to call +make-start-apps arm:\0a'
-    ::
-    =/  state-views-result
-      %+  mule-slap-subject  p.config-core
-      (ream %make-state-views)
-    ?:  ?=(%| -.state-views-result)
-      %+  make-error  p.state-views-result
-      'failed to call +make-state-views arm:\0a'
-    ::
-    =/  setup-result
-      (mule-slap-subject p.config-core (ream %make-setup))
-    ?:  ?=(%| -.setup-result)
-      %+  make-error  p.setup-result
-      'failed to call +make-setup arm:\0a'
-    ::
-    :*  %&
-        !<(config:zig p.config-result)
-        !<((list @p) p.virtualships-to-sync-result)
-        !<(? p.install-result)
-        !<((list @tas) p.start-apps-result)
-        !<((list [@p (unit @tas) path]) p.state-views-result)
-        !<((map @p thread-path=path) p.setup-result)
-    ==
-    ::
-    ++  make-error
-      |=  [error=@t message=@t]
-      ^-  (each configuration-file-output:zig [(list card) inflated-state-0:zig])
-      :-  %|
-      :_  state
-      :_  ~
-      %-  update-vase-to-card
-      (new-project-error (cat 3 message error))
-    --
-  ::
-  ++  build-cards-and-state
-    |=  $:  =config:zig
-            virtualships-to-sync=(list @p)
-            install=?
-            start-apps=(list @tas)
-            state-views=(list [who=@p app=(unit @tas) file=path])
-            setups=(map @p thread-path=path)
-        ==
-    ^-  [(list card) inflated-state-0:zig]
-    =/  setups-not-run=(set @p)
-      %-  ~(dif in ~(key by setups))
-      (~(gas in *(set @p)) virtualships-to-sync)
-    =/  cards=(list card)
-      ?:  =(0 ~(wyt in setups-not-run))  ~
-      =/  message=tape
-        ;:  weld
-          "+make-setup will only run for virtualships that"
-          " are set to sync. The following will not be run:"
-          " {<setups-not-run>}. To have them run, add to"
-          " +make-virtualships-to-sync in /zig/configs"
-          "/{<desk-name>} and run %new-project again"
-        ==
-      :_  ~
-      %-  update-vase-to-card
-      (new-project-error(level %warning) (crip message))
-    ::  use new-status rather than modifying status.state
-    ::   in place to satisfy compiler
-    =/  new-status=status:zig
-      :-  %commit-install-starting
-      (make-cis-running virtualships-to-sync desk-name)
-    ?>  ?=(%commit-install-starting -.new-status)
-    =*  cis-running  cis-running.new-status
-    =.  cards
-      %+  weld  cards
-      %+  murn  virtualships-to-sync
-      |=  who=@p
-      ?~  setup=(~(get by setups) who)  ~
-      =/  [cis-name=@t ?]  (~(got by cis-running) who)
-      :-  ~
-      %-  ~(poke-self pass:io /self-wire)
-      :-  %ziggurat-action
-      !>  ^-  action:zig
-      :*  project-name
-          desk-name
-          `cis-name
-          %queue-thread
-          u.setup
-      ==
-    :: =.  cards
-    ::   |-
-    ::   ?~  virtualships-to-sync  cards
-    ::   =*  who   i.virtualships-to-sync
-    ::   =/  cis-cards=(list card)
-    ::     :_  ~
-    ::     %+  cis-thread
-    ::       /cis-done/(scot %p who)/[project-name]/[desk-name]
-    ::     [who desk-name install start-apps new-status]
-    ::   %=  $
-    ::       virtualships-to-sync  t.virtualships-to-sync
-    ::       cards                 (weld cards cis-cards)
-    ::   ==
-    =.  cards
-      :_  cards
-      %-  fact:io  :_  ~[/project]
-      :-  %json
-      !>  ^-  json
-      %-  update:enjs
-      !<  update:zig
-      %.  state-views
-      %~  state-views  make-update-vase
-      [project-name desk-name %load-configuration-file ~]
-    :-  :_  cards
-        %-  update-vase-to-card
-        %.  new-status
-        %~  status  make-update-vase
-        [project-name desk-name %load-configuration-file ~]
-    =.  projects.state
-      %+  ~(put by projects.state)  project-name
-      =/  =project:zig
-        %+  ~(gut by projects.state)  project-name
-        *project:zig
-      project(pyro-ships virtualships-to-sync)
-    =.  projects.state
-      =/  project=(unit project:zig)
-        (~(get by projects.state) focused-project.state)
-      ?~  project  projects.state
-      %+  ~(put by projects.state)  focused-project.state
-      u.project(saved-thread-queue thread-queue.state)
-    %=  state
-        thread-queue   ~
-        status         new-status
-    ::
-        sync-desk-to-vship
-      %-  ~(gas ju sync-desk-to-vship.state)
-      %+  turn  virtualships-to-sync
-      |=(who=@p [desk-name who])
-    ::
-        configs
-      %+  ~(put by configs.state)  project-name
-      %.  ~(tap by config)
-      ~(gas by (~(gut by configs.state) project-name ~))
-    ==
-  --
+:: ::
+:: ++  build-default-configuration
+::   |=  [=config:zig desk-name=@tas]
+::   ^-  configuration-file-output:zig
+::   =*  ships  default-ships
+::   :*  config
+::       ships
+::   ::
+::       =/  bill-path=path
+::         :-  (scot %p our.bowl)
+::         /[desk-name]/(scot %da now.bowl)/desk/bill
+::       .^(? %cu bill-path)
+::   ::
+::       ~
+::       ~
+::       ~
+::   ==
+:: ::
+:: ++  load-configuration-file
+::   :: !.
+::   |=  [=update-info:zig state=inflated-state-0:zig]
+::   ^-  [[(list card) (unit configuration-file-output:zig)] inflated-state-0:zig]
+::   =*  project-name  project-name.update-info
+::   =*  desk-name     desk-name.update-info
+::   =/  new-project-error
+::     %~  new-project  make-error-vase
+::     [update-info(source %load-configuration-file) %error]
+::   =/  config-file-path=path
+::     %+  weld  /(scot %p our.bowl)/[desk-name]
+::     /(scot %da now.bowl)/zig/configs/[desk-name]/hoon
+::   |^
+::   ?.  .^(? %cu config-file-path)
+::     =/  =configuration-file-output:zig
+::       (build-default-configuration ~ desk-name)
+::     =^  cards=(list card)  state
+::       (build-cards-and-state configuration-file-output)
+::     [[cards `configuration-file-output] state]
+::   =/  result  get-configuration-from-file
+::   ?:  ?=(%| -.result)  [[-.p.result ~] +.p.result]
+::   =*  configuration-file-output  p.result
+::   =^  cards=(list card)  state
+::     (build-cards-and-state configuration-file-output)
+::   [[cards `configuration-file-output] state]
+::   ::
+::   ++  build-cards-and-state
+::     |=  $:  =config:zig
+::             virtualships-to-sync=(list @p)
+::             install=?
+::             start-apps=(list @tas)
+::             state-views=(list [who=@p app=(unit @tas) file=path])
+::             setups=(map @p thread-path=path)
+::         ==
+::     ^-  [(list card) inflated-state-0:zig]
+::     =/  setups-not-run=(set @p)
+::       %-  ~(dif in ~(key by setups))
+::       (~(gas in *(set @p)) virtualships-to-sync)
+::     =/  cards=(list card)
+::       ?:  =(0 ~(wyt in setups-not-run))  ~
+::       =/  message=tape
+::         ;:  weld
+::           "+make-setup will only run for virtualships that"
+::           " are set to sync. The following will not be run:"
+::           " {<setups-not-run>}. To have them run, add to"
+::           " +make-virtualships-to-sync in /zig/configs"
+::           "/{<desk-name>} and run %new-project again"
+::         ==
+::       :_  ~
+::       %-  update-vase-to-card
+::       (new-project-error(level %warning) (crip message))
+::     ::  use new-status rather than modifying status.state
+::     ::   in place to satisfy compiler
+::     =/  new-status=status:zig
+::       :-  %commit-install-starting
+::       (make-cis-running virtualships-to-sync desk-name)
+::     ?>  ?=(%commit-install-starting -.new-status)
+::     =*  cis-running  cis-running.new-status
+::     :-  :_  cards
+::         %-  update-vase-to-card
+::         %.  new-status
+::         %~  status  make-update-vase
+::         [project-name desk-name %load-configuration-file ~]
+::     =.  projects.state
+::       =/  project=(unit project:zig)
+::         (~(get by projects.state) focused-project.state)
+::       ?~  project  projects.state
+::       %+  ~(put by projects.state)  focused-project.state
+::       u.project(saved-thread-queue thread-queue.state)
+::     %=  state
+::         thread-queue   ~
+::         status         new-status
+::     ==
+::   --
 ::
 ++  uni-configs
   |=  [olds=configs:zig news=configs:zig]
@@ -1107,6 +1011,297 @@
       [/readme/md %del ~]
       [/app/[name]/hoon %ins hoon+!>((make-template /app/[name]/hoon))]
   ==
+::
+::  uqbar-core:lib/zink/conq/hoon duplicated here with changes
+::   that allow for more verbose compilation error output
+::
+++  conq
+  |%
+  ::
+  ++  hash
+    |=  [n=* cax=cache:zink]
+    ^-  phash:zink
+    ?@  n
+      ?:  (lte n 12)
+        =/  ch  (~(get by cax) n)
+        ?^  ch  u.ch
+        (hash:pedersen:zink n 0)
+      (hash:pedersen:zink n 0)
+    ?^  ch=(~(get by cax) n)
+      u.ch
+    =/  hh  $(n -.n)
+    =/  ht  $(n +.n)
+    (hash:pedersen:zink hh ht)
+  ::
+  ++  compile-path
+    !.
+    |=  pax=path
+    ^-  [bat=* pay=*]
+    =/  desk=path  (swag [0 3] pax)
+    (compile-contract pax desk .^(@t %cx pax))
+  ::
+  ++  compile-contract
+    !.
+    |=  [pax=path desk=path txt=@t]
+    ^-  [bat=* pay=*]
+    ::
+    ::  goal flow:
+    ::  - take main file, parse to find libs
+    ::  - for each lib, parse to find any libs there
+    ::  - if an import is already present in that stack
+    ::    (circular), crash
+    ::  - once a file with no imports is reached, (rain ) it
+    ::  - compose against this back up the stack
+    ::
+    ::  old stuff:
+    ::
+    ::  parse contract code
+    =/  [raw=(list [face=term =path]) contract-hoon=hoon]
+      (parse-pile pax (trip txt))
+    ::  generate initial subject containing uHoon
+    =/  smart-lib=vase  ;;(vase (cue +.+:;;([* * @] smart-lib-noun)))
+    ::  compose libraries against uHoon subject
+    =/  libraries=hoon
+      :-  %clsg
+      %+  turn  raw
+      |=  [face=term =path]
+      =/  pax  (weld desk path)
+      ^-  hoon
+      :+  %ktts  face
+      =/  lib-txt  .^(@t %cx (welp pax /hoon))
+      ::  CURRENTLY IGNORING IMPORTS INSIDE LIBRARIES
+      +:(parse-pile pax (trip lib-txt))
+    =/  pay=*  q:(~(mint ut p.smart-lib) %noun libraries)
+    =/  payload=vase  (slap smart-lib libraries)
+    =/  cont
+      %+  ~(mint ut p:(slop smart-lib payload))
+      %noun  contract-hoon
+    ::
+    [bat=q.cont pay]
+  ::
+  ++  compile-trivial
+    |=  [pax=path hoonlib-txt=@t smartlib-txt=@t]
+    ^-  vase
+    =/  [raw=(list [face=term =path]) contract-hoon=hoon]
+      (parse-pile /con/trivial/hoon (trip triv-txt))
+    =/  smart-lib=vase
+      ;;(vase (cue +.+:;;([* * @] smart-lib-noun)))
+    =/  libraries=hoon  [%clsg ~]
+    =/  full-nock=*     q:(~(mint ut p.smart-lib) %noun libraries)
+    =/  payload=vase    (slap smart-lib libraries)
+    ::
+    (slap (slop smart-lib payload) contract-hoon)
+  ::
+  ++  conq
+    |=  [pax=path hoonlib-txt=@t smartlib-txt=@t cax=cache:zink bud=@ud]
+    ^-  (map * phash:zink)
+    |^
+    =.  cax
+      %-  ~(gas by cax)
+      %+  turn  (gulf 0 12)
+      |=  n=@
+      ^-  [* phash:zink]
+      [n (hash n ~)]
+    ~&  >>  %compiling
+    =/  built-contract  (compile-trivial pax hoonlib-txt smartlib-txt)
+    ~&  >>  %hashing-arms
+    =.  cax
+      %^  cache-file  built-contract
+        cax
+      :~  ::  hoon
+          ::  four layers
+          'add'
+          'biff'
+          'egcd'
+          'po'
+          ::  inner layers
+          'dif:fe'
+          'all:in'
+          'all:by'
+          'get:ja'
+          'del:ju'
+          'apt:to'
+          'le:nl'
+          'abs:si'
+          'sb:ff'
+          ::  smart
+          ::  five layers
+          'pedersen'
+          'hash'
+          'ship'
+          'id'
+          'big'
+          ::  inner layers (reverse order)
+          'as-octs:secp:crypto'
+          'hmac-sha1:hmac:crypto'
+          'keccak-224:keccak:crypto'
+          'as:crub:crypto'
+          'sal:scr:crypto'
+          'ahem:aes:crypto'
+          'aes:crypto'
+          'as-octs:mimes:html'
+          'mimes:html'
+          'fu:number'
+          'pass:ames'
+          'hash:pedersen'
+          't:pedersen'
+          ::  'bif:bi'
+          'frond:enjs:format'
+      ==
+    ~&  >>  %hashing-trivial-core
+    ::
+    ::  =/  [raw=(list [face=term =path]) contract-hoon=hoon]  (parse-pile /con/trivial/hoon (trip triv-txt))
+    ::  =/  smart-lib=vase  ;;(vase (cue +.+:;;([* * @] smart-lib-noun)))
+    ::  =/  libraries=hoon  [%clsg ~]
+    ::  =/  full-nock=*  q:(~(mint ut p.smart-lib) %noun libraries)
+    ::  =/  payload=vase  (slap smart-lib libraries)
+    ::  =/  cont  (~(mint ut p:(slop smart-lib payload)) %noun contract-hoon)
+    ::  ::
+    ::  =/  gun  (~(mint ut p.cont) %noun (ream '~'))
+    ::  =/  =book  (zebra bud cax *chain-state-scry [q.cont q.gun] %.n)
+    ::  ~&  p.book
+    ::  cax.q.book
+    ::
+    =/  smart-lib=vase  ;;(vase (cue +.+:;;([* * @] smart-lib-noun)))
+    =/  code=[bat=* pay=*]  (compile-contract /con/trivial/hoon /zig triv-txt)
+    =/  cor  .*([q.smart-lib pay.code] bat.code)
+    =/  dor  [-:!>(*contract:smart) cor]
+    =/  gun  (ajar:engine dor %write !>(*context:smart) !>(*calldata:smart) %$)
+    =/  =book:zink  (zebra:zink bud cax jets:zink *chain-state-scry:zink gun %.n)
+    ~&  p.book
+    cax.q.book
+    ::
+    ++  cache-file
+      |=  [vax=vase cax=cache:zink layers=(list @t)]
+      ^-  cache:zink
+      |-
+      ?~  layers
+        cax
+      =/  cor  (slap vax (ream (cat 3 '..' i.layers)))
+      =/  min  (~(mint ut p.vax) %noun (ream (cat 3 '..' i.layers)))
+      $(layers t.layers, cax (hash-arms cor cax))
+    ::
+    ++  hash-arms
+      |=  [vax=vase cax=(map * phash:zink)]
+      ^-  (map * phash:zink)
+      =/  lis  (sloe p.vax)
+      =/  len  (lent lis)
+      =/  i  1
+      |-
+      ?~  lis  cax
+      =*  t  i.lis
+      ~&  >  %-  crip
+             %-  zing
+             :~  (trip t)
+                 (reap (sub 20 (met 3 t)) ' ')
+                 (trip (rap 3 (scot %ud i) '/' (scot %ud len) ~))
+             ==
+      =/  n  q:(slot (arm-axis vax t) vax)
+      $(lis t.lis, cax (~(put by cax) n (hash n cax)), i +(i))
+    --
+  ::  conq helpers
+  ++  arm-axis
+    |=  [vax=vase arm=term]
+    ^-  @
+    =/  r  (~(find ut p.vax) %read ~[arm])
+    ?>  ?=(%& -.r)
+    ?>  ?=(%| -.q.p.r)
+    p.q.p.r
+  ::
+  ::  parser helpers
+  ::
+  +$  small-pile
+      $:  raw=(list [face=term =path])
+          =hoon
+      ==
+  +$  taut  [face=(unit term) pax=term]
+  ++  parse-pile
+    !.
+    |=  [pax=path tex=tape]
+    ^-  small-pile
+    =/  [=hair res=(unit [=small-pile =nail])]  ((pile-rule pax) [1 1] tex)
+    ?^  res  small-pile.u.res
+    %-  mean  %-  flop
+    =/  lyn  p.hair
+    =/  col  q.hair
+    =/  lyns=wain  (to-wain:format (crip tex))
+    =/  prev-lyn=@ud  (dec lyn)
+    ?:  (gth (lent lyns) prev-lyn)
+      :~  leaf+"syntax error at [{<lyn>} {<col>}] in {<`path`(slag 3 pax)>}"
+          leaf+(runt [(dec col) '-'] "^")
+          leaf+(trip (snag prev-lyn lyns))
+      ==
+    :~  leaf+"syntax error at [{<lyn>} {<col>}] in {<`path`(slag 3 pax)>}"
+        leaf+"file missing a terminator"
+    ==
+  ++  pile-rule
+    |=  pax=path
+    %-  full
+    %+  ifix
+      :_  gay
+      ::  parse optional smart library import and ignore
+      ;~(plug gay (punt ;~(plug fas lus gap taut-rule gap)))
+    ;~  plug
+    ::  only accept /= imports for contract libraries
+      %+  rune  tis
+      ;~(plug sym ;~(pfix gap stap))
+    ::
+      %+  stag  %tssg
+      (most gap tall:(vang & (slag 3 pax)))
+    ==
+  ++  rune
+    |*  [bus=rule fel=rule]
+    %-  pant
+    %+  mast  gap
+    ;~(pfix fas bus gap fel)
+  ++  pant
+    |*  fel=rule
+    ;~(pose fel (easy ~))
+  ++  mast
+    |*  [bus=rule fel=rule]
+    ;~(sfix (more bus fel) bus)
+  ++  taut-rule
+    %+  cook  |=(taut +<)
+    ;~  pose
+      (stag ~ ;~(pfix tar sym))
+      ;~(plug (stag ~ sym) ;~(pfix tis sym))
+      (cook |=(a=term [`a a]) sym)
+    ==
+  ::
+  ::  abbreviated parser from lib/zink/conq.hoon:
+  ::   parse to end of imports, start of hoon.
+  ::   used to find start of hoon for compilation and to find
+  ::   proper line error number in case of error
+  ::   (see +mule-slap-subject)
+  ::
+  +$  small-start-of-pile  (list [face=term =path])
+  ::
+  ++  parse-start-of-pile
+    |=  tex=tape
+    ^-  [small-start-of-pile hair]
+    =/  [=hair res=(unit [=small-start-of-pile =nail])]
+      (start-of-pile-rule [1 1] tex)
+    ?^  res  [small-start-of-pile.u.res hair]
+    %-  mean  %-  flop
+    =/  lyn  p.hair
+    =/  col  q.hair
+    :~  leaf+"syntax error"
+        leaf+"\{{<lyn>} {<col>}}"
+        leaf+(runt [(dec col) '-'] "^")
+        leaf+(trip (snag (dec lyn) (to-wain:format (crip tex))))
+    ==
+  ::
+  ++  start-of-pile-rule
+    %+  ifix
+      :_  gay
+      ::  parse optional smart library import and ignore
+      ;~(plug gay (punt ;~(plug fas lus gap taut-rule:conq gap)))
+    ;~  plug
+    ::  only accept /= imports for contract libraries
+      %+  rune:conq  tis
+      ;~(plug sym ;~(pfix gap stap))
+    ==
+  --
 ::
 ++  make-template
   |=  file-path=path
@@ -1394,6 +1589,12 @@
 ::
 ++  make-update-vase
   |_  =update-info:zig
+  ++  focused-project
+    |=  focused-project=@t
+    ^-  vase
+    !>  ^-  update:zig
+    [%focused-project update-info [%& focused-project] ~]
+  ::
   ++  project-names
     |=  project-names=(set @t)
     ^-  vase
@@ -1464,10 +1665,10 @@
     [%poke update-info [%& ~] ~]
   ::
   ++  thread-queue
-    |=  queue=(qeu [@t @tas path])
+    |=  =thread-queue:zig
     ^-  vase
     !>  ^-  update:zig
-    [%thread-queue update-info [%& queue] ~]
+    [%thread-queue update-info [%& thread-queue] ~]
   ::
   ++  pyro-agent-state
     |=  [agent-state=vase wex=boat:gall sup=bitt:gall]
@@ -1525,6 +1726,12 @@
     ^-  vase
     !>  ^-  update:zig
     [%state-views update-info [%& state-views] ~]
+  ::
+  ++  ziggurat-state
+    |=  state=state-0:zig
+    ^-  vase
+    !>  ^-  update:zig
+    [%ziggurat-state update-info [%& state] ~]
   --
 ::
 ++  make-error-vase
@@ -1628,6 +1835,9 @@
     %+  weld  update-info
     ?:  ?=(%| -.payload.update)  (error p.payload.update)
     ?-    -.update
+        %focused-project
+      ['data' %s p.payload.update]~
+    ::
         %project-names
       :+  ['project_names' (set-cords project-names.update)]
         [%data ~]
@@ -1748,6 +1958,10 @@
     ::
         %suspend-uninstall-to-make-dev-desk
       ['data' ~]~
+    ::
+        %ziggurat-state
+      ['data' ~]~  :: TODO
+      :: ['data' p.payload.update]~
     ==
   ::
   ++  settings
@@ -1896,15 +2110,16 @@
     |=(who=@p [%s (scot %p who)])
   ::
   ++  thread-queue
-    |=  thread-queue=(qeu [@t @tas ^path])
+    |=  =thread-queue:zig
     ^-  json
     :-  %a
     %+  turn  ~(tap to thread-queue)
-    |=  [project-name=@t desk-name=@tas p=^path]
+    |=  [project-name=@t desk-name=@tas p=^path args=vase]
     %-  pairs
-    :^    [%project-name %s project-name]
-        [%desk-name %s desk-name]
-      [%thread-path (path p)]
+    :-  [%project-name %s project-name]
+    :^    [%desk-name %s desk-name]
+        [%thread-path (path p)]
+      [%thread-args %s (crip (noah args))]
     ~
   ::
   ++  boat
@@ -1980,7 +2195,7 @@
   ::
   ++  action
     %-  of
-    :~  [%new-project (ot ~[[%sync-ships (ar (se %p))] [%fetch-data-from-remote-ship (se-soft %p)]])]
+    :~  [%new-project new-project]
         [%delete-project ul]
         [%save-config-to-file ul]
     ::
@@ -2031,6 +2246,17 @@
         [%get-dev-desk (se %p)]
         [%suspend-uninstall-to-make-dev-desk ul]
     ==
+  ::
+  ++  new-project
+    ^-  $-(json [(list @p) (unit @p) vase])
+    %-  ot
+    :^    [%sync-ships (ar (se %p))]
+        [%fetch-data-from-remote-ship (se-soft %p)]
+      :-  %special-configuration-args
+      |=  jon=json
+      ?>  ?=([%s *] jon)
+      (slap !>(..zuse) (ream p.jon))
+    ~
   ::
   ++  change-settings
     ^-  $-(json settings:zig)
