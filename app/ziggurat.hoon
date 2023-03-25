@@ -261,6 +261,7 @@
     ::   'adding desk to project; try again later'
     ?-    tag
         %new-project
+      ::  TODO: add to queue and run queue
       ~&  %z^%np^%0
       =/  new-project-error
         %~  new-project  make-error-vase:zig-lib
@@ -302,13 +303,14 @@
       ~&  %z^%np^%does-config-exist^does-config-exist
       :_  %=  state
               status  [%running-thread ~]
-              projects
-            %+  ~(put by projects)  project-name.act
-            *project:zig
+            ::   projects
+            :: %+  ~(put by projects)  project-name.act
+            :: *project:zig
           ==
       :_  ~
       %-  %~  arvo  pass:io
-          /setup-desk/[`@`does-config-exist]/[desk-name.act]
+          :+  %setup-desk  `@`does-config-exist
+          /[project-name.act]/[desk-name.act]
       :-  %k
       ?:  does-config-exist
         :^  %fard  desk-name.act
@@ -619,29 +621,6 @@
           %-  ~(del ju sync-desk-to-vship)
           [project-name i.ships]:act
         ==
-      ==
-    ::
-        %set-config
-      :-  ~
-      %=  state
-          configs
-        %+  ~(put by configs)  project-name.act
-        %.  ~(tap by config.act)
-        ~(gas by (~(gut by configs) project-name.act ~))
-      ==
-    ::
-        %set-sync-desk-to-vship
-      =/  =project:zig  (~(got by projects) project-name.act)
-      :-  ~
-      %=  state
-          projects
-        %+  ~(put by projects)  project-name.act
-        project(pyro-ships ships.act)
-      ::
-          sync-desk-to-vship
-        %-  ~(gas ju sync-desk-to-vship)
-        %+  turn  ships.act
-        |=(who=@p [desk-name.act who])
       ==
     ::
         %send-state-views
@@ -1552,7 +1531,10 @@
       [%new-project-from-remote @ ~]  `this
       :: [%new-project-uninstall @ ~]    `this
   ::
-      [%setup-desk @ @ ~]
+      [%setup-desk @ @ @ ~]
+    =*  does-config-exist  `?`i.t.w
+    =*  project-name       i.t.t.w
+    =*  desk-name          i.t.t.t.w
     ?.  ?&  ?=(%khan -.sign-arvo)
             ?=(%arow -.+.sign-arvo)
         ==
@@ -1560,8 +1542,13 @@
     ?:  ?=(%| -.p.+.sign-arvo)
       ~&  (reformat-compiler-error:zig-lib p.p.+.sign-arvo)
       !!  :: TODO
-    ~&  sign-arvo
-    `this
+    =.  status  [%ready ~]
+    :_  this(status status)
+    :_  ~
+    %-  update-vase-to-card:zig-lib
+    %.  status
+    %~  status  make-update-vase:zig-lib
+    [%project-name %desk-name %setup-desk ~]
   ::
       [%on-init-zig-setup ~]
     =*  our  (scot %p our.bowl)

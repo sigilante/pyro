@@ -421,25 +421,29 @@
       %-  send-error
       (crip "{<`@tas`project-name>} face reserved")
     return-failure
-  ?:  ?&  (~(has by projects.state) project-name)
-          !&(=(1 ~(wyt by projects.state)) =('zig' project-name))
-      ==
+  ?:  (~(has by projects.state) project-name)
     ;<  ~  bind:m
       %-  send-error
       (crip "{<`@tas`project-name>} already exists")
     return-failure
+  ;<  new-state=state-0:zig  bind:m
+    add-empty-project-to-state
+  =.  state  new-state
   ~&  %sd^%1
   ;<  ~  bind:m  handle-initial-zig-setup
   ~&  %sd^%2
   ;<  ~  bind:m  make-dev-desk
   ~&  %sd^%3
-  ;<  state=state-0:zig  bind:m  set-initial-state
+  ;<  new-state=state-0:zig  bind:m  set-initial-state
+  =.  state  new-state
   ~&  %sd^%4
   ;<  desk-names=(set desk)  bind:m  (scry (set desk) /cd/$)
   ~&  %sd^%5
   ;<  ~  bind:m
     ?:  (~(has in desk-names) desk-name)
+      ~&  %sd^%desk-exists^desk-name^desk-names
       run-desk-exists-setup
+    ~&  %sd^%desk-not-exists^desk-name^desk-names
     run-desk-not-exists-setup
   ~&  %sd^%6
   ;<  ~  bind:m  send-new-project-update
@@ -498,8 +502,6 @@
     ~&  %sd^%szs
     ?.  ?&  =(1 ~(wyt by projects.state))
             =('zig' project-name)
-            (~(has by projects.state) project-name)
-            =(*project:zig (~(got by projects.state) project-name))
         ==
       (pure:m ~)
     ;<  ~  bind:m
@@ -514,6 +516,12 @@
   ++  make-dev-desk
     =/  m  (strand ,~)
     ^-  form:m
+    ;<  apps-running=(set [@tas ?])  bind:m
+      (scry ,(set [@tas ?]) /ge/desk-name)
+    ?.  ?&  !=(0 ~(wyt in apps-running))
+            (~(any in apps-running) |=([@tas r=?] r))
+        ==
+      (pure:m ~)
     ::  TODO: should this be interactive?
     ;<  ~  bind:m
       %+  poke-our  %ziggurat
@@ -530,15 +538,29 @@
     %-  ~(gas ju sync-desk-to-vship.state)
     (turn whos |=(who=@p [desk-name who]))
   ::
+  ++  add-empty-project-to-state
+    =/  m  (strand ,state-0:zig)
+    ^-  form:m
+    =|  =project:zig
+    =.  state
+      %=  state
+          projects
+        %+  ~(put by projects.state)  project-name
+        project(pyro-ships whos)
+      ==
+    ;<  ~  bind:m
+      %+  poke-our  %ziggurat
+      :-  %ziggurat-action
+      !>  ^-  action:zig
+      :-  project-name
+      [desk-name request-id %set-ziggurat-state state]
+    (pure:m state)
+  ::
   ++  set-initial-state
     =/  m  (strand ,state-0:zig)
     ^-  form:m
     =.  state
       %=  state
-          projects
-        %+  ~(jab by projects.state)  project-name
-        |=(=project:zig project(pyro-ships whos))
-      ::
           sync-desk-to-vship  make-sync-desk-to-vship
       ::
           configs
@@ -553,37 +575,23 @@
       :-  project-name
       [desk-name request-id %set-ziggurat-state state]
     (pure:m state)
-    :: ;<  ~  bind:m
-    ::   %+  poke-our  %ziggurat
-    ::   :-  %ziggurat-action
-    ::   !>  ^-  action:zig
-    ::   [project-name desk-name request-id %set-config config]
-    :: ;<  ~  bind:m
-    ::   %+  poke-our  %ziggurat
-    ::   :-  %ziggurat-action
-    ::   !>  ^-  action:zig
-    ::   :^  project-name  desk-name  request-id
-    ::   [%set-sync-desk-to-vship whos]
   ::
   ++  run-desk-exists-setup
     =/  m  (strand ,~)
     ^-  form:m
     ;<  ~  bind:m  make-read-desk
-    make-snap-cards
+    make-snap
   ::
   ++  run-desk-not-exists-setup
     =/  m  (strand ,~)
     |^  ^-  form:m
-    ;<  ~  bind:m  make-snap-cards
+    ;<  ~  bind:m  make-snap
     ;<  ~  bind:m  make-merge
     ;<  ~  bind:m  make-mount
     ;<  ~  bind:m  make-bill
     ;<  ~  bind:m  make-deletions
     ;<  ~  bind:m  make-read-desk
-    ::
-    :: %+  make-done-cards:zig-lib  status
-    :: [project-name desk-name]:act  ?? app/ziggurat 403
-    (pure:m ~)
+    (sleep ~s1)
     ::
     ++  make-merge
       =/  m  (strand ,~)
@@ -616,8 +624,7 @@
       |=  [w=wire =task:clay]
       =/  m  (strand ,~)
       ^-  form:m
-      ;<  ~  bind:m  (send-raw-card %pass w %arvo %c task)
-      (take-poke-ack w)
+      (send-raw-card %pass w %arvo %c task)
     --
   ::
   ++  make-read-desk
@@ -628,12 +635,12 @@
     !>  ^-  action:zig
     [project-name desk-name request-id %read-desk ~]
   ::
-  ++  make-snap-cards
+  ++  make-snap
     =/  m  (strand ,~)
     ^-  form:m
     ?:  =('zig' project-name)  (pure:m ~)
     ;<  =update:zig  bind:m
-      (scry update:zig /gx/focused-project/noun)
+      (scry update:zig /gx/ziggurat/focused-project/noun)
     =/  focused-project=@t
       ?~  update                         ''  :: TODO: ?
       ?.  ?=(%focused-project -.update)  ''
@@ -650,10 +657,11 @@
       :-  %pyro-action
       !>  ^-  action:pyro
       [%restore-snap default-snap-path:zig-lib]
-    =*  ships-to-run
+    =/  ships-to-run=(list @p)
       %~  tap  in
       %.  default-ships-set:zig-lib
       ~(dif in (~(gas in *(set @p)) whos))
+    ?~  ships-to-run  (pure:m ~)
     %+  poke-our  %ziggurat
     :-  %ziggurat-action
     !>  ^-  action:zig
@@ -739,6 +747,28 @@
   ++  return-success
     =/  m  (strand ,vase)
     ^-  form:m
+    ;<  now=@da  bind:m  get-time
+    =/  snap-path=path
+      ?:  ?=(%zig desk-name)  default-snap-path:zig-lib
+      /[project-name]/(scot %da now)
+    ;<  state=state-0:zig  bind:m  get-state
+    =.  state
+      %=  state
+          focused-project  project-name
+          projects
+        %+  ~(jab by projects.state)  project-name
+        |=  =project:zig  project(most-recent-snap snap-path)
+      ==
+    ;<  ~  bind:m
+      %+  poke-our  %ziggurat
+      :-  %ziggurat-action
+      !>  ^-  action:zig
+      :-  project-name
+      [desk-name request-id %set-ziggurat-state state]
+    ;<  ~  bind:m
+      %+  poke-our  %pyro
+      :-  %pyro-action
+      !>(`action:pyro`[%snap-ships snap-path whos])
     (pure:m !>(`?`%.y))
   ::
   ++  scry-virtualship-desks

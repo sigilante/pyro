@@ -162,8 +162,6 @@
           [%add-sync-desk-vships ships=(list @p) install=? start-apps=(list @tas)]
           [%delete-sync-desk-vships ships=(list @p)]
       ::
-          [%set-config =config]
-          [%set-sync-desk-to-vship ships=(list @p)]
           [%send-state-views =state-views]
           [%set-ziggurat-state new-state=state-0]
           [%send-update =update]
