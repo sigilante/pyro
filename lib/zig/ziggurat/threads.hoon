@@ -196,7 +196,7 @@
           mutable=?
           publish-contract-id=(unit @ux)  ::  ~ -> 0x1111.1111
       ==
-  =/  m  (strand ,@ux)
+  =/  m  (strand ,vase)
   ^-  form:m
   =/  address=@ux  (~(got by ship-to-address) who)
   ;<  code-atom=@  bind:m
@@ -215,7 +215,7 @@
             town=town-id
             [%noun %deploy mutable code interface=~]
         ==
-  (pure:m compute-contract-hash)
+  (pure:m !>(`@ux`compute-contract-hash))
   ::
   ++  town-id
     ^-  @ux
@@ -233,7 +233,8 @@
 ::
 ++  send-wallet-transaction
   =/  m  (strand ,vase)
-  |=  $:  who=@p
+  |=  $:  project-name
+          who=@p
           sequencer-host=@p
           gate=$-(* form:m)
           gate-args=*
@@ -259,7 +260,8 @@
     ~&  %ziggurat-threads^%diff-pending-not-length-one^diff-pending
     !!
   ;<  ~  bind:m
-    %-  send-pyro-poke
+    %-  send-discrete-pyro-poke
+    :-  project-name
     :^  who  who  %uqbar
     :-  %wallet-poke
     !>  ^-  wallet-poke:wallet
@@ -267,7 +269,8 @@
     gas=[rate=1 bud=1.000.000]
   ;<  ~  bind:m  (sleep ~s1)  ::  TODO: tune time
   ;<  ~  bind:m
-    (send-pyro-dojo sequencer-host ':sequencer|batch')
+    %^  send-pyro-dojo-discrete  project-name
+    sequencer-host  ':sequencer|batch'
   (pure:m gate-output)
 ::
 ++  block-on-previous-operation
