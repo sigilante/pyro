@@ -473,7 +473,7 @@
       =/  new-project-error
         %~  new-project  make-error-vase:zig-lib
         [update-info %error]
-      ?:  (~(has by projects) project-name.act)
+      ?:  &((~(has by projects) project-name.act) !=('zig' project-name.act))
         :_  state
         :_  ~
         %-  update-vase-to-card:zig-lib
@@ -562,6 +562,7 @@
       ::
           projects
         =|  =desk:zig
+        =.  name.desk  desk-name.act
         =.  user-files.desk
           (~(put in *(set path)) /app/[project-name.act]/hoon)
         =/  =project:zig
@@ -716,9 +717,10 @@
         (crip "desk {<`@tas`desk-name.act>} does not exist")
       =.  desks.project
         ?~  index.act
-          (snoc desks.project [desk-name.act *desk:zig])
+          %+  snoc  desks.project
+          [desk-name.act desk-name.act +:*desk:zig]
         %^  into  desks.project  u.index.act
-        [desk-name.act *desk:zig]
+        [desk-name.act desk-name.act +:*desk:zig]
       (update-project-from-desk-change update-info project)
     ::
         %delete-project-desk
