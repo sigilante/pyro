@@ -272,6 +272,8 @@
       %get-dev-desk
       %suspend-uninstall-to-make-dev-desk
       %ziggurat-state
+      %configs
+      %ship-to-address-map
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -323,6 +325,8 @@
       [%get-dev-desk update-info payload=(data ~) ~]
       [%suspend-uninstall-to-make-dev-desk update-info payload=(data ~) ~]
       [%ziggurat-state update-info payload=(data state-0) ~]
+      [%configs update-info payload=(data configs) ~]
+      [%ship-to-address-map update-info payload=(data (map @p @ux)) ~]
   ==
 ::
 :: +$  shown-projects  (map @t shown-project)

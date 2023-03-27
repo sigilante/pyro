@@ -770,6 +770,20 @@
     town-id-to-sequencer
   (get-town-id-to-sequencer-map 'global' configs)
 ::
+++  get-ship-to-address-map
+  |=  [project-name=@t =configs:zig]
+  ^-  (map @p @ux)
+  =/  ship-to-address=(map @p @ux)
+    %-  ~(gas by *(map @p @ux))
+    %+  murn  ~(tap bi:mip configs)
+    |=  [pn=@t [who=@p what=@tas] item=@]
+    ?.  =(project-name pn)   ~
+    ?.  ?=(%address what)  ~
+    `[who `@ux`item]
+  ?.  &(?=(~ ship-to-address) !=('global' project-name))
+    ship-to-address
+  (get-ship-to-address-map 'global' configs)
+::
 ++  sync-desk-to-virtualship-card
   |=  [who=@p project-name=@tas]
   ^-  card
@@ -1732,6 +1746,18 @@
     ^-  vase
     !>  ^-  update:zig
     [%ziggurat-state update-info [%& state] ~]
+  ::
+  ++  configs
+    |=  =configs:zig
+    ^-  vase
+    !>  ^-  update:zig
+    [%configs update-info [%& configs] ~]
+  ::
+  ++  ship-to-address-map
+    |=  ship-to-address-map=(map @p @ux)
+    ^-  vase
+    !>  ^-  update:zig
+    [%ship-to-address-map update-info [%& ship-to-address-map] ~]
   --
 ::
 ++  make-error-vase
@@ -1962,6 +1988,12 @@
         %ziggurat-state
       ['data' ~]~  :: TODO
       :: ['data' p.payload.update]~
+    ::
+        %configs
+      ['data' ~]~  :: TODO
+    ::
+        %ship-to-address-map
+      ['data' ~]~  :: TODO
     ==
   ::
   ++  settings

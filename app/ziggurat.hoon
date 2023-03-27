@@ -1542,13 +1542,21 @@
     ?:  ?=(%| -.p.+.sign-arvo)
       ~&  (reformat-compiler-error:zig-lib p.p.+.sign-arvo)
       !!  :: TODO
+    =/  snap-path=path
+      ?:  ?=(%zig desk-name)  default-snap-path:zig-lib
+      /[project-name]/(scot %da now.bowl)
     =.  status  [%ready ~]
     :_  this(status status)
-    :_  ~
-    %-  update-vase-to-card:zig-lib
-    %.  status
-    %~  status  make-update-vase:zig-lib
-    [%project-name %desk-name %setup-desk ~]
+    :+  %-  ~(poke-self pass:io /self-wire)
+        :-  %ziggurat-action
+        !>  ^-  action:zig
+        :^  project-name  desk-name  ~
+        [%take-snapshot `snap-path]
+      %-  update-vase-to-card:zig-lib
+      %.  status
+      %~  status  make-update-vase:zig-lib
+      [%project-name %desk-name %setup-desk ~]
+    ~
   ::
       [%on-init-zig-setup ~]
     =*  our  (scot %p our.bowl)
@@ -1758,6 +1766,18 @@
   ?.  =(%x -.p)  ~
   =,  format
   ?+    +.p  (on-peek:def p)
+      [%get-ship-to-address-map @ ~]
+    :^  ~  ~  %ziggurat-update
+    %.  (get-ship-to-address-map:zig-lib i.t.t.p configs)
+    %~  ship-to-address-map  make-update-vase:zig-lib
+    ['' %$ %get-ship-to-address-map ~]
+  ::
+      [%get-configs ~]
+    :^  ~  ~  %ziggurat-update
+    %.  configs
+    %~  configs  make-update-vase:zig-lib
+    ['' %$ %get-configs ~]
+  ::
       [%get-ziggurat-state ~]
     :^  ~  ~  %ziggurat-update
     %.  -.state

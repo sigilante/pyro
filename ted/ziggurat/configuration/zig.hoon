@@ -77,26 +77,26 @@
     =/  m  (strand ,~)
     ^-  form:m
     =/  who=@p  ~nec
-    ;<  ~  bind:m
+    ;<  empty-vase=vase  bind:m
       %^  send-discrete-pyro-dojo:zig-threads  project-name
       who  ':rollup|activate'
-    ;<  ~  bind:m
+    ;<  empty-vase=vase  bind:m
       %-  send-pyro-poke:zig-threads
       :^  who  who  %indexer
       :-  %indexer-action
       !>(`action:ui`[%set-sequencer ~nec %sequencer])
-    ;<  ~  bind:m
+    ;<  empty-vase=vase  bind:m
       %-  send-discrete-pyro-poke:zig-threads
       :-  project-name
       :^  who  who  %indexer
       :-  %indexer-action
       !>(`action:ui`[%set-rollup ~nec %rollup])
-    ;<  ~  bind:m
+    ;<  empty-vase=vase  bind:m
       %^  send-discrete-pyro-dojo:zig-threads  project-name
         who
       %-  crip
       ":sequencer|init our {<town-id>} {<sequencer-address>}"
-    ;<  ~  bind:m
+    ;<  empty-vase=vase  bind:m
       %-  send-discrete-pyro-poke:zig-threads
       :-  project-name
       :^  who  who  %uqbar
@@ -110,7 +110,7 @@
     ^-  form:m
     =/  who=@p  ~bud
     ;<  ~  bind:m  (make-setup-chain-user who)
-    ;<  ~  bind:m
+    ;<  empty-vase=vase  bind:m
       %-  send-discrete-pyro-poke:zig-threads
       :-  project-name
       :^  who  who  %uqbar
@@ -124,7 +124,7 @@
     ^-  form:m
     =/  who=@p  ~wes
     ;<  ~  bind:m  (make-setup-chain-user who)
-    ;<  ~  bind:m
+    ;<  empty-vase=vase  bind:m
       %-  send-discrete-pyro-poke:zig-threads
       :-  project-name
       :^  who  who  %uqbar
@@ -137,18 +137,18 @@
     |=  who=@p
     =/  m  (strand ,~)
     ^-  form:m
-    ;<  ~  bind:m
+    ;<  empty-vase=vase  bind:m
       %-  send-pyro-poke:zig-threads
       :^  who  who  %indexer
       :-  %indexer-action
       !>(`action:ui`[%set-sequencer ~nec %sequencer])
-    ;<  ~  bind:m
+    ;<  empty-vase=vase  bind:m
       %-  send-discrete-pyro-poke:zig-threads
       :-  project-name
       :^  who  who  %indexer
       :-  %indexer-action
       !>(`action:ui`[%set-rollup ~nec %rollup])
-    ;<  ~  bind:m
+    ;<  empty-vase=vase  bind:m
       %-  send-discrete-pyro-poke:zig-threads
       :-  project-name
       :^  who  who  %indexer

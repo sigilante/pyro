@@ -23,19 +23,19 @@
     ==
 ++  send-discrete-pyro-dojo
   |=  [project-name=@t who=@p payload=@t]
-  =/  m  (strand ,~)
+  =/  m  (strand ,vase)
   ^-  form:m
-  ;<  ~  bind:m  (send-pyro-dojo who payload)
+  ;<  empty-vase=vase  bind:m  (send-pyro-dojo who payload)
   ::  ensure %pyro dojo send has completed before moving on
   ;<  ~  bind:m  (block-on-previous-operation `project-name)
-  (pure:m ~)
+  (pure:m !>(~))
 ::
 ++  send-pyro-dojo
   |=  [who=@p payload=@t]
-  =/  m  (strand ,~)
+  =/  m  (strand ,vase)
   ^-  form:m
   ;<  ~  bind:m  (dojo:pyro-lib who (trip payload))
-  (pure:m ~)
+  (pure:m !>(~))
 ::
 ++  send-pyro-scry
   |*  [who=@p =mold care=@tas app=@tas =path]
@@ -90,23 +90,24 @@
           mark=@tas
           payload=vase
       ==
-  =/  m  (strand ,~)
+  =/  m  (strand ,vase)
   ^-  form:m
-  ;<  ~  bind:m  (send-pyro-poke who to app mark payload)
+  ;<  empty-vase=vase  bind:m  (send-pyro-poke who to app mark payload)
   ::  ensure %pyro poke send has completed before moving on
   ;<  ~  bind:m  (block-on-previous-operation `project-name)
-  (pure:m ~)
+  (pure:m !>(~))
 ::
 ++  send-pyro-poke
   |=  [who=@p to=@p app=@tas mark=@tas payload=vase]
-  =/  m  (strand ,~)
+  =/  m  (strand ,vase)
   ^-  form:m
   ::  if mark is not found poke will fail
   ;<  =bowl:strand  bind:m  get-bowl
   |^
   ?:  is-mar-found
     ::  found mark: proceed
-    (poke:pyro-lib who to app mark q.payload)
+    ;<  ~  bind:m  (poke:pyro-lib who to app mark q.payload)
+    (pure:m !>(~))
   ::  mark not found: warn and attempt to fallback to
   ::   equivalent %dojo step rather than failing outright
   ~&  %ziggurat-test-run^%poke-mark-not-found^mark
@@ -203,7 +204,7 @@
     (scry @ [%cx desk-name contract-jam-path])
   =/  code  [- +]:(cue code-atom)
   |^
-  ;<  ~  bind:m
+  ;<  empty-vase=vase  bind:m
     %-  send-pyro-poke
     :^  who  who  %uqbar
     :-  %wallet-poke 
@@ -233,24 +234,29 @@
 ::
 ++  send-wallet-transaction
   =/  m  (strand ,vase)
-  |=  $:  project-name
+  |=  $:  project-name=@t
           who=@p
           sequencer-host=@p
-          gate=$-(* form:m)
+          gate=vase
           gate-args=*
       ==
   ^-  form:m
+  ~&  ship-to-address
   =/  address=@ux  (~(got by ship-to-address) who)
   ;<  old-scry=(map @ux *)  bind:m
     %^  send-pyro-scry  who  (map @ux *)
-    [%gx %uqbar /pending-store/(scot %ux address)/noun/noun]
+    :+  %gx  %wallet
+    /pending-store/(scot %ux address)/noun/noun
   ::
-  ;<  gate-output=vase  bind:m  (gate gate-args)
+  ;<  gate-output=vase  bind:m
+    !<(form:m (slym gate gate-args))
+    :: !<(form:m (slym !>(gate) gate-args))
   ;<  ~  bind:m  (block-on-previous-operation `project-name)
   ::
   ;<  new-scry=(map @ux *)  bind:m
     %^  send-pyro-scry  who  (map @ux *)
-    [%gx %uqbar /pending-store/(scot %ux address)/noun/noun]
+    :+  %gx  %wallet
+    /pending-store/(scot %ux address)/noun/noun
   ::
   =*  old-pending  ~(key by old-scry)
   =*  new-pending  ~(key by new-scry)
@@ -259,7 +265,7 @@
   ?.  ?=([@ ~] diff-pending)
     ~&  %ziggurat-threads^%diff-pending-not-length-one^diff-pending
     !!
-  ;<  ~  bind:m
+  ;<  empty-vase=vase  bind:m
     %-  send-discrete-pyro-poke
     :-  project-name
     :^  who  who  %uqbar
@@ -268,8 +274,8 @@
     :^  %submit  from=address  hash=i.diff-pending
     gas=[rate=1 bud=1.000.000]
   ;<  ~  bind:m  (sleep ~s1)  ::  TODO: tune time
-  ;<  ~  bind:m
-    %^  send-pyro-dojo-discrete  project-name
+  ;<  empty-vase=vase  bind:m
+    %^  send-discrete-pyro-dojo  project-name
     sequencer-host  ':sequencer|batch'
   (pure:m gate-output)
 ::
@@ -448,6 +454,7 @@
       run-desk-exists-setup
     ~&  %sd^%desk-not-exists^desk-name^desk-names
     run-desk-not-exists-setup
+  ;<  ~  bind:m  (block-on-previous-operation `project-name)
   ~&  %sd^%6
   ;<  ~  bind:m  send-new-project-update
   ~&  %sd^%7
@@ -645,9 +652,9 @@
     ;<  =update:zig  bind:m
       (scry update:zig /gx/ziggurat/focused-project/noun)
     =/  focused-project=@t
-      ?~  update                         ''  :: TODO: ?
-      ?.  ?=(%focused-project -.update)  ''
-      ?:  ?=(%| -.payload.update)        ''
+      ?>  ?=(^ update)  :: TODO: ?
+      ?>  ?=(%focused-project -.update)
+      ?>  ?=(%& -.payload.update)
       p.payload.update
     ;<  ~  bind:m
       ?:  =('' focused-project)  (pure:m ~)
@@ -698,8 +705,10 @@
     |=  who=@p
     =/  m  (strand ,~)
     ^-  form:m
-    %+  send-pyro-dojo  who
-    (crip "|install our {<desk-name>}")
+    ;<  empty-vase=vase  bind:m
+      %+  send-pyro-dojo  who
+      (crip "|install our {<desk-name>}")
+    (pure:m ~)
   ::
   ++  block-on-install
     |=  who=@p
@@ -725,7 +734,7 @@
     |-
     ?~  start-apps  (pure:m ~)
     =*  next-app  i.start-apps
-    ;<  ~  bind:m
+    ;<  empty-vase=vase  bind:m
       %+  send-pyro-dojo  who
       (crip "|start {<`@tas`desk-name>} {<`@tas`next-app>}")
     ;<  ~  bind:m  (block-on-start who next-app)
@@ -750,28 +759,15 @@
   ++  return-success
     =/  m  (strand ,vase)
     ^-  form:m
-    ;<  now=@da  bind:m  get-time
-    =/  snap-path=path
-      ?:  ?=(%zig desk-name)  default-snap-path:zig-lib
-      /[project-name]/(scot %da now)
     ;<  state=state-0:zig  bind:m  get-state
-    =.  state
-      %=  state
-          focused-project  project-name
-          projects
-        %+  ~(jab by projects.state)  project-name
-        |=  =project:zig  project(most-recent-snap snap-path)
-      ==
+    =.  state  state(focused-project project-name)
     ;<  ~  bind:m
       %+  poke-our  %ziggurat
       :-  %ziggurat-action
       !>  ^-  action:zig
       :-  project-name
       [desk-name request-id %set-ziggurat-state state]
-    ;<  ~  bind:m
-      %+  poke-our  %pyro
-      :-  %pyro-action
-      !>(`action:pyro`[%snap-ships snap-path whos])
+    ;<  ~  bind:m  (block-on-previous-operation `project-name)
     (pure:m !>(`?`%.y))
   ::
   ++  scry-virtualship-desks
