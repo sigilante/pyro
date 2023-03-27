@@ -613,7 +613,8 @@
 ++  show-desk
   |=  =desk:zig
   ^-  shown-desk:zig
-  :*  dir=dir.desk
+  :*  name=name.desk
+      dir=dir.desk
       user-files=user-files.desk
       to-compile=to-compile.desk
       tests=(show-tests tests.desk)
@@ -2295,7 +2296,8 @@
     |=  d=desk:zig
     ^-  json
     %-  pairs
-    :~  ['dir' (dir dir.d)]
+    :~  ['name' %s name.d]
+        ['dir' (dir dir.d)]
         ['user_files' (dir ~(tap in user-files.d))]
         ['to_compile' (dir ~(tap in to-compile.d))]
         ['tests' (tests tests.d)]
@@ -2338,7 +2340,8 @@
     |=  d=shown-desk:zig
     ^-  json
     %-  pairs
-    :~  ['dir' (dir dir.d)]
+    :~  ['name' %s name.d]
+        ['dir' (dir dir.d)]
         ['user_files' (dir ~(tap in user-files.d))]
         ['to_compile' (dir ~(tap in to-compile.d))]
         ['tests' (shown-tests tests.d)]
