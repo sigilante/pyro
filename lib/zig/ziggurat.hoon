@@ -1379,7 +1379,6 @@
     =/  m  (strand ,vase)
     ^-  form:m
     (pure:m !>(~))
-    --
   ::
   ++  ted
     ^-  thread:spider

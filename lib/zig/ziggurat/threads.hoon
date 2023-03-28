@@ -395,6 +395,64 @@
     (get-virtualship-timers project-name our now)
   --
 ::
+++  create-desk
+  |=  =update-info:zig
+  =/  m  (strand ,vase)
+  =*  desk-name  desk-name.update-info
+  |^  ^-  form:m
+  ;<  ~  bind:m  make-merge
+  ;<  ~  bind:m  make-mount
+  ;<  ~  bind:m  make-bill
+  ;<  ~  bind:m  make-deletions
+  :: ;<  ~  bind:m  make-read-desk
+  ;<  ~  bind:m  make-configuration-file
+  ;<  ~  bind:m  (sleep ~s1)
+  (pure:m !>(~))
+  ::
+  ++  make-merge
+    =/  m  (strand ,~)
+    ^-  form:m
+    ;<  =bowl:strand  bind:m  get-bowl
+    %^  send-clay-card  /merge  %merg
+    [desk-name our.bowl q.byk.bowl da+now.bowl %init]
+  ::
+  ++  make-mount
+    =/  m  (strand ,~)
+    ^-  form:m
+    ;<  =bowl:strand  bind:m  get-bowl
+    %^  send-clay-card  /mount  %mont
+    [desk-name [our.bowl desk-name da+now.bowl] /]
+  ::
+  ++  make-bill
+    =/  m  (strand ,~)
+    ^-  form:m
+    %^  send-clay-card  /bill  %info
+    :+  desk-name  %&
+    [/desk/bill %ins %bill !>(~[desk-name])]~
+  ::
+  ++  make-deletions
+    =/  m  (strand ,~)
+    ^-  form:m
+    %^  send-clay-card  /delete  %info
+    [desk-name %& (clean-desk:zig-lib desk-name)]
+  ::
+  ++  make-configuration-file
+    =/  m  (strand ,~)
+    ^-  form:m
+    ;<  ~  bind:m
+    %-  send-raw-card
+    %^  make-save-file:zig-lib  update-info
+      /ted/ziggurat/configuration/[desk-name]/hoon
+    make-configuration-template:zig-lib
+    (pure:m ~)
+  ::
+  ++  send-clay-card
+    |=  [w=wire =task:clay]
+    =/  m  (strand ,~)
+    ^-  form:m
+    (send-raw-card %pass w %arvo %c task)
+  --
+::
 ++  get-state
   =/  m  (strand ,state-0:zig)
   ^-  form:m
@@ -429,13 +487,18 @@
       %-  send-error
       (crip "{<`@tas`project-name>} face reserved")
     return-failure
-  ?:  (~(has by projects.state) project-name)
+  =/  p=(unit project:zig)
+    (~(get by projects.state) project-name)
+  ?:  ?&  ?=(^ p)
+          (has-desk:zig-lib u.p desk-name)
+      ==
     ;<  ~  bind:m
       %-  send-error
-      (crip "{<`@tas`project-name>} already exists")
+      %-  crip
+      %+  weld  "project {<`@tas`project-name>} already has"
+      " desk {<`@tas`desk-name>}"
     return-failure
-  ;<  new-state=state-0:zig  bind:m
-    add-empty-project-to-state
+  ;<  new-state=state-0:zig  bind:m  handle-empty-project
   =.  state  new-state
   ~&  %sd^%1
   ;<  ~  bind:m  handle-initial-zig-setup
@@ -447,12 +510,7 @@
   ~&  %sd^%4
   ;<  desk-names=(set desk)  bind:m  (scry (set desk) /cd/$)
   ~&  %sd^%5
-  ;<  ~  bind:m
-    ?:  (~(has in desk-names) desk-name)
-      ~&  %sd^%desk-exists^desk-name^desk-names
-      run-desk-exists-setup
-    ~&  %sd^%desk-not-exists^desk-name^desk-names
-    run-desk-not-exists-setup
+  ;<  ~  bind:m  make-read-desk
   ;<  ~  bind:m  (block-on-previous-operation `project-name)
   ~&  %sd^%6
   ;<  ~  bind:m  send-new-project-update
@@ -547,9 +605,11 @@
     %-  ~(gas ju sync-desk-to-vship.state)
     (turn whos |=(who=@p [desk-name who]))
   ::
-  ++  add-empty-project-to-state
+  ++  handle-empty-project
     =/  m  (strand ,state-0:zig)
     ^-  form:m
+    ?:  (~(has by projects.state) project-name)
+      (pure:m state)
     =|  =project:zig
     =.  state
       %=  state
@@ -589,52 +649,8 @@
     =/  m  (strand ,~)
     ^-  form:m
     ;<  ~  bind:m  make-read-desk
-    make-snap
-  ::
-  ++  run-desk-not-exists-setup
-    =/  m  (strand ,~)
-    |^  ^-  form:m
-    ;<  ~  bind:m  make-snap
-    ;<  ~  bind:m  make-merge
-    ;<  ~  bind:m  make-mount
-    ;<  ~  bind:m  make-bill
-    ;<  ~  bind:m  make-deletions
-    ;<  ~  bind:m  make-read-desk
-    (sleep ~s1)
-    ::
-    ++  make-merge
-      =/  m  (strand ,~)
-      ^-  form:m
-      ;<  =bowl:strand  bind:m  get-bowl
-      %^  send-clay-card  /merge  %merg
-      [desk-name our.bowl q.byk.bowl da+now.bowl %init]
-    ::
-    ++  make-mount
-      =/  m  (strand ,~)
-      ^-  form:m
-      ;<  =bowl:strand  bind:m  get-bowl
-      %^  send-clay-card  /mount  %mont
-      [desk-name [our.bowl desk-name da+now.bowl] /]
-    ::
-    ++  make-bill
-      =/  m  (strand ,~)
-      ^-  form:m
-      %^  send-clay-card  /bill  %info
-      :+  desk-name  %&
-      [/desk/bill %ins %bill !>(~[desk-name])]~
-    ::
-    ++  make-deletions
-      =/  m  (strand ,~)
-      ^-  form:m
-      %^  send-clay-card  /delete  %info
-      [desk-name %& (clean-desk:zig-lib desk-name)]
-    ::
-    ++  send-clay-card
-      |=  [w=wire =task:clay]
-      =/  m  (strand ,~)
-      ^-  form:m
-      (send-raw-card %pass w %arvo %c task)
-    --
+    (pure:m ~)
+    :: make-snap
   ::
   ++  make-read-desk
     =/  m  (strand ,~)

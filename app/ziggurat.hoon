@@ -115,6 +115,63 @@
   ::   ^-  [(list card) _state]
   ::   =*  project-name  project-name.update-info
   ::   =*  desk-name     desk-name.update-info
+  ::   =/  cards=(list card)
+  ::     
+  ::   :: =/  [[cards=(list card) project-cis-running=(mip:mip @tas @p [@t ?]) ships=(set @p)] modified-state=_state]
+  ::   ::   %+  roll  (turn desks.project |=([p=@tas *] p))
+  ::   ::   |=  [current-desk-name=@tas [[cards=(list card) project-cis-running=(mip:mip @tas @p [@t ?]) ships=(set @p)] modified-state=_state]]
+  ::   ::   =/  [[iteration-cards=(list card) cfo=(unit configuration-file-output:zig)] modified-state=_state]
+  ::   ::     %+  load-configuration-file:zig-lib
+  ::   ::       update-info(desk-name current-desk-name)
+  ::   ::     ?.  =(*_state modified-state)  modified-state
+  ::   ::     %=  state
+  ::   ::         projects
+  ::   ::       (~(put by projects.state) project-name project)
+  ::   ::     ==
+  ::   ::   ?>  ?=(%commit-install-starting -.status.modified-state)
+  ::   ::   =/  [request-id=@t ?]
+  ::   ::     %-  ~(got by cis-running.status.modified-state)
+  ::   ::     -:?^(cfo ships.u.cfo default-ships:zig-lib)
+  ::   ::   :_  modified-state
+  ::   ::   :+  :_  (weld cards iteration-cards)
+  ::   ::       %^  make-read-desk:zig-lib  project-name
+  ::   ::       current-desk-name  `request-id
+  ::   ::     %+  ~(put by project-cis-running)  current-desk-name
+  ::   ::     cis-running.status.modified-state
+  ::   ::   %-  ~(gas in ships)
+  ::   ::   %+  weld  ?~(cfo ~ ships.u.cfo)
+  ::   ::   =<  pyro-ships
+  ::   ::   (~(gut by projects) project-name *project:zig)
+  ::   =/  ships-to-run=(list @p)
+  ::     ~(tap in (~(dif in ships) default-ships-set:zig-lib))
+  ::   =.  project
+  ::     (~(got by projects.modified-state) project-name)
+  ::   =.  project
+  ::     ?~  ships-to-run  project
+  ::     project(pyro-ships (sort ~(tap in ships) lth))
+  ::   :_  %=  modified-state
+  ::           status
+  ::         [%changing-project-desks project-cis-running]
+  ::       ::
+  ::           projects
+  ::         %+  ~(put by projects.modified-state)
+  ::         project-name  project
+  ::       ==
+  ::   %-  weld  :_  cards
+  ::   :-  %+  ~(poke-our pass:io /pyro-poke)  %pyro
+  ::       :-  %pyro-action
+  ::       !>  ^-  action:pyro
+  ::       [%restore-snap default-snap-path:zig-lib]
+  ::   %+  turn  ships-to-run
+  ::   |=  who=@p
+  ::   %+  ~(poke-our pass:io /self-wire)  %pyro
+  ::   [%pyro-action !>([%init-ship who])]
+  ::
+  :: ++  update-project-from-desk-change
+  ::   |=  [=update-info:zig =project:zig]
+  ::   ^-  [(list card) _state]
+  ::   =*  project-name  project-name.update-info
+  ::   =*  desk-name     desk-name.update-info
   ::   =/  [[cards=(list card) project-cis-running=(mip:mip @tas @p [@t ?]) ships=(set @p)] modified-state=_state]
   ::     %+  roll  (turn desks.project |=([p=@tas *] p))
   ::     |=  [current-desk-name=@tas [[cards=(list card) project-cis-running=(mip:mip @tas @p [@t ?]) ships=(set @p)] modified-state=_state]]
@@ -245,40 +302,49 @@
       ~&  %z^%np^%1
       =*  configuration-args
         !>([project-name desk-name request-id]:act)
-      =/  config-file-path=path
-        %+  weld  /(scot %p our.bowl)/[desk-name.act]
-        /(scot %da now.bowl)/zig/configs/[desk-name.act]/hoon
-      =/  does-config-exist=?  .^(? %cu config-file-path)
-      ~&  %z^%np^%does-config-exist^does-config-exist
-      :_  %=  state
-              projects
-            ?:  =('' focused-project)  projects
-            ?~  thread-queue           projects
-            %+  ~(jab by projects)     focused-project
-            |=  =project:zig
-            project(saved-thread-queue thread-queue)
-          ==
-      :+  %-  ~(poke-self pass:io /self-wire)
+      =/  cards=(list card)
+        :+  %-  ~(poke-self pass:io /self-wire)
+            :-  %ziggurat-action
+            !>  ^-  action:zig
+            :^  project-name.act  desk-name.act  request-id.act
+            :+  %queue-thread
+              (cat 3 'ziggurat-configuration-' desk-name.act)
+            ?:  =(!>(~) special-configuration-args.act)
+              !>(`[project-name desk-name request-id]:act)
+            ;:  slop
+                !>(~)
+                !>(project-name.act)
+                !>(desk-name.act)
+                !>(request-id.act)
+                special-configuration-args.act
+            ==
+          %-  ~(poke-self pass:io /self-wire)
           :-  %ziggurat-action
           !>  ^-  action:zig
           :^  project-name.act  desk-name.act  request-id.act
-          :+  %queue-thread
-            (cat 3 'ziggurat-configuration-' desk-name.act)
-          ?:  =(!>(~) special-configuration-args.act)
-            !>(`[project-name desk-name request-id]:act)
-          ;:  slop
-              !>(~)
-              !>(project-name.act)
-              !>(desk-name.act)
-              !>(request-id.act)
-              special-configuration-args.act
-          ==
-        %-  ~(poke-self pass:io /self-wire)
-        :-  %ziggurat-action
-        !>  ^-  action:zig
-        :^  project-name.act  desk-name.act  request-id.act
-        [%run-queue ~]
-      ~
+          [%run-queue ~]
+        ~
+      =.  cards
+        =/  config-file-path=path
+          %+  weld  /(scot %p our.bowl)/[desk-name.act]
+          /(scot %da now.bowl)/zig/configs/[desk-name.act]/hoon
+        =/  does-config-exist=?  .^(? %cu config-file-path)
+        ~&  %z^%np^%does-config-exist^does-config-exist
+        ?:  does-config-exist  cards
+        :_  cards
+        %-  %~  arvo  pass:io
+            /create-desk/[desk-name.act]
+        :^  %k  %lard  q.byk.bowl
+        (create-desk:zig-threads update-info)
+      :-  cards
+      %=  state
+          projects
+        ?:  =('' focused-project)  projects
+        ?~  thread-queue           projects
+        %+  ~(jab by projects)     focused-project
+        |=  =project:zig
+        project(saved-thread-queue thread-queue)
+      ==
       :: %-  %~  arvo  pass:io
       ::     :+  %setup-desk  `@`does-config-exist
       ::     /[project-name.act]/[desk-name.act]
@@ -1158,6 +1224,7 @@
   |=  [w=wire =sign-arvo:agent:gall]
   ^-  (quip card _this)
   ?+    w  (on-arvo:def w sign-arvo)
+      [%create-desk @ ~]              `this
       [%new-project-from-remote @ ~]  `this
       :: [%new-project-uninstall @ ~]    `this
   ::
