@@ -250,7 +250,6 @@
   ::
   ;<  gate-output=vase  bind:m
     !<(form:m (slym gate gate-args))
-    :: !<(form:m (slym !>(gate) gate-args))
   ;<  ~  bind:m  (block-on-previous-operation `project-name)
   ::
   ;<  new-scry=(map @ux *)  bind:m
@@ -273,7 +272,7 @@
     !>  ^-  wallet-poke:wallet
     :^  %submit  from=address  hash=i.diff-pending
     gas=[rate=1 bud=1.000.000]
-  ;<  ~  bind:m  (sleep ~s1)  ::  TODO: tune time
+  ;<  ~  bind:m  (sleep ~s3)  ::  TODO: tune time
   ;<  empty-vase=vase  bind:m
     %^  send-discrete-pyro-dojo  project-name
     sequencer-host  ':sequencer|batch'

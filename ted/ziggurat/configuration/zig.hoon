@@ -2,11 +2,16 @@
     ui=zig-indexer,
     w=zig-wallet,
     zig=zig-ziggurat
-/+  zig-threads=zig-ziggurat-threads
+/+  ziggurat-threads=zig-ziggurat-threads
 ::
 =*  strand     strand:spider
 ::
 =/  m  (strand ,vase)
+=|  project-name=@t
+=|  desk-name=@tas
+=|  ship-to-address=(map @p @ux)
+=*  zig-threads
+  ~(. ziggurat-threads project-name desk-name ship-to-address)
 |^  ted
 ::
 +$  arg-mold
@@ -46,10 +51,7 @@
   ~[%subscriber]
 ::
 ++  run-setup-desk
-  |=  $:  project-name=@t
-          desk-name=@tas
-          request-id=(unit @t)
-      ==
+  |=  request-id=(unit @t)
   =/  m  (strand ,vase)
   ^-  form:m
   %:  setup-desk:zig-threads
@@ -64,7 +66,6 @@
   ==
 ::
 ++  setup-virtualship-state
-  |=  project-name=@t
   =/  m  (strand ,vase)
   ^-  form:m
   |^
@@ -186,16 +187,15 @@
     ~&  >>>  "Usage:"
     ~&  >>>  "-zig!ziggurat-configuration-zig project-name=@t desk-name=@tas request-id=(unit @t)"
     (pure:m !>(~))
-  =*  project-name  project-name.u.args
-  =*  desk-name     desk-name.u.args
+  =.  project-name  project-name.u.args
+  =.  desk-name     desk-name.u.args
   =*  request-id    request-id.u.args
   ::
   ~&  %zcz^%top^%0
   ;<  setup-desk-result=vase  bind:m
-    (run-setup-desk project-name desk-name request-id)
+    (run-setup-desk request-id)
   ~&  %zcz^%top^%1
-  ;<  setup-ships-result=vase  bind:m
-    (setup-virtualship-state project-name)
+  ;<  setup-ships-result=vase  bind:m  setup-virtualship-state
   ~&  %zcz^%top^%2
   (pure:m !>(`(each ~ @t)`[%.y ~]))
 --

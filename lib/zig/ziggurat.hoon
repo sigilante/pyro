@@ -1317,6 +1317,90 @@
     ==
   --
 ::
+++  make-configuration-template
+  ^-  @t
+  '''
+  /-  spider,
+      zig=zig-ziggurat
+  /+  ziggurat-threads=zig-ziggurat-threads
+  ::
+  =*  strand     strand:spider
+  ::
+  =/  m  (strand ,vase)
+  =|  project-name=@t
+  =|  desk-name=@tas
+  =|  ship-to-address=(map @p @ux)
+  =*  zig-threads
+    ~(. ziggurat-threads project-name desk-name ship-to-address)
+  |^  ted
+  ::
+  +$  arg-mold
+    $:  project-name=@t
+        desk-name=@tas
+        request-id=(unit @t)
+    ==
+  ::
+  ++  make-config
+    ^-  config:zig
+    ~
+  ::
+  ++  make-state-views
+    ^-  state-views:zig
+    ~
+  ::
+  ++  make-virtualships-to-sync
+    ^-  (list @p)
+    ~  ::  ~ -> default-ships:zig-lib
+  ::
+  ++  make-install
+    ^-  ?
+    %.n
+  ::
+  ++  make-start-apps
+    ^-  (list @tas)
+    ~
+  ::
+  ++  run-setup-desk
+    |=  request-id=(unit @t)
+    =/  m  (strand ,vase)
+    ^-  form:m
+    %:  setup-desk:zig-threads
+        project-name
+        desk-name
+        request-id
+        make-config
+        make-state-views
+        make-virtualships-to-sync
+        make-install
+        make-start-apps
+    ==
+  ::
+  ++  setup-virtualship-state
+    =/  m  (strand ,vase)
+    ^-  form:m
+    (pure:m !>(~))
+    --
+  ::
+  ++  ted
+    ^-  thread:spider
+    |=  args-vase=vase
+    ^-  form:m
+    =/  args  !<((unit arg-mold) args-vase)
+    ?~  args
+      ~&  >>>  "Usage:"
+      ~&  >>>  "-!ziggurat-configuration- project-name=@t desk-name=@tas request-id=(unit @t)"
+      (pure:m !>(~))
+    =.  project-name  project-name.u.args
+    =.  desk-name     desk-name.u.args
+    =*  request-id    request-id.u.args
+    ::
+    ;<  setup-desk-result=vase  bind:m
+      (run-setup-desk request-id)
+    ;<  setup-ships-result=vase  bind:m  setup-virtualship-state
+    (pure:m !>(`(each ~ @t)`[%.y ~]))
+  --
+  '''
+::
 ++  make-template
   |=  file-path=path
   |^  ^-  @t
@@ -1682,7 +1766,8 @@
     |=  =thread-queue:zig
     ^-  vase
     !>  ^-  update:zig
-    [%thread-queue update-info [%& thread-queue] ~]
+    :^  %thread-queue  update-info
+    [%& (show-thread-queue thread-queue)]  ~
   ::
   ++  pyro-agent-state
     |=  [agent-state=vase wex=boat:gall sup=bitt:gall]
@@ -2066,7 +2151,7 @@
     :~  ['desks' (desks desks.p)]
         ['pyro_ships' (list-ships pyro-ships.p)]
         ['most_recent_snap' (path most-recent-snap.p)]
-        ['saved_thread_queue' (thread-queue saved-thread-queue.p)]
+        ['saved_thread_queue' (thread-queue (show-thread-queue saved-thread-queue.p))]
     ==
   ::
   ++  desks
@@ -2142,16 +2227,16 @@
     |=(who=@p [%s (scot %p who)])
   ::
   ++  thread-queue
-    |=  =thread-queue:zig
+    |=  thread-queue=shown-thread-queue:zig
     ^-  json
     :-  %a
     %+  turn  ~(tap to thread-queue)
-    |=  [project-name=@t desk-name=@tas p=^path args=vase]
+    |=  [project-name=@t desk-name=@tas name=@tas args=@t]
     %-  pairs
     :-  [%project-name %s project-name]
     :^    [%desk-name %s desk-name]
-        [%thread-path (path p)]
-      [%thread-args %s (crip (noah args))]
+        [%thread-name %s name]
+      [%thread-args %s args]
     ~
   ::
   ++  boat
@@ -2344,4 +2429,13 @@
     ^-  $-(json [=imports:zig grab=@t])
     (ot ~[[%imports (om pa)] [%grab so]])
   --
+++  show-thread-queue
+  |=  =thread-queue:zig
+  ^-  shown-thread-queue:zig
+  %-  ~(gas to *shown-thread-queue:zig)
+  %+  turn  ~(tap to thread-queue)
+  |=  i=thread-queue-item:zig
+  ^-  shown-thread-queue-item:zig
+  :^  project-name.i  desk-name.i  thread-name.i
+  (crip (noah thread-args.i))
 --

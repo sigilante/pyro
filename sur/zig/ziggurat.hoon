@@ -32,8 +32,16 @@
 +$  thread-queue-item
   $:  project-name=@t
       desk-name=@tas
-      thread-path=path
+      thread-name=@tas
       thread-args=vase
+  ==
++$  shown-thread-queue
+  (qeu shown-thread-queue-item)
++$  shown-thread-queue-item
+  $:  project-name=@t
+      desk-name=@tas
+      thread-name=@tas
+      thread-args=@t
   ==
 ::
 +$  settings
@@ -184,7 +192,7 @@
           [%compile-contract =path]  ::  path of form /con/foo/hoon within project desk
           [%read-desk ~]
       ::
-          [%queue-thread thread-path=path thread-args=vase]
+          [%queue-thread thread-name=@tas thread-args=vase]
           :: [%save-thread thread-path=path ] :: TODO; take in test-steps(?) and convert to thread
           :: [%edit-thread old=path new=path ] :: TODO: delete old, create new w/ %save-thread
       ::
@@ -308,7 +316,7 @@
       :: [%test-results update-info payload=(data shown-test-results) test-id=@ux thread-id=@t =test-steps]
       [%dir update-info payload=(data (list path)) ~]
       [%poke update-info payload=(data ~) ~]
-      [%thread-queue update-info payload=(data thread-queue) ~]
+      [%thread-queue update-info payload=(data shown-thread-queue) ~]
       :: [%test-queue update-info payload=(data (qeu [@t @tas @ux])) ~]
       [%pyro-agent-state update-info payload=(data [agent-state=vase wex=boat:gall sup=bitt:gall]) ~]
       [%shown-pyro-agent-state update-info payload=(data [agent-state=@t wex=boat:gall sup=bitt:gall]) ~]
