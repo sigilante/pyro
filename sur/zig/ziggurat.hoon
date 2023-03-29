@@ -64,10 +64,7 @@
   ==
 ::
 +$  status
-  :: $%  [%running-test-steps ~]
   $%  [%running-thread ~]
-      [%commit-install-starting cis-running=(map @p [@t ?])]
-      [%changing-project-desks project-cis-running=(mip:mip @tas @p [@t ?])]
       [%ready ~]
       [%uninitialized ~]  ::  last is default
   ==

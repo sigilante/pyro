@@ -247,49 +247,6 @@
       ;;((list clause:dock) reamed-text)
     ==
   --
-:: ::
-:: ++  make-test-steps-file
-::   |=  =test:zig
-::   ^-  @t
-::   %+  rap  3
-::   :~
-::   ::  imports
-::     %+  roll  ~(tap by test-imports.test)
-::     |=  [[face=@tas file=path] imports=@t]
-::     %+  rap  3
-::     :~  imports
-::         '/=  '
-::         face
-::         '  '
-::         (crip (noah !>(file)))
-::         '\0a'
-::     ==
-::   ::  infix
-::     '''
-::     ::
-::     |%
-::     ++  $
-::       ^-  test-steps:zig
-::       :~
-:: 
-::     '''
-::   ::  test-steps
-::     %+  roll  steps.test
-::     |=  [=test-step:zig test-steps-text=@t]
-::     %+  rap  3
-::     :~  test-steps-text
-::         '  ::\0a'
-::         '    '
-::         (crip (noah !>(test-step)))
-::         '\0a'
-::     ==
-::   ::  suffix
-::     '''
-::       ==
-::     --
-:: 
-::     '''
-::   ==
 ::
 ++  make-configs-file
   |=  $:  imports-list=(list [@tas path])
@@ -901,98 +858,6 @@
   %+  roll  p.compilation-result
   |=  [in=tank out=tape]
   :(weld ~(ram re in) "\0a" out)
-:: ::
-:: ++  build-default-configuration
-::   |=  [=config:zig desk-name=@tas]
-::   ^-  configuration-file-output:zig
-::   =*  ships  default-ships
-::   :*  config
-::       ships
-::   ::
-::       =/  bill-path=path
-::         :-  (scot %p our.bowl)
-::         /[desk-name]/(scot %da now.bowl)/desk/bill
-::       .^(? %cu bill-path)
-::   ::
-::       ~
-::       ~
-::       ~
-::   ==
-:: ::
-:: ++  load-configuration-file
-::   :: !.
-::   |=  [=update-info:zig state=inflated-state-0:zig]
-::   ^-  [[(list card) (unit configuration-file-output:zig)] inflated-state-0:zig]
-::   =*  project-name  project-name.update-info
-::   =*  desk-name     desk-name.update-info
-::   =/  new-project-error
-::     %~  new-project  make-error-vase
-::     [update-info(source %load-configuration-file) %error]
-::   =/  config-file-path=path
-::     %+  weld  /(scot %p our.bowl)/[desk-name]
-::     /(scot %da now.bowl)/zig/configs/[desk-name]/hoon
-::   |^
-::   ?.  .^(? %cu config-file-path)
-::     =/  =configuration-file-output:zig
-::       (build-default-configuration ~ desk-name)
-::     =^  cards=(list card)  state
-::       (build-cards-and-state configuration-file-output)
-::     [[cards `configuration-file-output] state]
-::   =/  result  get-configuration-from-file
-::   ?:  ?=(%| -.result)  [[-.p.result ~] +.p.result]
-::   =*  configuration-file-output  p.result
-::   =^  cards=(list card)  state
-::     (build-cards-and-state configuration-file-output)
-::   [[cards `configuration-file-output] state]
-::   ::
-::   ++  build-cards-and-state
-::     |=  $:  =config:zig
-::             virtualships-to-sync=(list @p)
-::             install=?
-::             start-apps=(list @tas)
-::             state-views=(list [who=@p app=(unit @tas) file=path])
-::             setups=(map @p thread-path=path)
-::         ==
-::     ^-  [(list card) inflated-state-0:zig]
-::     =/  setups-not-run=(set @p)
-::       %-  ~(dif in ~(key by setups))
-::       (~(gas in *(set @p)) virtualships-to-sync)
-::     =/  cards=(list card)
-::       ?:  =(0 ~(wyt in setups-not-run))  ~
-::       =/  message=tape
-::         ;:  weld
-::           "+make-setup will only run for virtualships that"
-::           " are set to sync. The following will not be run:"
-::           " {<setups-not-run>}. To have them run, add to"
-::           " +make-virtualships-to-sync in /zig/configs"
-::           "/{<desk-name>} and run %new-project again"
-::         ==
-::       :_  ~
-::       %-  update-vase-to-card
-::       (new-project-error(level %warning) (crip message))
-::     ::  use new-status rather than modifying status.state
-::     ::   in place to satisfy compiler
-::     =/  new-status=status:zig
-::       :-  %commit-install-starting
-::       (make-cis-running virtualships-to-sync desk-name)
-::     ?>  ?=(%commit-install-starting -.new-status)
-::     =*  cis-running  cis-running.new-status
-::     :-  :_  cards
-::         %-  update-vase-to-card
-::         %.  new-status
-::         %~  status  make-update-vase
-::         [project-name desk-name %load-configuration-file ~]
-::     =.  projects.state
-::       =/  project=(unit project:zig)
-::         (~(get by projects.state) focused-project.state)
-::       ?~  project  projects.state
-::       %+  ~(put by projects.state)  focused-project.state
-::       u.project(saved-thread-queue thread-queue.state)
-::     %=  state
-::         thread-queue   ~
-::         status         new-status
-::     ==
-::   --
 ::
 ++  uni-configs
   |=  [olds=configs:zig news=configs:zig]
@@ -2110,33 +1975,10 @@
   ++  status
     |=  =status:zig
     ^-  json
-    ?-    -.status
-        %running-thread  [%s -.status]
-        %ready           [%s -.status]
-        %uninitialized   [%s -.status]
-        %commit-install-starting
-      %-  pairs
-      %+  turn  ~(tap by cis-running.status)
-      |=  [who=@p cis-done=@t is-done=?]
-      :-  (scot %p who)
-      %-  pairs
-      :+  [%cis-done %s cis-done]
-        [%is-done %b is-done]
-      ~
-    ::
-        %changing-project-desks
-      %-  pairs
-      %+  turn  ~(tap by project-cis-running.status)
-      |=  [desk-name=@tas cis-running=(map @p [@t ?])]
-      :-  desk-name
-      %-  pairs
-      %+  turn  ~(tap by cis-running)
-      |=  [who=@p cis-done=@t is-done=?]
-      :-  (scot %p who)
-      %-  pairs
-      :+  [%cis-done %s cis-done]
-        [%is-done %b is-done]
-      ~
+    ?-  -.status
+      %running-thread  [%s -.status]
+      %ready           [%s -.status]
+      %uninitialized   [%s -.status]
     ==
   ::
   ++  error
