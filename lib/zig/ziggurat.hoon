@@ -94,6 +94,15 @@
   ?~  ind-desk=(get-ind-desk project desk-name)  project
   project(desks (oust [p.u.ind-desk 1] desks.project))
 ::
+++  diff-ship-lists
+  |=  [running=(list @p) new=(list @p)]
+  ^-  (list @p)
+  =|  diff=(list @p)
+  |-
+  ?~  new  (flop diff)
+  ?^  (find [i.new]~ running)  $(new t.new)
+  $(new t.new, diff [i.new diff])
+::
 ::  +make-new-desk based on https://github.com/urbit/urbit/blob/0b95645134f9b3902fa5ec8d2aad825f2e64ed8d/pkg/arvo/gen/hood/new-desk.hoon
 ::
 ++  make-new-desk
@@ -1368,6 +1377,7 @@
         project-name
         desk-name
         request-id
+        !>(~)
         make-config
         make-state-views
         make-virtualships-to-sync
@@ -2230,13 +2240,21 @@
     ^-  json
     :-  %a
     %+  turn  ~(tap to thread-queue)
-    |=  [project-name=@t desk-name=@tas name=@tas args=@t]
+    |=  $:  project-name=@t
+            desk-name=@tas
+            thread-name=@tas
+            payload=shown-thread-queue-payload:zig
+        ==
     %-  pairs
-    :-  [%project-name %s project-name]
-    :^    [%desk-name %s desk-name]
-        [%thread-name %s name]
-      [%thread-args %s args]
-    ~
+    :~  [%project-name %s project-name]
+        [%desk-name %s desk-name]
+        [%thread-name %s thread-name]
+        :-  %payload 
+        %-  pairs
+        =+  [%type %s -.payload]~
+        ?:  ?=(%lard -.payload)  -
+        [[%args %s args.payload] -]
+    ==
   ::
   ++  boat
     |=  =boat:gall
@@ -2319,7 +2337,7 @@
         [%delete-sync-desk-vships (ot ~[[%ships (ar (se %p))]])]
     ::
         [%change-focus ul]
-        [%add-project-desk ni:dejs-soft:format]
+        [%add-project-desk (ot ~[[%index ni:dejs-soft:format] [%fetch-desk-from-remote-ship (se-soft %p)] [%special-configuration-args special-configuration-args]])]
         [%delete-project-desk ul]
     ::
         [%save-file (ot ~[[%file pa] [%text so]])]
@@ -2369,10 +2387,14 @@
     :^    [%sync-ships (ar (se %p))]
         [%fetch-data-from-remote-ship (se-soft %p)]
       :-  %special-configuration-args
-      |=  jon=json
-      ?>  ?=([%s *] jon)
-      (slap !>(..zuse) (ream p.jon))
+      special-configuration-args
     ~
+  ::
+  ++  special-configuration-args
+    ^-  $-(json vase)
+    |=  jon=json
+    ?>  ?=([%s *] jon)
+    (slap !>(..zuse) (ream p.jon))
   ::
   ++  change-settings
     ^-  $-(json settings:zig)
@@ -2428,6 +2450,17 @@
     ^-  $-(json [=imports:zig grab=@t])
     (ot ~[[%imports (om pa)] [%grab so]])
   --
+:: ::
+:: ++  show-thread-queue
+::   |=  =thread-queue:zig
+::   ^-  shown-thread-queue:zig
+::   %-  ~(gas to *shown-thread-queue:zig)
+::   %+  turn  ~(tap to thread-queue)
+::   |=  i=thread-queue-item:zig
+::   ^-  shown-thread-queue-item:zig
+::   :^  project-name.i  desk-name.i  thread-name.i
+::   (crip (noah thread-args.i))
+::
 ++  show-thread-queue
   |=  =thread-queue:zig
   ^-  shown-thread-queue:zig
@@ -2436,5 +2469,6 @@
   |=  i=thread-queue-item:zig
   ^-  shown-thread-queue-item:zig
   :^  project-name.i  desk-name.i  thread-name.i
-  (crip (noah thread-args.i))
+  ?:  ?=(%lard -.payload.i)  [%lard ~]
+  [%fard (crip (noah args.payload.i))]
 --

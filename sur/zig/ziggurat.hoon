@@ -33,7 +33,13 @@
   $:  project-name=@t
       desk-name=@tas
       thread-name=@tas
-      thread-args=vase
+      payload=thread-queue-payload
+      :: thread-name=@tas
+      :: thread-args=vase
+  ==
++$  thread-queue-payload
+  $%  [%fard args=vase]
+      [%lard =shed:khan]
   ==
 +$  shown-thread-queue
   (qeu shown-thread-queue-item)
@@ -41,7 +47,13 @@
   $:  project-name=@t
       desk-name=@tas
       thread-name=@tas
-      thread-args=@t
+      thread=$%([%fard args=@t] [%lard ~])
+      :: thread-name=@tas
+      :: thread-args=@t
+  ==
++$  shown-thread-queue-payload
+  $%  [%fard args=@t]
+      [%lard ~]
   ==
 ::
 +$  settings
@@ -74,6 +86,7 @@
       to-compile=(set path)
       :: =tests
       threads=(set path)
+      special-configuration-args=vase
   ==
 ::
 +$  build-result  (each [bat=* pay=*] @t)
@@ -175,7 +188,7 @@
           [%send-update =update]
       ::
           [%change-focus ~]
-          [%add-project-desk index=(unit @ud)]  ::  ~ -> add to end
+          [%add-project-desk index=(unit @ud) fetch-desk-from-remote-ship=(unit @p) special-configuration-args=vase]  ::  index=~ -> add to end
           [%delete-project-desk ~]
       ::
           [%save-file file=path text=@t]  ::  generates new file or overwrites existing
@@ -192,7 +205,7 @@
           [%compile-contract =path]  ::  path of form /con/foo/hoon within project desk
           [%read-desk ~]
       ::
-          [%queue-thread thread-name=@tas thread-args=vase]
+          [%queue-thread thread-name=@tas payload=thread-queue-payload]
           :: [%save-thread thread-path=path ] :: TODO; take in test-steps(?) and convert to thread
           :: [%edit-thread old=path new=path ] :: TODO: delete old, create new w/ %save-thread
       ::

@@ -395,6 +395,26 @@
     (get-virtualship-timers project-name our now)
   --
 ::
+::
+++  fetch-desk-from-remote-ship
+  |=  [who=@p desk-name=@tas followup-action=(unit vase)]
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ;<  ~  bind:m
+    %+  poke-our  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:zig
+    ['' desk-name ~ [%get-dev-desk who]]
+  ::  if no sleep, get crash;
+  ::   TODO: replace sleep with non-hacky solution
+  ::   TODO: test on live network
+  ;<  ~  bind:m  (sleep:strandio ~s1)
+  ?~  followup-action  (pure:m !>(~))
+  ;<  ~  bind:m
+    %+  poke-our  %ziggurat
+    [%ziggurat-action u.followup-action]
+  (pure:m !>(~))
+::
 ++  create-desk
   |=  =update-info:zig
   =/  m  (strand ,vase)
@@ -453,6 +473,32 @@
     (send-raw-card %pass w %arvo %c task)
   --
 ::
+++  make-snap
+  |=  [project-name=@t request-id=(unit @t)]
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ?:  =('zig' project-name)  (pure:m !>(~))
+  ;<  =update:zig  bind:m
+    (scry update:zig /gx/ziggurat/focused-project/noun)
+  =/  focused-project=@t
+    ?>  ?=(^ update)  :: TODO: ?
+    ?>  ?=(%focused-project -.update)
+    ?>  ?=(%& -.payload.update)
+    p.payload.update
+  ?:  =('' focused-project)  (pure:m !>(~))
+  ;<  ~  bind:m
+    :: ?:  =('' focused-project)  (pure:m ~)
+    %+  poke-our  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:zig
+    [focused-project %$ request-id %take-snapshot ~]
+  ;<  ~  bind:m
+    %+  poke-our  %pyro
+    :-  %pyro-action
+    !>  ^-  action:pyro
+    [%restore-snap default-snap-path:zig-lib]
+  (pure:m !>(~))
+::
 ++  get-state
   =/  m  (strand ,state-0:zig)
   ^-  form:m
@@ -468,6 +514,7 @@
   |=  $:  project-name=@t
           desk-name=@tas
           request-id=(unit @t)
+          special-configuration-args=vase
           =config:zig
           =state-views:zig
           whos=(list @p)
@@ -489,6 +536,7 @@
     return-failure
   =/  p=(unit project:zig)
     (~(get by projects.state) project-name)
+  ~&  %sd^p
   ?:  ?&  ?=(^ p)
           (has-desk:zig-lib u.p desk-name)
       ==
@@ -498,10 +546,10 @@
       %+  weld  "project {<`@tas`project-name>} already has"
       " desk {<`@tas`desk-name>}"
     return-failure
-  ;<  new-state=state-0:zig  bind:m  handle-empty-project
+  ;<  new-state=state-0:zig  bind:m  update-project
   =.  state  new-state
   ~&  %sd^%1
-  ;<  ~  bind:m  handle-initial-zig-setup
+  :: ;<  ~  bind:m  start-new-ships
   ~&  %sd^%2
   ;<  ~  bind:m  make-dev-desk
   ~&  %sd^%3
@@ -511,7 +559,10 @@
   ;<  desk-names=(set desk)  bind:m  (scry (set desk) /cd/$)
   ~&  %sd^%5
   ;<  ~  bind:m  make-read-desk
-  ;<  ~  bind:m  (block-on-previous-operation `project-name)
+  :: ;<  ~  bind:m  make-snap
+  ;<  ~  bind:m  start-new-ships
+  ;<  ~  bind:m  (block-on-previous-operation ~)
+  :: ;<  ~  bind:m  (block-on-previous-operation `project-name)
   ~&  %sd^%6
   ;<  ~  bind:m  send-new-project-update
   ~&  %sd^%7
@@ -563,21 +614,15 @@
     %~  new-project  make-update-vase:zig-lib
     [project-name desk-name %setup-desk request-id]
   ::
-  ++  handle-initial-zig-setup
+  ++  start-new-ships
     =/  m  (strand ,~)
     ^-  form:m
-    ~&  %sd^%szs
-    ?.  ?&  =(1 ~(wyt by projects.state))
-            =('zig' project-name)
-        ==
-      (pure:m ~)
     ;<  ~  bind:m
       %+  poke-our  %ziggurat
       :-  %ziggurat-action
       !>  ^-  action:zig
       :-  project-name
-      :^  desk-name  request-id  %start-pyro-ships
-      default-ships:zig-lib
+      [desk-name request-id %start-pyro-ships whos]
     (sleep ~s1)
   ::
   ++  make-dev-desk
@@ -605,18 +650,25 @@
     %-  ~(gas ju sync-desk-to-vship.state)
     (turn whos |=(who=@p [desk-name who]))
   ::
-  ++  handle-empty-project
+  ++  update-project
     =/  m  (strand ,state-0:zig)
     ^-  form:m
-    ?:  (~(has by projects.state) project-name)
-      (pure:m state)
-    =|  =project:zig
-    =.  state
-      %=  state
-          projects
-        %+  ~(put by projects.state)  project-name
-        project(pyro-ships whos)
-      ==
+    =|  =desk:zig
+    =/  =project:zig
+      (~(gut by projects.state) project-name *project:zig)
+    =.  projects.state
+      %+  ~(put by projects.state)  project-name
+      %^  put-desk:zig-lib  project  desk-name
+      desk(special-configuration-args special-configuration-args)
+    :: ?:  (~(has by projects.state) project-name)
+    ::   (pure:m state)
+    :: =|  =project:zig
+    :: =.  state
+    ::   %=  state
+    ::       projects
+    ::     %+  ~(put by projects.state)  project-name
+    ::     project(pyro-ships whos)
+    ::   ==
     ;<  ~  bind:m
       %+  poke-our  %ziggurat
       :-  %ziggurat-action
@@ -645,13 +697,6 @@
       [desk-name request-id %set-ziggurat-state state]
     (pure:m state)
   ::
-  ++  run-desk-exists-setup
-    =/  m  (strand ,~)
-    ^-  form:m
-    ;<  ~  bind:m  make-read-desk
-    (pure:m ~)
-    :: make-snap
-  ::
   ++  make-read-desk
     =/  m  (strand ,~)
     ^-  form:m
@@ -659,39 +704,6 @@
     :-  %ziggurat-action
     !>  ^-  action:zig
     [project-name desk-name request-id %read-desk ~]
-  ::
-  ++  make-snap
-    =/  m  (strand ,~)
-    ^-  form:m
-    ?:  =('zig' project-name)  (pure:m ~)
-    ;<  =update:zig  bind:m
-      (scry update:zig /gx/ziggurat/focused-project/noun)
-    =/  focused-project=@t
-      ?>  ?=(^ update)  :: TODO: ?
-      ?>  ?=(%focused-project -.update)
-      ?>  ?=(%& -.payload.update)
-      p.payload.update
-    ;<  ~  bind:m
-      ?:  =('' focused-project)  (pure:m ~)
-      %+  poke-our  %ziggurat
-      :-  %ziggurat-action
-      !>  ^-  action:zig
-      [focused-project %$ request-id %take-snapshot ~]
-    ;<  ~  bind:m
-      %+  poke-our  %pyro
-      :-  %pyro-action
-      !>  ^-  action:pyro
-      [%restore-snap default-snap-path:zig-lib]
-    =/  ships-to-run=(list @p)
-      %~  tap  in
-      %.  default-ships-set:zig-lib
-      ~(dif in (~(gas in *(set @p)) whos))
-    ?~  ships-to-run  (pure:m ~)
-    %+  poke-our  %ziggurat
-    :-  %ziggurat-action
-    !>  ^-  action:zig
-    :-  project-name
-    [desk-name request-id %start-pyro-ships ships-to-run]
   ::
   ++  iterate-over-whos
     =/  m  (strand ,~)
