@@ -179,8 +179,6 @@
     ^-  (quip card _state)
     ?>  =(our.bowl src.bowl)
     =*  tag  -.+.+.+.act
-    :: ?:  =(tag %cis-panic)
-    ::   ~^state(status [%ready ~])
     =/  =update-info:zig
       [project-name.act desk-name.act tag request-id.act]
     ?-    tag
@@ -238,65 +236,34 @@
       ::  should show a warning on frontend before performing this one ;)
       `state(projects (~(del by projects) project-name.act))
     ::
-        %cis-panic  :: we handle this above, not here. ignore
-      ~^state
-    ::
-        %save-config-to-file
-      !!
-      :: ::  frontend should warn about overwriting
-      :: =/  file-text=@t
-      ::   %+  make-configs-file:zig-lib  ~
-      ::   %+  build-default-configuration:zig-lib
-      ::   (~(got by configs) project-name.act)  desk-name.act
-      :: =/  file-path=path  /zig/configs/[project-name.act]/hoon
-      :: :_  state
-      :: :+  %^  make-save-file:zig-lib  update-info
-      ::     file-path  file-text
-      ::   %-  make-read-desk:zig-lib
-      ::   [project-name desk-name request-id]:act
-      :: ~
-    ::
         %add-sync-desk-vships
-      !!
-      :: =*  project-name  project-name.act
-      :: =*  desk-name     desk-name.act
-      :: =*  ships         ships.act
-      :: =*  install       install.act
-      :: =*  start-apps    start-apps.act
-      :: =^  cards  state
-      ::   %-  handle-poke
-      ::   :^  project-name  desk-name  request-id.act
-      ::   [%read-desk ~]
-      :: =.  status
-      ::   :-  %commit-install-starting
-      ::   (make-cis-running:zig-lib ships desk-name)
-      :: :_  %=  state
-      ::         sync-desk-to-vship
-      ::       %-  ~(gas ju sync-desk-to-vship)
-      ::       %+  turn  ships
-      ::       |=(who=@p [desk-name who])
-      ::     ==
-      :: :-  %-  update-vase-to-card:zig-lib
-      ::     %.  status
-      ::     %~  status  make-update-vase:zig-lib
-      ::     update-info
-      :: |-
-      :: ?~  ships.act  cards
-      :: =*  who   i.ships
-      :: =/  cis-cards=(list card)
-      ::   :_  ~
-      ::   %+  cis-thread:zig-lib
-      ::     /cis-done/(scot %p who)/[project-name]/[desk-name]
-      ::   [who desk-name install start-apps status]
-      :: %=  $
-      ::     ships.act  t.ships.act
-      ::     cards      (weld cards cis-cards)
-      :: ==
+      :_  state
+      :+  %-  ~(poke-self pass:io /self-wire)
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  project-name.act  desk-name.act  request-id.act
+          :^  %queue-thread
+            (cat 3 'add-and-sync-' desk-name.act)  %lard
+          %:  setup-desk:zig-threads
+              project-name.act
+              desk-name.act
+              request-id.act
+              !>(~)
+              ~
+              ~
+              ships.act
+              install.act
+              start-apps.act
+          ==
+        %-  ~(poke-self pass:io /self-wire)
+        :-  %ziggurat-action
+        !>  ^-  action:zig
+        :^  project-name.act  desk-name.act  request-id.act
+        [%run-queue ~]
+      ~
     ::
         %delete-sync-desk-vships
-      :-  :_  ~
-          %-  make-cancel-watch-for-file-changes:zig-lib
-          [project-name desk-name]:act
+      :-  ~
       %=  state
           sync-desk-to-vship
         |-
@@ -781,8 +748,6 @@
         [update-info %error]
       =/  s=status:zig  status  ::  TODO: remove this hack
       ?-    -.s
-          %changing-project-desks   !!
-          %commit-install-starting  !!
           %uninitialized
         =/  top=(unit thread-queue-item:zig)
           ~(top to thread-queue)
@@ -814,15 +779,12 @@
           %-  update-vase-to-card:zig-lib
           %-  run-queue-error(level %warning)
           'no threads in queue'
-        ~&  %z^%run-queue^%ready
         =^  top=thread-queue-item:zig  thread-queue
           ~(get to thread-queue)
         =*  next-project-name  project-name.top
         =*  next-desk-name     desk-name.top
         =*  next-thread-name   thread-name.top
         =*  next-payload       payload.top
-        :: =*  next-thread-name   thread-name.top
-        :: =*  next-thread-args   thread-args.top
         =.  status  [%running-thread ~]
         :_  state
         :_  ~
@@ -835,46 +797,6 @@
         :^  %k  %fard  next-desk-name
         [next-thread-name [%noun args.next-payload]]
         ::  TODO: status, etc updates
-        :: =/  =project:zig  (~(got by projects) next-project-name)
-        :: =/  =desk:zig  (got-desk:zig-lib project next-desk-name)
-        :: =/  =test:zig  (~(got by tests.desk) next-test-id)
-        :: ?:  ?=(%| -.subject.test)
-        ::   :_  state
-        ::   :_  ~
-        ::   %-  update-vase-to-card:zig-lib
-        ::   %-  run-queue-error
-        ::   'test subject must compile before test can be run'
-        :: =/  tid=@ta
-        ::   %+  rap  3
-        ::   :~  'ted-'
-        ::       next-project-name
-        ::       '-'
-        ::       ?^(name.test u.name.test (scot %ux next-test-id))
-        ::       '-'
-        ::       (scot %uw (sham eny.bowl))
-        ::   ==
-        :: =/  =start-args:spider
-        ::   :-  ~
-        ::   :^  `tid  byk.bowl(r da+now.bowl)
-        ::     %ziggurat-test-run
-        ::   !>  ^-  (unit [@t @tas @ux test-steps:zig vase (list @p)])
-        ::   :*  ~
-        ::       next-project-name
-        ::       next-desk-name
-        ::       next-test-id
-        ::       steps.test
-        ::       p.subject.test
-        ::       default-ships:zig-lib  :: TODO: remove hardcode and allow input of for-snapshot
-        ::   ==
-        :: =/  w=wire
-        ::   :^  %test  next-project-name  next-desk-name
-        ::   /(scot %ux next-test-id)/[tid]
-        :: =.  status  [%running-test-steps ~]
-        :: :_  state
-        :: :-  %-  update-vase-to-card:zig-lib
-        ::     %.  status
-        ::     %~  status  make-update-vase:zig-lib
-        ::     update-info
         :: :^    %-  update-vase-to-card:zig-lib
         ::       %.  test-queue
         ::       %~  test-queue  make-update-vase:zig-lib
@@ -1249,24 +1171,11 @@
           (make-read-desk:zig-lib project-name desk-name ~)
         %^  make-compile-contracts:zig-lib  project-name
         desk-name  ~
-    :: %-  weld  :_  cards
     %+  turn
       %~  tap  in
       (~(get ju sync-desk-to-vship) desk-name)
     |=  who=@p
     (sync-desk-to-virtualship-card:zig-lib who desk-name)
-  ::
-    ::   [%delete-test @ @ @ ~]
-    :: ?.  ?&  ?=(%khan -.sign-arvo)
-    ::         ?=(%arow -.+.sign-arvo)
-    ::         ?=(%& -.p.+.sign-arvo)
-    ::     ==
-    ::   (on-arvo:def w sign-arvo)
-    :: =*  project-name  i.t.w
-    :: =*  desk-name     i.t.t.w
-    :: =*  test-id=@ux   (slav %ux i.t.t.t.w)
-    :: :_  this
-    :: ~[(make-delete-test:zig-lib test-id project-name desk-name ~)]
   ==
 ::
 ++  on-peek

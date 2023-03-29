@@ -539,6 +539,7 @@
   ~&  %sd^p
   ?:  ?&  ?=(^ p)
           (has-desk:zig-lib u.p desk-name)
+          ?=(^ (~(int in (~(gas in *(set @p)) pyro-ships.u.p)) (~(gas in *(set @p)) whos)))
       ==
     ;<  ~  bind:m
       %-  send-error
@@ -660,15 +661,6 @@
       %+  ~(put by projects.state)  project-name
       %^  put-desk:zig-lib  project  desk-name
       desk(special-configuration-args special-configuration-args)
-    :: ?:  (~(has by projects.state) project-name)
-    ::   (pure:m state)
-    :: =|  =project:zig
-    :: =.  state
-    ::   %=  state
-    ::       projects
-    ::     %+  ~(put by projects.state)  project-name
-    ::     project(pyro-ships whos)
-    ::   ==
     ;<  ~  bind:m
       %+  poke-our  %ziggurat
       :-  %ziggurat-action

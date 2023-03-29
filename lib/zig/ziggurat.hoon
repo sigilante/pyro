@@ -2173,7 +2173,6 @@
     %-  of
     :~  [%new-project new-project]
         [%delete-project ul]
-        [%save-config-to-file ul]
     ::
         [%add-sync-desk-vships add-sync-desk-vships]
         [%delete-sync-desk-vships (ot ~[[%ships (ar (se %p))]])]
@@ -2214,8 +2213,6 @@
     ::
         [%pyro-agent-state pyro-agent-state]
         [%pyro-chain-state pyro-chain-state]
-    ::
-        [%cis-panic ul]
     ::
         [%change-settings change-settings]
     ::
