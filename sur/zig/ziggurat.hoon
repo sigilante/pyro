@@ -195,7 +195,7 @@
       ::
           [%register-contract-for-compilation file=path]
           [%unregister-contract-for-compilation file=path]
-          [%deploy-contract town-id=@ux =path]
+          [%deploy-contract who=(unit @p) town-id=@ux contract-jam-path=path]
       ::
           [%compile-contracts ~]
           [%compile-contract =path]  ::  path of form /con/foo/hoon within project desk
@@ -257,6 +257,7 @@
       %new-project
       %add-config
       %delete-config
+      %queue-thread
       :: %add-test
       :: %edit-test
       :: %delete-test
@@ -310,6 +311,7 @@
       [%new-project update-info payload=(data =sync-desk-to-vship) ~]
       [%add-config update-info payload=(data [who=@p what=@tas item=@]) ~]
       [%delete-config update-info payload=(data [who=@p what=@tas]) ~]
+      [%queue-thread update-info payload=(data @tas) ~]
       :: [%add-test update-info payload=(data shown-test) test-id=@ux]
       :: [%edit-test update-info payload=(data shown-test) test-id=@ux]
       :: [%delete-test update-info payload=(data ~) test-id=@ux]

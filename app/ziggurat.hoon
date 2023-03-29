@@ -19,7 +19,7 @@
     pyro-lib=pyro-pyro,
     seq=zig-sequencer,
     smart=zig-sys-smart,
-    zig-threads=zig-ziggurat-threads,
+    ziggurat-threads=zig-ziggurat-threads,
     ziggurat-lib=zig-ziggurat
 /*  smart-lib-noun  %noun  /lib/zig/sys/smart-lib/noun
 /*  zink-cax-noun   %noun  /lib/zig/sys/hash-cache/noun
@@ -110,70 +110,6 @@
     ==
   [cards this]
   ::
-  ++  setup-project-desk
-    |=  $:  =update-info:zig
-            special-configuration-args=vase
-        ==
-    ^-  (list card)
-    =*  project-name  project-name.update-info
-    =*  desk-name     desk-name.update-info
-    =*  request-id    request-id.update-info
-    =/  cards=(list card)
-      :_  ~
-      %-  ~(poke-self pass:io /self-wire)
-      :-  %ziggurat-action
-      !>  ^-  action:zig
-      :^  project-name  desk-name  request-id
-      :^  %queue-thread
-        (cat 3 'ziggurat-configuration-' desk-name)  %fard
-      ?:  =(!>(~) special-configuration-args)
-        !>(`[project-name desk-name request-id])
-      ;:  slop
-          !>(~)
-          !>(project-name)
-          !>(desk-name)
-          !>(request-id)
-          special-configuration-args
-      ==
-    =/  config-file-path=path
-      :-  (scot %p our.bowl)
-      %+  weld  /[desk-name]/(scot %da now.bowl)
-      /ted/ziggurat/configuration/[desk-name]/hoon
-    =/  does-config-exist=?  .^(? %cu config-file-path)
-    ~&  %z^%np^%does-config-exist^does-config-exist
-    ?:  does-config-exist  cards
-    :_  cards
-    %-  ~(poke-self pass:io /self-wire)
-    :-  %ziggurat-action
-    !>  ^-  action:zig
-    :^  project-name  desk-name  request-id
-    :^  %queue-thread
-      (cat 3 'create-desk-' desk-name)  %lard
-    (create-desk:zig-threads update-info)
-  ::
-  ++  update-project-from-desk-change
-    |=  $:  =update-info:zig
-            desk-names=(list [@tas vase])
-        ==
-    ^-  (list card)
-    =*  project-name  project-name.update-info
-    =*  request-id    request-id.update-info
-    =/  cards=(list card)
-      %+  roll  desk-names
-      |=  [[desk-name=@tas special-configuration-args=vase] cards=(list card)]
-      %+  weld  cards
-      %+  setup-project-desk
-        update-info(desk-name desk-name)
-      special-configuration-args
-    :-  %+  ~(poke-our pass:io /pyro-poke)  %pyro
-        :-  %pyro-action
-        !>  ^-  action:pyro
-        [%restore-snap default-snap-path:zig-lib]
-    %+  snoc  cards
-    %-  ~(poke-self pass:io /self-wire)
-    :-  %ziggurat-action
-    !>  ^-  action:zig
-    [project-name %$ request-id [%run-queue ~]]
   ++  handle-poke
     |=  act=action:zig
     ^-  (quip card _state)
@@ -181,6 +117,17 @@
     =*  tag  -.+.+.+.act
     =/  =update-info:zig
       [project-name.act desk-name.act tag request-id.act]
+    =*  zig-threads
+      %~  .  ziggurat-threads
+      :+  project-name.act  desk-name.act
+      %+  get-ship-to-address-map:zig-lib
+      project-name.act  configs
+    :: =*  zig-threads
+    ::   ~(. ziggurat-threads project-name.act desk-name.act (get-ship-to-address-map:zig-lib project-name.act configs))
+      :: %~  .  zig-threads  project-name.act  desk-name.act
+      :: %+  get-ship-to-address-map:zig-lib
+      :: project-name.act  configs
+    |^
     ?-    tag
         %new-project
       ::  TODO: add to queue and run queue
@@ -372,8 +319,8 @@
                 (cat 3 'make-snap-' desk-name.act)  %lard
               %+  make-snap:zig-threads  project-name.act
               request-id.act
-          %+  snoc  %+  update-project-from-desk-change
-                    update-info  desk-names
+          %+  snoc  %-  update-project-from-desk-change
+                    desk-names
           %-  ~(poke-self pass:io /self-wire)
           :-  %ziggurat-action
           !>  ^-  action:zig
@@ -418,8 +365,8 @@
                 (cat 3 'make-snap-' desk-name.act)  %lard
               %+  make-snap:zig-threads  project-name.act
               request-id.act
-          %+  snoc  %+  update-project-from-desk-change
-                    update-info  desk-names
+          %+  snoc  %-  update-project-from-desk-change
+                    desk-names
           %-  ~(poke-self pass:io /self-wire)
           :-  %ziggurat-action
           !>  ^-  action:zig
@@ -511,122 +458,42 @@
       state(projects (~(put by projects) project-name.act project))
     ::
         %deploy-contract
-      !!
-      :: =/  =project:zig  (~(got by projects) project-name.act)
-      :: =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
-      :: =/  add-test-error
-      ::   %~  add-test  make-error-vase:zig-lib
-      ::   [update-info %error]
-      :: =/  who=(unit @p)
-      ::   %^  town-id-to-sequencer-host:zig-lib  project-name.act
-      ::   town-id.act  configs
-      :: ?~  who
-      ::   :_  state
-      ::   :_  ~
-      ::   %-  update-vase-to-card:zig-lib
-      ::   %+  add-test-error  0x0
-      ::   %-  crip
-      ::   %+  weld  "could not find host for town-id"
-      ::   " {<town-id.act>} amongst {<configs>}"
-      :: =/  address=@ux
-      ::   (~(got bi:mip configs) 'global' [u.who %address])
-      :: =/  test-name=@tas  `@tas`(rap 3 %deploy path.act)
-      :: =/  imports=(list [@tas path])
-      ::   :^    [%indexer /sur/zig/indexer]
-      ::       [%zig /sur/zig/ziggurat]
-      ::     [%mip /lib/mip]
-      ::   ~
-      :: =^  subject=(each vase @t)  state
-      ::   %-  compile-imports:zig-lib
-      ::   :^  project-name.act  desk-name.act  imports  state
-      :: ?:  ?=(%| -.subject)
-      ::   :_  state
-      ::   :_  ~
-      ::   %-  update-vase-to-card:zig-lib
-      ::   %+  add-test-error  0x0
-      ::   %^  cat  3  'compilation of imports failed:\0a'
-      ::   p.subject
-      :: =*  service-host  ~nec  ::  TODO: remove hardcode
-      :: =.  path.act
-      ::   ?+    (rear path.act)  !!  ::  TODO: error handle
-      ::       %jam   path.act
-      ::       %hoon
-      ::     %-  need  ::  TODO: error handle
-      ::     (convert-contract-hoon-to-jam:zig-lib path.act)
-      ::   ==
-      :: =/  =test:zig
-      ::   :*  `test-name
-      ::       ~
-      ::       (~(gas by *imports:zig) imports)
-      ::       subject
-      ::       ~
-      ::   ::
-      ::       :_  ~
-      ::       :-  %custom-write
-      ::       :^  %send-wallet-transaction  ~
-      ::         %-  crip
-      ::         %-  noah
-      ::         !>  ^-  [@p @p test-write-step:zig]
-      ::         :+  u.who  service-host
-      ::         :-  %custom-write
-      ::         :^  %deploy-contract  ~
-      ::           %-  crip
-      ::           "[{<u.who>} {<service-host>} {<path.act>} %.n ~]"
-      ::         ~
-      ::       ~
-      ::   ::
-      ::       ~
-      ::   ==
-      :: =^  cards=(list card)  test
-      ::   %^  add-custom-step:zig-lib  test  project-name.act
-      ::   :^  desk-name.act  %deploy-contract
-      ::     /zig/custom-step-definitions/deploy-contract/hoon
-      ::   request-id.act
-      :: =/  all-cards=(list card)  cards
-      :: =^  cards=(list card)  test
-      ::   %^  add-custom-step:zig-lib  test  project-name.act
-      ::   :^  desk-name.act  %send-wallet-transaction
-      ::     /zig/custom-step-definitions/send-wallet-transaction/hoon
-      ::   request-id.act
-      :: =/  test-id=@ux  `@ux`(sham test)
-      :: =.  tests.desk  (~(put by tests.desk) test-id test)
-      :: =.  test-queue
-      ::   %^  ~(put to test-queue)  project-name.act
-      ::   desk-name.act  test-id
-      :: :_  %=  state
-      ::         projects
-      ::       %+  ~(put by projects)  project-name.act
-      ::       (put-desk:zig-lib project desk-name.act desk)
-      ::     ==
-      :: :-  %-  %~  arvo  pass:io
-      ::         :+  %delete-test  project-name.act
-      ::         /[desk-name.act]/(scot %ux test-id)
-      ::     :^  %k  %lard  q.byk.bowl
-      ::     =/  m  (strand ,vase)
-      ::     ^-  form:m
-      ::     ;<  ~  bind:m
-      ::       %^  watch-our:strandio  /updates  %ziggurat
-      ::       /project
-      ::     |-
-      ::     ;<  update-cage=cage  bind:m
-      ::       (take-fact:strandio /updates)
-      ::     ?.  ?=(%ziggurat-update -.update-cage)  $
-      ::     =+  !<(=update:zig q.update-cage)
-      ::     ?~  update                              $
-      ::     ?.  ?=(%test-results -.update)          $
-      ::     ?.  =(test-id test-id.update)           $
-      ::     (pure:m !>(`?`-.payload.update))
-      :: ^-  (list card)
-      :: :^    %-  make-run-queue:zig-lib
-      ::       [project-name desk-name request-id]:act
-      ::     %-  update-vase-to-card:zig-lib
-      ::     %.  test-queue
-      ::     ~(test-queue make-update-vase:zig-lib update-info)
-      ::   %-  update-vase-to-card:zig-lib
-      ::   %.  [test test-id]
-      ::   %~  add-test  make-update-vase:zig-lib
-      ::   update-info
-      :: (weld cards all-cards)
+      =/  =project:zig  (~(got by projects) project-name.act)
+      =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
+      =/  queue-thread-error
+        %~  queue-thread  make-error-vase:zig-lib
+        [update-info %error]
+      =/  host=(unit @p)
+        %^  town-id-to-sequencer-host:zig-lib  project-name.act
+        town-id.act  configs
+      ?~  host
+        :_  state
+        :_  ~
+        %-  update-vase-to-card:zig-lib
+        %-  queue-thread-error
+        %-  crip
+        %+  weld  "could not find host for town-id"
+        " {<town-id.act>} amongst {<configs>}"
+      =*  who  ?^(who.act u.who.act u.host)
+      :_  state
+      :+  %-  ~(poke-self pass:io /self-wire)
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  project-name.act  desk-name.act  request-id.act
+          :^    %queue-thread
+              %^  cat  3  'deploy-contract-'
+              (spat contract-jam-path.act)
+            %lard
+          %-  send-wallet-transaction:zig-threads
+          :^  project-name.act  who  u.host
+          :-  !>(deploy-contract:zig-threads)
+          [who contract-jam-path.act %.n ~]
+        %-  ~(poke-self pass:io /self-wire)
+        :-  %ziggurat-action
+        !>  ^-  action:zig
+        :^  project-name.act  desk-name.act  request-id.act
+        [%run-queue ~]
+      ~
     ::
         %compile-contracts
       ::  for internal use
@@ -1049,6 +916,70 @@
         make-error-vase:zig-lib  [update-info %warning]
       ~
     ==
+    ::
+    ++  setup-project-desk
+      |=  $:  =update-info:zig
+              special-configuration-args=vase
+          ==
+      ^-  (list card)
+      =*  project-name  project-name.update-info
+      =*  desk-name     desk-name.update-info
+      =*  request-id    request-id.update-info
+      =/  cards=(list card)
+        :_  ~
+        %-  ~(poke-self pass:io /self-wire)
+        :-  %ziggurat-action
+        !>  ^-  action:zig
+        :^  project-name  desk-name  request-id
+        :^  %queue-thread
+          (cat 3 'ziggurat-configuration-' desk-name)  %fard
+        ?:  =(!>(~) special-configuration-args)
+          !>(`[project-name desk-name request-id])
+        ;:  slop
+            !>(~)
+            !>(project-name)
+            !>(desk-name)
+            !>(request-id)
+            special-configuration-args
+        ==
+      =/  config-file-path=path
+        :-  (scot %p our.bowl)
+        %+  weld  /[desk-name]/(scot %da now.bowl)
+        /ted/ziggurat/configuration/[desk-name]/hoon
+      =/  does-config-exist=?  .^(? %cu config-file-path)
+      ~&  %z^%np^%does-config-exist^does-config-exist
+      ?:  does-config-exist  cards
+      :_  cards
+      %-  ~(poke-self pass:io /self-wire)
+      :-  %ziggurat-action
+      !>  ^-  action:zig
+      :^  project-name  desk-name  request-id
+      :^  %queue-thread
+        (cat 3 'create-desk-' desk-name)  %lard
+      (create-desk:zig-threads update-info)
+    ::
+    ++  update-project-from-desk-change
+      |=  desk-names=(list [@tas vase])
+      ^-  (list card)
+      =*  project-name  project-name.update-info
+      =*  request-id    request-id.update-info
+      =/  cards=(list card)
+        %+  roll  desk-names
+        |=  [[desk-name=@tas special-configuration-args=vase] cards=(list card)]
+        %+  weld  cards
+        %+  setup-project-desk
+          update-info(desk-name desk-name)
+        special-configuration-args
+      :-  %+  ~(poke-our pass:io /pyro-poke)  %pyro
+          :-  %pyro-action
+          !>  ^-  action:pyro
+          [%restore-snap default-snap-path:zig-lib]
+      %+  snoc  cards
+      %-  ~(poke-self pass:io /self-wire)
+      :-  %ziggurat-action
+      !>  ^-  action:zig
+      [project-name %$ request-id [%run-queue ~]]
+    --
   --
 ::
 ++  on-agent

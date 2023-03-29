@@ -1731,6 +1731,12 @@
     !>  ^-  update:zig
     [%new-project update-info [%| level message] ~]
   ::
+  ++  queue-thread
+    |=  message=@t
+    ^-  vase
+    !>  ^-  update:zig
+    [%queue-thread update-info [%| level message] ~]
+  ::
   ++  compile-contract
     |=  message=@t
     ^-  vase
@@ -1863,6 +1869,9 @@
       :+  ['who' %s (scot %p who.p.payload.update)]
         ['what' %s what.p.payload.update]
       ~
+    ::
+        %queue-thread
+      ['data' %s p.payload.update]~
     ::
         ?(%add-user-file %delete-user-file)
       :+  ['file' (path file.update)]
@@ -2262,10 +2271,11 @@
     ==
   ::
   ++  deploy
-    ^-  $-(json [town-id=@ux contract-jam=path])
+    ^-  $-(json [who=(unit @p) town-id=@ux contract-jam-path=path])
     %-  ot
-    :~  [%town-id (se %ux)]
-        [%path pa]
+    :~  [%who (se-soft %p)]
+        [%town-id (se %ux)]
+        [%contract-jam-path pa]
     ==
   ::
   ++  add-sync-desk-vships
