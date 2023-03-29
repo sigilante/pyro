@@ -532,7 +532,6 @@
           [desk-name special-configuration-args.desk]
         ?~  index.act  (snoc existing new)
         (into existing u.index.act new)
-      ~&  %z^%add-project-desk^desk-names
       :-  :-  %-  ~(poke-self pass:io /self-wire)
               :-  %ziggurat-action
               !>  ^-  action:zig
@@ -549,7 +548,8 @@
           !>  ^-  action:zig
           :^  project-name.act  desk-name.act  request-id.act
           [%run-queue ~]
-      =.  projects
+      %=  state
+          projects
         %-  ~(gas by projects)
         =+  [project-name.act project(desks ~)]~
         ?:  =('' focused-project)  -
@@ -558,40 +558,53 @@
         =/  old=project:zig
           (~(got by projects) focused-project)
         old(saved-thread-queue thread-queue)
-        :: %+  ~(jab by projects)     focused-project
-        :: |=  =project:zig
-        :: project(saved-thread-queue thread-queue)
-      ~&  %add-desk-to-project^(~(get by projects) project-name.act)
-      state
+      ==
     ::
         %delete-project-desk
-      !!
-      :: =/  delete-project-desk-error
-      ::   %~  delete-project-desk  make-error-vase:zig-lib
-      ::   [update-info %error]
-      :: ?.  =(focused-project project-name.act)
-      ::   :_  state
-      ::   :_  ~
-      ::   %-  update-vase-to-card:zig-lib
-      ::   %-  delete-project-desk-error(level %warning)
-      ::   %-  crip
-      ::   ;:  weld
-      ::       "focused-project ({<`@tas`focused-project>})"
-      ::       " must be same as project-name"
-      ::       " ({<`@tas`project-name.act>}); retry after"
-      ::       " %change-focus"
-      ::   ==
-      :: =/  =project:zig  (~(got by projects) project-name.act)
-      :: ?.  (has-desk:zig-lib project desk-name.act)
-      ::   :_  state
-      ::   :_  ~
-      ::   %-  update-vase-to-card:zig-lib
-      ::   %-  delete-project-desk-error(level %warning)
-      ::   %-  crip
-      ::   %+  weld  "project {<`@tas`project-name.act>}"
-      ::   " doesn't have desk {<`@tas`desk-name.act>}"
-      :: =.  project  (del-desk:zig-lib project desk-name.act)
-      :: (update-project-from-desk-change update-info project)
+      =/  delete-project-desk-error
+        %~  delete-project-desk  make-error-vase:zig-lib
+        [update-info %error]
+      =/  =project:zig  (~(got by projects) project-name.act)
+      ?.  (has-desk:zig-lib project desk-name.act)
+        :_  state
+        :_  ~
+        %-  update-vase-to-card:zig-lib
+        %-  delete-project-desk-error(level %warning)
+        %-  crip
+        %+  weld  "project {<`@tas`project-name.act>}"
+        " doesn't have desk {<`@tas`desk-name.act>}"
+      =.  project  (del-desk:zig-lib project desk-name.act)
+      =/  desk-names=(list [@tas vase])  
+        %+  turn  desks.project
+        |=  [desk-name=@tas =desk:zig]
+        [desk-name special-configuration-args.desk]
+      :-  :-  %-  ~(poke-self pass:io /self-wire)
+              :-  %ziggurat-action
+              !>  ^-  action:zig
+              :^  project-name.act  desk-name.act
+                request-id.act
+              :^  %queue-thread
+                (cat 3 'make-snap-' desk-name.act)  %lard
+              %+  make-snap:zig-threads  project-name.act
+              request-id.act
+          %+  snoc  %+  update-project-from-desk-change
+                    update-info  desk-names
+          %-  ~(poke-self pass:io /self-wire)
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  project-name.act  desk-name.act  request-id.act
+          [%run-queue ~]
+      %=  state
+          projects
+        %-  ~(gas by projects)
+        =+  [project-name.act project(desks ~)]~
+        ?:  =('' focused-project)  -
+        :_  -
+        :-  focused-project
+        =/  old=project:zig
+          (~(got by projects) focused-project)
+        old(saved-thread-queue thread-queue)
+      ==
     ::
         %save-file
       =/  =project:zig  (~(got by projects) project-name.act)
