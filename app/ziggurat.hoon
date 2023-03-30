@@ -480,8 +480,8 @@
               (spat contract-jam-path.act)
             %lard
           %-  send-wallet-transaction:zig-threads
-          :^  project-name.act  who  u.host
-          :-  !>(deploy-contract:zig-threads)
+          :-  project-name.act
+          :^  who  u.host  !>(deploy-contract:zig-threads)
           [who contract-jam-path.act %.n ~]
         %-  ~(poke-self pass:io /self-wire)
         :-  %ziggurat-action
