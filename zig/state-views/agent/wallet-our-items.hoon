@@ -4,8 +4,6 @@
 ::
 ::  get our held items
 ^-  book:wal
-=/  who=@p  our:test-globals
-=/  who-address=@ux
-  %.  [%global [who %address]]
-  ~(got bi:mip configs:test-globals)
+=*  who-address=@ux
+  (~(got bi:mip configs) [%global [who %address]])
 (~(got by tokens) who-address)

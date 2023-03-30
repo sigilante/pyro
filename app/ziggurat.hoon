@@ -836,9 +836,7 @@
               /[now]/[who]/[app]/dbug/state/noun/noun
           ==
       =^  subject=(each vase @t)  state
-        %-  compile-imports:zig-lib
-        :^  project-name.act  desk-name.act
-        ~(tap by imports.act)  state
+        (compile-imports ~(tap by imports.act))
       ?:  ?=(%| -.subject)
         :_  state
         :_  ~
@@ -846,10 +844,10 @@
         %-  state-error
         %^  cat  3  'compilation of imports failed:\0a'
         p.subject
-      =.  p.subject
-        (slop agent-state (slop !>(bowl=bowl) p.subject))
+      =.  p.subject  (slop agent-state p.subject)
       =/  modified-state=vase
-        (slap p.subject (loud-ream:zig-lib grab.act /))
+        %+  slap  (slop !>(who=who) p.subject)
+        (loud-ream:zig-lib grab.act /)
       ::  %shown-pyro-agent-state over %pyro-agent-state
       ::   because there are casts deep in vanes that don't
       ::   take too kindly to vases within vases
@@ -876,9 +874,7 @@
         %-  update-vase-to-card:zig-lib
         (state-error p.chain-state)
       =^  subject=(each vase @t)  state
-        %-  compile-imports:zig-lib
-        :^  project-name.act  desk-name.act
-        ~(tap by imports.act)  state
+        (compile-imports ~(tap by imports.act))
       ?:  ?=(%| -.subject)
         :_  state
         :_  ~
@@ -886,8 +882,7 @@
         %-  state-error
         %^  cat  3  'compilation of imports failed:\0a'
         p.subject
-      =.  p.subject
-        (slop !>(p.chain-state) (slop !>(bowl=bowl) p.subject))
+      =.  p.subject  (slop !>(p.chain-state) p.subject)
       =/  modified-state=vase
         (slap p.subject (loud-ream:zig-lib grab.act /))
       :_  state
@@ -979,6 +974,34 @@
       :-  %ziggurat-action
       !>  ^-  action:zig
       [project-name %$ request-id [%run-queue ~]]
+    ::
+    ++  compile-imports
+      |=  imports=(list [face=@tas =path])
+      ^-  [(each vase @t) _state]
+      =/  compilation-result
+        %-  mule
+        |.
+        =/  [subject=vase c=ca-scry-cache:zig]
+          %+  roll  imports
+          |:  [[face=`@tas`%$ sur=`path`/] [subject=`vase`!>(..zuse) ca-scry-cache=ca-scry-cache:state]]
+          =^  sur-hoon=vase  ca-scry-cache
+            %-  need  ::  TODO: handle error
+            %^  scry-or-cache-ca:zig-lib  desk-name.act
+            (snoc sur %hoon)  ca-scry-cache
+          :_  ca-scry-cache
+          %-  slop  :_  subject
+          sur-hoon(p [%face face p.sur-hoon])
+        :_  c
+        ;:(slop !>(configs=configs) !>(bowl=bowl) subject)
+      ?:  ?=(%& -.compilation-result)
+        :-  [%& -.p.compilation-result]
+        state(ca-scry-cache +.p.compilation-result)
+      :_  state
+      :-  %|
+      %-  crip
+      %+  roll  p.compilation-result
+      |=  [in=tank out=tape]
+      :(weld ~(ram re in) "\0a" out)
     --
   --
 ::
