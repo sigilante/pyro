@@ -226,7 +226,6 @@
       ::
           [%stop-pyro-ships ~]
           [%start-pyro-ships ships=(list @p)]  ::  ships=~ -> ~[~nec ~bud ~wes]
-          [%start-pyro-snap snap=path]
       ::
           [%take-snapshot update-project-snaps=(unit path)]  ::  ~ -> overwrite project snap
       ::
@@ -234,8 +233,6 @@
       ::
           [%add-user-file file=path]
           [%delete-user-file file=path]
-      ::
-          [%send-pyro-dojo who=@p command=tape]
       ::
           [%pyro-agent-state who=@p app=@tas =imports grab=@t]
           [%pyro-chain-state =imports grab=@t]

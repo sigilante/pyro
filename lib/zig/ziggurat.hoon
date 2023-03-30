@@ -634,21 +634,6 @@
   :+  who  /c/commit/(scot %p who)
   (park:pyro-lib our.bowl project-name %da now.bowl)
 ::
-++  send-pyro-dojo-card
-  |=  [who=@p command=tape]
-  ^-  card
-  %+  %~  poke-our  pass:io
-      /dojo/(scot %p who)/(scot %ux `@ux`(jam command))
-    %pyro
-  (send-pyro-dojo-cage who command)
-::
-++  send-pyro-dojo-cage
-  |=  [who=@p command=tape]
-  ^-  cage
-  :-  %pyro-events
-  !>  ^-  (list pyro-event:pyro)
-  (dojo-events:pyro-lib who command)
-::
 ++  make-cis-running
   |=  [ships=(list @p) desk-name=@tas]
   ^-  (map @p [@t ?])
@@ -2045,7 +2030,6 @@
     ::
         [%stop-pyro-ships ul]
         [%start-pyro-ships (ot ~[[%ships (ar (se %p))]])]
-        [%start-pyro-snap (ot ~[[%snap pa]])]
     ::
         [%take-snapshot (ot ~[[%update-project-snaps (mu pa)]])]
     ::
@@ -2053,8 +2037,6 @@
     ::
         [%add-user-file (ot ~[[%file pa]])]
         [%delete-user-file (ot ~[[%file pa]])]
-    ::
-        [%send-pyro-dojo (ot ~[[%who (se %p)] [%command sa]])]
     ::
         [%pyro-agent-state pyro-agent-state]
         [%pyro-chain-state pyro-chain-state]

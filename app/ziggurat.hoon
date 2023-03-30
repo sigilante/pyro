@@ -122,11 +122,6 @@
       :+  project-name.act  desk-name.act
       %+  get-ship-to-address-map:zig-lib
       project-name.act  configs
-    :: =*  zig-threads
-    ::   ~(. ziggurat-threads project-name.act desk-name.act (get-ship-to-address-map:zig-lib project-name.act configs))
-      :: %~  .  zig-threads  project-name.act  desk-name.act
-      :: %+  get-ship-to-address-map:zig-lib
-      :: project-name.act  configs
     |^
     ?-    tag
         %new-project
@@ -615,6 +610,13 @@
         [update-info %error]
       =/  s=status:zig  status  ::  TODO: remove this hack
       ?-    -.s
+          %running-thread
+        :_  state
+        :_  ~
+        %-  update-vase-to-card:zig-lib
+        %-  run-queue-error(level %info)
+        'queue already running'
+      ::
           %uninitialized
         =/  top=(unit thread-queue-item:zig)
           ~(top to thread-queue)
@@ -632,13 +634,6 @@
         %-  run-queue-error(level %warning)
         'must run %start-pyro-ships before threads'
       ::
-          %running-thread
-        :_  state
-        :_  ~
-        %-  update-vase-to-card:zig-lib
-        %-  run-queue-error(level %info)
-        'queue already running'
-      ::
           %ready
         ?:  =(~ thread-queue)
           :_  state
@@ -654,25 +649,19 @@
         =*  next-payload       payload.top
         =.  status  [%running-thread ~]
         :_  state
-        :_  ~
-        %-  %~  arvo  pass:io
-            ^-  path
-            :^  %thread-result  next-project-name
-            next-desk-name  /[next-thread-name]
-        ?:  ?=(%lard -.next-payload)
-          [%k %lard q.byk.bowl shed.next-payload]
-        :^  %k  %fard  next-desk-name
-        [next-thread-name [%noun args.next-payload]]
-        ::  TODO: status, etc updates
-        :: :^    %-  update-vase-to-card:zig-lib
-        ::       %.  test-queue
-        ::       %~  test-queue  make-update-vase:zig-lib
-        ::       update-info
-        ::     %+  ~(watch-our pass:io w)  %spider
-        ::     /thread-result/[tid]
-        ::   %+  ~(poke-our pass:io w)  %spider
-        ::   [%spider-start !>(start-args)]
-        :: ~
+        :+  %-  update-vase-to-card:zig-lib
+            %.  thread-queue
+            %~  thread-queue  make-update-vase:zig-lib
+            update-info
+          %-  %~  arvo  pass:io
+              ^-  path
+              :^  %thread-result  next-project-name
+              next-desk-name  /[next-thread-name]
+          ?:  ?=(%lard -.next-payload)
+            [%k %lard q.byk.bowl shed.next-payload]
+          :^  %k  %fard  next-desk-name
+          [next-thread-name [%noun args.next-payload]]
+        ~
       ==
     ::
         %clear-queue
@@ -717,8 +706,6 @@
       %+  ~(poke-our pass:io /self-wire)  %pyro
       [%pyro-action !>([%init-ship who])]
     ::
-        %start-pyro-snap  !!  ::  TODO
-    ::
         %take-snapshot
       =/  =project:zig  (~(got by projects) project-name.act)
       =/  snap-path=path
@@ -737,37 +724,38 @@
         project(most-recent-snap snap-path)
       ==
     ::
-        %publish-app  :: TODO
-      ::  [%publish-app title=@t info=@t color=@ux image=@t version=[@ud @ud @ud] website=@t license=@t]
-      ::  should assert that desk.bill contains only our agent name,
-      ::  and that clause has been filled out at least partially,
-      ::  then poke treaty agent with publish
-      =/  =project:zig  (~(got by projects) project-name.act)
-      =/  bill
-        ;;  (list @tas)
-        .^(* %cx /(scot %p our.bowl)/(scot %tas desk-name.act)/(scot %da now.bowl)/desk/bill)
-      ~|  "desk.bill should only contain our agent"
-      ?>  =(bill ~[project-name.act])
-      =/  docket-0
-        :*  %1
-            'Foo'
-            'An app that does a thing.'
-            0xf9.8e40
-            [%glob `@tas`project-name.act [0v0 [%ames our.bowl]]]
-            `'https://example.com/tile.svg'
-            [0 0 1]
-            'https://example.com'
-            'MIT'
-        ==
-      =/  docket-task
-        [%info `@tas`project-name.act %& [/desk/docket-0 %ins %docket-0 !>(docket-0)]~]
-      :_  state
-      :^    (~(arvo pass:io /save-wire) %c [docket-task])
-          %-  make-compile-contracts:zig-lib
-          [project-name desk-name request-id]:act
-        %+  ~(poke-our pass:io /treaty-wire)  %treaty
-        [%alliance-update-0 !>([%add our.bowl `@tas`project-name.act])]
-      ~
+        %publish-app
+      !!  :: TODO
+      :: ::  [%publish-app title=@t info=@t color=@ux image=@t version=[@ud @ud @ud] website=@t license=@t]
+      :: ::  should assert that desk.bill contains only our agent name,
+      :: ::  and that clause has been filled out at least partially,
+      :: ::  then poke treaty agent with publish
+      :: =/  =project:zig  (~(got by projects) project-name.act)
+      :: =/  bill
+      ::   ;;  (list @tas)
+      ::   .^(* %cx /(scot %p our.bowl)/(scot %tas desk-name.act)/(scot %da now.bowl)/desk/bill)
+      :: ~|  "desk.bill should only contain our agent"
+      :: ?>  =(bill ~[project-name.act])
+      :: =/  docket-0
+      ::   :*  %1
+      ::       'Foo'
+      ::       'An app that does a thing.'
+      ::       0xf9.8e40
+      ::       [%glob `@tas`project-name.act [0v0 [%ames our.bowl]]]
+      ::       `'https://example.com/tile.svg'
+      ::       [0 0 1]
+      ::       'https://example.com'
+      ::       'MIT'
+      ::   ==
+      :: =/  docket-task
+      ::   [%info `@tas`project-name.act %& [/desk/docket-0 %ins %docket-0 !>(docket-0)]~]
+      :: :_  state
+      :: :^    (~(arvo pass:io /save-wire) %c [docket-task])
+      ::     %-  make-compile-contracts:zig-lib
+      ::     [project-name desk-name request-id]:act
+      ::   %+  ~(poke-our pass:io /treaty-wire)  %treaty
+      ::   [%alliance-update-0 !>([%add our.bowl `@tas`project-name.act])]
+      :: ~
     ::
         %add-user-file
       =/  =project:zig  (~(got by projects) project-name.act)
@@ -800,10 +788,6 @@
       %.  file.act
       %~  delete-user-file  make-update-vase:zig-lib
       update-info
-    ::
-        %send-pyro-dojo
-      :_  state
-      (send-pyro-dojo-card:zig-lib [who command]:act)^~
     ::
         %pyro-agent-state
       =/  who=@ta  (scot %p who.act)
@@ -912,47 +896,6 @@
       ~
     ==
     ::
-    ++  setup-project-desk
-      |=  $:  =update-info:zig
-              special-configuration-args=vase
-          ==
-      ^-  (list card)
-      =*  project-name  project-name.update-info
-      =*  desk-name     desk-name.update-info
-      =*  request-id    request-id.update-info
-      =/  cards=(list card)
-        :_  ~
-        %-  ~(poke-self pass:io /self-wire)
-        :-  %ziggurat-action
-        !>  ^-  action:zig
-        :^  project-name  desk-name  request-id
-        :^  %queue-thread
-          (cat 3 'ziggurat-configuration-' desk-name)  %fard
-        ?:  =(!>(~) special-configuration-args)
-          !>(`[project-name desk-name request-id])
-        ;:  slop
-            !>(~)
-            !>(project-name)
-            !>(desk-name)
-            !>(request-id)
-            special-configuration-args
-        ==
-      =/  config-file-path=path
-        :-  (scot %p our.bowl)
-        %+  weld  /[desk-name]/(scot %da now.bowl)
-        /ted/ziggurat/configuration/[desk-name]/hoon
-      =/  does-config-exist=?  .^(? %cu config-file-path)
-      ~&  %z^%np^%does-config-exist^does-config-exist
-      ?:  does-config-exist  cards
-      :_  cards
-      %-  ~(poke-self pass:io /self-wire)
-      :-  %ziggurat-action
-      !>  ^-  action:zig
-      :^  project-name  desk-name  request-id
-      :^  %queue-thread
-        (cat 3 'create-desk-' desk-name)  %lard
-      (create-desk:zig-threads update-info)
-    ::
     ++  update-project-from-desk-change
       |=  desk-names=(list [@tas vase])
       ^-  (list card)
@@ -1002,6 +945,47 @@
       %+  roll  p.compilation-result
       |=  [in=tank out=tape]
       :(weld ~(ram re in) "\0a" out)
+    ::
+    ++  setup-project-desk
+      |=  $:  =update-info:zig
+              special-configuration-args=vase
+          ==
+      ^-  (list card)
+      =*  project-name  project-name.update-info
+      =*  desk-name     desk-name.update-info
+      =*  request-id    request-id.update-info
+      =/  cards=(list card)
+        :_  ~
+        %-  ~(poke-self pass:io /self-wire)
+        :-  %ziggurat-action
+        !>  ^-  action:zig
+        :^  project-name  desk-name  request-id
+        :^  %queue-thread
+          (cat 3 'ziggurat-configuration-' desk-name)  %fard
+        ?:  =(!>(~) special-configuration-args)
+          !>(`[project-name desk-name request-id])
+        ;:  slop
+            !>(~)
+            !>(project-name)
+            !>(desk-name)
+            !>(request-id)
+            special-configuration-args
+        ==
+      =/  config-file-path=path
+        :-  (scot %p our.bowl)
+        %+  weld  /[desk-name]/(scot %da now.bowl)
+        /ted/ziggurat/configuration/[desk-name]/hoon
+      =/  does-config-exist=?  .^(? %cu config-file-path)
+      ~&  %z^%np^%does-config-exist^does-config-exist
+      ?:  does-config-exist  cards
+      :_  cards
+      %-  ~(poke-self pass:io /self-wire)
+      :-  %ziggurat-action
+      !>  ^-  action:zig
+      :^  project-name  desk-name  request-id
+      :^  %queue-thread
+        (cat 3 'create-desk-' desk-name)  %lard
+      (create-desk:zig-threads update-info)
     --
   --
 ::
@@ -1014,9 +998,18 @@
   |=  [w=wire =sign-arvo:agent:gall]
   ^-  (quip card _this)
   ?+    w  (on-arvo:def w sign-arvo)
-      [%create-desk @ ~]              `this
       [%new-project-from-remote @ ~]  `this
-      :: [%new-project-uninstall @ ~]    `this
+  ::
+      [%on-init-zig-setup ~]
+    =*  our  (scot %p our.bowl)
+    =*  now  (scot %da now.bowl)
+    ~&  %z^%on-init-zig-setup
+    :_  this
+    ?:  .^(? %gu /[our]/subscriber/[now])  ~
+    :_  ~
+    %-  ~(poke-self pass:io /self-wire)
+    :-  %ziggurat-action
+    !>(`action:zig`['zig' %zig ~ %new-project ~ ~ !>(~)])
   ::
       [%thread-result @ @ @ ~]
     =*  project-name  i.t.w
@@ -1054,25 +1047,6 @@
     :-  %ziggurat-action
     !>  ^-  action:zig
     [project-name desk-name ~ [%run-queue ~]]
-  ::
-      [%on-init-zig-setup ~]
-    =*  our  (scot %p our.bowl)
-    =*  now  (scot %da now.bowl)
-    ~&  %z^%on-init-zig-setup
-    :_  this
-    ?:  .^(? %gu /[our]/subscriber/[now])  ~
-    :_  ~
-    %-  ~(poke-self pass:io /self-wire)
-    :-  %ziggurat-action
-    !>(`action:zig`['zig' %zig ~ %new-project ~ ~ !>(~)])
-  ::
-    ::   [%on-new-project-ship-rerun @ @ ~]
-    :: =*  mark           i.t.w
-    :: =*  jammed-action  i.t.t.w
-    :: :_  this
-    :: :_  ~
-    :: %+  ~(poke-self pass:io /self-wire)
-    :: mark  !>(;;(action:zig (cue jammed-action)))
   ::
       [%merge-wire @ @ ~]
     ?>  ?=([%clay %mere *] sign-arvo)
