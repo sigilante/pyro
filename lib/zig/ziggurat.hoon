@@ -658,7 +658,8 @@
 ++  show-desk
   |=  =desk:zig
   ^-  shown-desk:zig
-  :*  dir=dir.desk
+  :*  name=name.desk
+      dir=dir.desk
       user-files=user-files.desk
       to-compile=to-compile.desk
       tests=(show-tests tests.desk)
@@ -2344,19 +2345,25 @@
   ++  desks
     |=  ds=(list (pair @tas desk:zig))
     ^-  json
-    :-  %a
-    %+  turn  ds
-    |=  [desk-name=@tas d=desk:zig]
-    [%a ~[[%s desk-name] (desk d)]]
+    %-  pairs
+    =|  desks=(list [@t json])
+    =|  i=@
+    |-
+    ?~  ds  (flop desks)
+    =*  desk-name  p.i.ds
+    =*  dask       q.i.ds
+    $(desks [[desk-name (desk dask i)] desks], i +(i), ds t.ds)
   ::
   ++  desk
-    |=  d=desk:zig
+    |=  [d=desk:zig i=@]
     ^-  json
     %-  pairs
-    :~  ['dir' (dir dir.d)]
+    :~  ['name' %s name.d]
+        ['dir' (dir dir.d)]
         ['user_files' (dir ~(tap in user-files.d))]
         ['to_compile' (dir ~(tap in to-compile.d))]
         ['tests' (tests tests.d)]
+        ['index' (numb i)]
     ==
   ::
   ++  shown-projects
@@ -2387,19 +2394,25 @@
   ++  shown-desks
     |=  ds=(list (pair @tas shown-desk:zig))
     ^-  json
-    :-  %a
-    %+  turn  ds
-    |=  [desk-name=@tas desk=shown-desk:zig]
-    [%a ~[[%s desk-name] (shown-desk desk)]]
+    %-  pairs
+    =|  desks=(list [@t json])
+    =|  i=@
+    |-
+    ?~  ds  (flop desks)
+    =*  desk-name  p.i.ds
+    =*  dask       q.i.ds
+    $(desks [[desk-name (shown-desk dask i)] desks], i +(i), ds t.ds)
   ::
   ++  shown-desk
-    |=  d=shown-desk:zig
+    |=  [d=shown-desk:zig i=@]
     ^-  json
     %-  pairs
-    :~  ['dir' (dir dir.d)]
+    :~  ['name' %s name.d]
+        ['dir' (dir dir.d)]
         ['user_files' (dir ~(tap in user-files.d))]
         ['to_compile' (dir ~(tap in to-compile.d))]
         ['tests' (shown-tests tests.d)]
+        ['index' (numb i)]
     ==
   ::
   ++  pyro-chain-state

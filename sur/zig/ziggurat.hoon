@@ -48,7 +48,8 @@
       saved-test-queue=(qeu [project-name=@t desk-name=@tas test-id=@ux])
   ==
 +$  desk
-  $:  dir=(list path)
+  $:  name=@tas
+      dir=(list path)
       user-files=(set path)
       to-compile=(set path)
       =tests
@@ -301,7 +302,8 @@
       saved-test-queue=(qeu [project-name=@t desk-name=@tas test-id=@ux])
   ==
 +$  shown-desk
-  $:  dir=(list path)
+  $:  name=@tas
+      dir=(list path)
       user-files=(set path)
       to-compile=(set path)
       tests=shown-tests
