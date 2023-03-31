@@ -603,6 +603,46 @@
       %.  thread-queue
       ~(thread-queue make-update-vase:zig-lib update-info)
     ::
+        %save-thread
+      =/  =project:zig  (~(got by projects) project-name.act)
+      =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
+      =.  saved-test-steps.desk
+        %-  ~(put by saved-test-steps.desk)
+        [thread-name test-imports test-steps]:act
+      =/  thread-text=@t
+        %-  convert-test-steps-to-thread:zig-lib 
+        [project-name desk-name test-imports test-steps]:act
+      =/  thread-path=path
+        (thread-name-to-path:zig-lib thread-name.act)
+      :_  %=  state
+              projects
+            %+  ~(put by projects)  project-name.act
+            (put-desk:zig-lib project desk-name.act desk)
+          ==
+      :+  %^  make-save-file:zig-lib  update-info  thread-path
+          thread-text
+        %-  update-vase-to-card:zig-lib
+        %.  thread-path
+        ~(save-file make-update-vase:zig-lib update-info)
+      ~
+    ::
+        %delete-thread
+      =/  =project:zig  (~(got by projects) project-name.act)
+      =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
+      =.  saved-test-steps.desk
+        (~(del by saved-test-steps.desk) thread-name.act)
+      =*  thread-path  (thread-name-to-path:zig-lib thread-name.act)
+      =^  cards=(list card)  state
+        %-  handle-poke
+        :^  project-name.act  desk-name.act  request-id.act
+        [%delete-file thread-path]
+      :-  cards
+      %=  state
+          projects
+        %+  ~(put by projects)  project-name.act
+        (put-desk:zig-lib project desk-name.act desk)
+      ==
+    ::
         %run-queue
       ~&  %z^%run-queue^%update-info^update-info^(show-thread-queue:zig-lib thread-queue)
       =/  run-queue-error

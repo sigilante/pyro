@@ -690,6 +690,205 @@
   ?~  new=(~(get by news) project-name)  old
   (~(uni by old) u.new)
 ::
+++  thread-name-to-path
+  |=  thread-name=@tas
+  ^-  path
+  /ted/ziggurat/[thread-name]/hoon
+::
+++  convert-test-steps-to-thread
+  |=  $:  project-name=@t
+          desk-name=@tas
+          =imports:zig
+          =test-steps:zig
+      ==
+  ^-  @t
+  =.  imports
+    %-  ~(gas by imports)
+    :-  [%spider /sur/spider]
+    :^  [%strandio /lib/strandio]  [%zig /sur/zig/ziggurat]
+      [%ziggurat-threads /lib/zig/ziggurat/threads]
+    ~
+  |^
+  :: =/  sorted-imports=(map @tas imports:zig)  sort-imports
+  %+  rap  3
+  %-  zing
+  :~  make-import-lines
+      :: %-  to-wain:format
+  ::
+      :_  ~
+      '''
+      ::
+      =*  strand  strand:spider
+      ::
+      =/  m  (strand ,vase)
+      =|  project-name=@t
+      =|  desk-name=@tas
+      =|  ship-to-address=(map @p @ux)
+      =*  zig-threads
+        ~(. ziggurat-threads project-name desk-name ship-to-address)
+      |^  ted
+      ::
+      +$  arg-mold
+        $:  project-name=@t
+            desk-name=@tas
+            request-id=(unit @t)
+        ==
+      ::
+      ++  town-id
+        ^-  @ux
+        0x0
+      ::
+      ++  sequencer-host
+        ^-  @p
+        ~nec
+      ::
+      ++  get-ship-to-address
+        =/  m  (strand ,(map @p @ux))
+        ^-  form:m
+        ;<  =update:zig  bind:m
+          %+  scry:strandio  update:zig
+          /gx/ziggurat/get-ship-to-address-map/[project-name]/noun
+        ?>  ?=(^ update)
+        ?>  ?=(%ship-to-address-map -.update)
+        ?>  ?=(%& -.payload.update)
+        (pure:m p.payload.update)
+      ::
+      ++  ted
+        ^-  thread:spider
+        |=  args-vase=vase
+        ^-  form:m
+        =/  args  !<((unit arg-mold) args-vase)
+        ?~  args
+          ~&  >>>  "Usage:"
+          ~&  >>>  "-<desk-name>!<thread-name> project-name=@t desk-name=@tas request-id=(unit @t)"
+          (pure:m !>(~))
+        =.  project-name  project-name.u.args
+        =.  desk-name     desk-name.u.args
+        =*  request-id    request-id.u.args
+        ;<  new-ship-to-address=(map @p @ux)  bind:m
+          get-ship-to-address
+        =.  ship-to-address  new-ship-to-address
+
+      '''
+  ::
+      make-test-steps-lines
+      ~['  (pure:m !>(`(each ~ @t)`[%.y ~]))\0a--\0a']
+  ==
+  ::
+  ++  make-import-lines
+    |^  ^-  (list @t)
+    =/  prefix=@t  '/=  '
+    %+  turn
+      (sort ~(tap by imports) alphabetize-face-comparator)
+    |=  [face=@tas p=path]
+    ?:  ?=(%$ face)  (rap 3 prefix (spat p) '\0a' ~)
+    (rap 3 prefix face '  ' (spat p) '\0a' ~)
+    ::
+    ++  alphabetize-face-comparator
+      |=  [a=(pair @tas *) b=(pair @tas *)]
+      ^-  ?
+      (alphabetize-comparator p.a p.b)
+    ::
+    ++  alphabetize-comparator
+      |=  [a=@tas b=@tas]
+      ^-  ?
+      =|  index=@ud
+      |-
+      =/  a=@tas  (cut 3 [index 1] a)
+      =/  b=@tas  (cut 3 [index 1] b)
+      ?~  a  %.y
+      ?~  b  %.n
+      ?:  =(a b)  $(index +(index))
+      (lth a b)
+    --
+  ::
+  ++  make-test-steps-lines
+    ^-  (list @t)
+    =|  lines=(list @t)
+    =|  index=@ud
+    |-
+    ?~  test-steps  (flop lines)
+    =*  test-step  i.test-steps
+    %=  $
+        index       +(index)
+        test-steps  t.test-steps
+        lines
+      :_  lines
+      %^  cat  3
+        %-  crip
+        """
+          ::
+          ::  step {<index>}
+          ::
+
+        """
+      ?-    -.test-step
+          %wait
+        %-  crip
+        "  ;<  ~  bind:m  (sleep:strandio {<until.test-step>})\0a"
+      ::
+          %dojo
+        =*  p  payload.test-step
+        %-  crip
+        """
+          ;<  empty-vase=vase  bind:m
+            %^  send-discrete-pyro-dojo:zig-threads
+              {<project-name>}  {<who.p>}
+            {<payload.p>}
+
+        """
+      ::
+          %scry
+        =*  p  payload.test-step
+        %+  rap  3
+        :~
+            :: '  ;<  result=['
+            '  ;<  result='
+            mold-name.p
+            :: ' ?]  bind:m\0a'
+            '  bind:m\0a'
+        ::
+            %-  crip
+                :: %^  send-pyro-scry-with-expectation:zig-threads
+            """
+                %^  send-pyro-scry:zig-threads
+                  {<who.p>}
+            """
+        ::
+            '  '
+            mold-name.p
+        ::
+            %-  crip
+            """
+
+                :+  {<care.p>}  {<app.p>}  {<path.p>}
+
+            """
+        ::
+            :: '    '
+            :: ?~  expected.test-step  '0'  expected.test-step
+            :: '\0a'
+        ==
+      ::
+          %poke
+        =*  p  payload.test-step
+        %+  rap  3
+        :~  %-  crip
+            """
+              ;<  empty-vase=vase  bind:m
+                %+  send-discrete-pyro-poke:zig-threads  {<project-name>}
+                :^  {<who.p>}  {<to.p>}  {<app.p>}
+                :-  {<mark.p>}
+
+            """
+            '    !>('
+            (crip (noah payload.p))
+            ')\0a'
+        ==
+      ==
+    ==
+  --
+::
 ::  files we delete from zig desk to make new gall desk
 ::
 ++  clean-desk
@@ -1491,6 +1690,11 @@
     :^  %shown-pyro-chain-state  update-info
     [%& chain-state]  ~
   ::
+  ++  save-file
+    |=  p=path
+    ^-  vase
+    !>(`update:zig`[%save-file update-info [%& p] ~])
+  ::
   ++  sync-desk-to-vship
     |=  =sync-desk-to-vship:zig
     ^-  vase
@@ -1856,15 +2060,93 @@
         ['user_files' (dir ~(tap in user-files.d))]
         ['to_compile' (dir ~(tap in to-compile.d))]
         ['threads' (threads threads.d)]
+        ['saved_test_steps' (saved-test-steps saved-test-steps.d)]
         ['index' (numb i)]
     ==
   ::
-  ++  threads
-    |=  threads=(set ^path)
+  ++  saved-test-steps
+    |=  saved-test-steps=(map @tas [imports:zig test-steps:zig])
+    ^-  json
+    %-  pairs
+    %+  turn  ~(tap by saved-test-steps)
+    |=  [thread-name=@tas i=imports:zig tss=test-steps:zig]
+    :-  thread-name
+    %-  pairs
+    :+  [%test-imports (imports i)]
+      [%test-steps (test-steps tss)]
+    ~
+  ::
+  ++  test-steps
+    |=  =test-steps:zig
     ^-  json
     :-  %a
-    %+  turn  ~(tap in threads)
-    |=  thread=^path  (path thread)
+    (turn test-steps |=(ts=test-step:zig (test-step ts)))
+  ::
+  ++  test-step
+    |=  =test-step:zig
+    ^-  json
+    ?-    -.test-step
+        %scry
+      %-  pairs
+      :^    ['type' %s -.test-step]
+          ['payload' (scry-payload payload.test-step)]
+        ['expected' %s expected.test-step]
+      ~
+    ::
+        %wait
+      %-  pairs
+      :+  ['type' %s -.test-step]
+        ['until' %s (scot %dr until.test-step)]
+      ~
+    ::
+        %dojo
+      %-  pairs
+      :+  ['type' %s -.test-step]
+        ['payload' (dojo-payload payload.test-step)]
+      ~
+    ::
+        %poke
+      %-  pairs
+      :+  ['type' %s -.test-step]
+        ['payload' (poke-payload payload.test-step)]
+      ~
+    ==
+  ::
+  ++  dojo-payload
+    |=  payload=dojo-payload:zig
+    ^-  json
+    %-  pairs
+    :+  ['who' %s (scot %p who.payload)]
+      ['payload' %s payload.payload]
+    ~
+  ::
+  ++  scry-payload
+    |=  payload=scry-payload:zig
+    ^-  json
+    %-  pairs
+    :~  ['who' %s (scot %p who.payload)]
+        ['mold-name' %s mold-name.payload]
+        ['care' %s care.payload]
+        ['app' %s app.payload]
+        ['path' (path path.payload)]
+    ==
+  ::
+  ++  poke-payload
+    |=  payload=poke-payload:zig
+    ^-  json
+    %-  pairs
+    :~  ['who' %s (scot %p who.payload)]
+        ['to' %s (scot %p to.payload)]
+        ['app' %s app.payload]
+        ['mark' %s mark.payload]
+        ['payload' %s (crip (noah payload.payload))]
+    ==
+  ::
+  ++  threads
+    |=  threads=(set @tas)
+    ^-  json
+    :-  %a
+    %+  turn  ~(tap in threads)  |=(t=@tas [%s t])
   ::
   ++  list-ships
   |=  ss=(list @p)

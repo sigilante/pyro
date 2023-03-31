@@ -13,7 +13,6 @@
       =configs
       =sync-desk-to-vship
       focused-project=@t
-      :: test-queue=(qeu [project-name=@t desk-name=@tas test-id=@ux])
       =thread-queue
       =status
       =settings
@@ -34,8 +33,6 @@
       desk-name=@tas
       thread-name=@tas
       payload=thread-queue-payload
-      :: thread-name=@tas
-      :: thread-args=vase
   ==
 +$  thread-queue-payload
   $%  [%fard args=vase]
@@ -48,8 +45,6 @@
       desk-name=@tas
       thread-name=@tas
       thread=$%([%fard args=@t] [%lard ~])
-      :: thread-name=@tas
-      :: thread-args=@t
   ==
 +$  shown-thread-queue-payload
   $%  [%fard args=@t]
@@ -83,22 +78,12 @@
       user-files=(set path)
       to-compile=(set path)
       :: =tests
-      threads=(set path)
+      threads=(set @tas)
+      saved-test-steps=(map thread-name=@tas [test-imports=imports =test-steps])
       special-configuration-args=vase
   ==
 ::
 +$  build-result  (each [bat=* pay=*] @t)
-::
-:: +$  tests  (map @ux test)
-:: +$  test
-::   $:  name=(unit @t)  ::  optional
-::       test-steps-file=path
-::       =test-imports
-::       subject=(each vase @t)
-::       =custom-step-definitions
-::       steps=test-steps
-::       results=test-results
-::   ==
 ::
 +$  configs  (mip:mip project-name=@t [who=@p what=@tas] @)
 +$  config   (map [who=@p what=@tas] @)
@@ -106,11 +91,18 @@
 +$  sync-desk-to-vship  (jug @tas @p)
 ::
 +$  imports  (map @tas path)
-:: ::
-:: +$  expected-diff
-::   (map id:smart [made=(unit item:smart) expected=(unit item:smart) match=(unit ?)])
-:: ::
-:: +$  test-imports  (map @tas path)
+::
++$  test-steps  (list test-step)
++$  test-step
+  $%  [%scry payload=scry-payload expected=@t]
+      [%wait until=@dr]
+      [%dojo payload=dojo-payload]
+      [%poke payload=poke-payload]
+  ==
++$  scry-payload
+  [who=@p mold-name=@t care=@tas app=@tas =path]
++$  dojo-payload  [who=@p payload=@t]
++$  poke-payload  [who=@p to=@p app=@tas mark=@tas payload=vase]
 :: ::
 :: +$  test-steps  (list test-step)
 :: +$  test-step  $%(test-read-step test-write-step)
@@ -132,15 +124,6 @@
 :: +$  dojo-payload  [who=@p payload=@t]
 :: +$  poke-payload  [who=@p to=@p app=@tas mark=@tas payload=@t]
 :: +$  sub-payload  [who=@p to=@p app=@tas =path]
-:: ::
-:: +$  result-face  (unit @tas)
-:: ::
-:: +$  custom-step-definitions
-::   (map @tas (pair path custom-step-compiled))
-:: +$  custom-step-compiled  (each transform=vase @t)
-:: ::
-:: +$  test-results  (list test-result)
-:: +$  test-result   (list [success=? expected=@t result=vase])
 ::
 +$  template  ?(%fungible %nft %blank)
 ::
@@ -149,26 +132,6 @@
 ::
 +$  state-views
   (list [who=@p app=(unit @tas) file=path])
-::
-:: +$  configuration-file-output
-::   $:  =config
-::       ships=(list @p)
-::       install=?
-::       start=(list @tas)
-::       =state-views
-::       :: setup=(map @p test-steps)
-::       :: imports=(list [@tas path])
-::       setup=(map @p thread-path=path)
-::   ==
-:: ::
-:: +$  test-globals
-::   $:  our=@p
-::       now=@da
-::       =test-results
-::       project-name=@t
-::       desk-name=@tas
-::       =configs
-::   ==
 ::
 +$  action
   $:  project-name=@t
@@ -203,7 +166,8 @@
           [%read-desk ~]
       ::
           [%queue-thread thread-name=@tas payload=thread-queue-payload]
-          :: [%save-thread thread-path=path ] :: TODO; take in test-steps(?) and convert to thread
+          [%save-thread thread-name=@tas test-imports=imports =test-steps] :: TODO; take in test-steps(?) and convert to thread
+          [%delete-thread thread-name=@tas] :: TODO; take in test-steps(?) and convert to thread
           :: [%edit-thread old=path new=path ] :: TODO: delete old, create new w/ %save-thread
       ::
       ::     [%add-test name=(unit @t) =test-imports =test-steps]
@@ -256,20 +220,12 @@
       %add-config
       %delete-config
       %queue-thread
-      :: %add-test
-      :: %edit-test
-      :: %delete-test
       %compile-contract
       %run-queue
-      :: %add-custom-step
-      :: %delete-custom-step
       %add-user-file
       %delete-user-file
-      :: %custom-step-compiled
-      :: %test-results
       %dir
       %poke
-      :: %test-queue
       %thread-queue
       %shown-pyro-agent-state
       %pyro-chain-state
@@ -310,21 +266,13 @@
       [%add-config update-info payload=(data [who=@p what=@tas item=@]) ~]
       [%delete-config update-info payload=(data [who=@p what=@tas]) ~]
       [%queue-thread update-info payload=(data @tas) ~]
-      :: [%add-test update-info payload=(data shown-test) test-id=@ux]
-      :: [%edit-test update-info payload=(data shown-test) test-id=@ux]
-      :: [%delete-test update-info payload=(data ~) test-id=@ux]
       [%compile-contract update-info payload=(data ~) ~]
       [%run-queue update-info payload=(data ~) ~]
-      :: [%add-custom-step update-info payload=(data ~) test-id=@ux tag=@tas]
-      :: [%delete-custom-step update-info payload=(data ~) test-id=@ux tag=@tas]
       [%add-user-file update-info payload=(data ~) file=path]
       [%delete-user-file update-info payload=(data ~) file=path]
-      :: [%custom-step-compiled update-info payload=(data ~) test-id=@ux tag=@tas]
-      :: [%test-results update-info payload=(data shown-test-results) test-id=@ux thread-id=@t =test-steps]
       [%dir update-info payload=(data (list path)) ~]
       [%poke update-info payload=(data ~) ~]
       [%thread-queue update-info payload=(data shown-thread-queue) ~]
-      :: [%test-queue update-info payload=(data (qeu [@t @tas @ux])) ~]
       [%pyro-agent-state update-info payload=(data [agent-state=vase wex=boat:gall sup=bitt:gall]) ~]
       [%shown-pyro-agent-state update-info payload=(data [agent-state=@t wex=boat:gall sup=bitt:gall]) ~]
       [%pyro-chain-state update-info payload=(data (map @ux batch:ui)) ~]
