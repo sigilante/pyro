@@ -78,7 +78,8 @@
       saved-thread-queue=thread-queue
   ==
 +$  desk
-  $:  dir=(list path)
+  $:  name=@tas
+      dir=(list path)
       user-files=(set path)
       to-compile=(set path)
       :: =tests
@@ -342,31 +343,4 @@
       [%configs update-info payload=(data configs) ~]
       [%ship-to-address-map update-info payload=(data (map @p @ux)) ~]
   ==
-::
-:: +$  shown-projects  (map @t shown-project)
-:: +$  shown-project
-::   $:  desks=(list (pair @tas shown-desk))
-::       pyro-ships=(list @p)
-::       most-recent-snap=path
-::       saved-test-queue=(qeu [project-name=@t desk-name=@tas test-id=@ux])
-::   ==
-:: +$  shown-desk
-::   $:  dir=(list path)
-::       user-files=(set path)
-::       to-compile=(set path)
-::       tests=shown-tests
-::   ==
-:: +$  shown-tests  (map @ux shown-test)
-:: +$  shown-test
-::   $:  name=(unit @t)  ::  optional
-::       test-steps-file=path
-::       =test-imports
-::       subject=(each vase @t)
-::       =custom-step-definitions
-::       steps=test-steps
-::       results=shown-test-results
-::       test-id=@ux
-::   ==
-:: +$  shown-test-results  (list shown-test-result)
-:: +$  shown-test-result   (list [success=? expected=@t result=@t])
 --
