@@ -17,7 +17,7 @@
     (fall non-default-publish-contract-id 0x1111.1111)
   |^
   :_  %^  ~(put bi:mip configs:test-globals)
-        project:test-globals  [who (spat contract-jam-path)]
+        project-name:test-globals  [who (spat contract-jam-path)]
       compute-escrow-contract-hash
   :_  ~
   :^  %poke  ~
@@ -46,7 +46,7 @@
     ^-  path
     %-  weld  :_  contract-jam-path
     :-  (scot %p our:test-globals)
-    /[project:test-globals]/(scot %da now:test-globals)
+    /[desk-name:test-globals]/(scot %da now:test-globals)
   ::
   ++  get-escrow-contract
     [- +]:(cue .^(@ %cx make-full-scry-path))

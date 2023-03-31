@@ -13,9 +13,7 @@
       =configs
       =sync-desk-to-vship
       focused-project=@t
-      linked-projects=(jug @t @t)
-      unfocused-project-snaps=(map (set @t) path)
-      test-queue=(qeu [project=@t test-id=@ux])
+      test-queue=(qeu [project-name=@t desk-name=@tas test-id=@ux])
       =status
       =settings
   ==
@@ -37,19 +35,24 @@
 +$  status
   $%  [%running-test-steps ~]
       [%commit-install-starting cis-running=(map @p [@t ?])]
-      [%changing-project-links project-cis-running=(mip:mip @t @p [@t ?])]
+      [%changing-project-desks project-cis-running=(mip:mip @tas @p [@t ?])]
       [%ready ~]
       [%uninitialized ~]  ::  last is default
   ==
 ::
 +$  projects  (map @t project)
 +$  project
-  $:  dir=(list path)
-      user-files=(set path)  ::  not on list -> grayed out in GUI
+  $:  desks=(list (pair @tas desk))
+      pyro-ships=(list @p)
+      most-recent-snap=path
+      saved-test-queue=(qeu [project-name=@t desk-name=@tas test-id=@ux])
+  ==
++$  desk
+  $:  name=@tas
+      dir=(list path)
+      user-files=(set path)
       to-compile=(set path)
       =tests
-      pyro-ships=(list @p)
-      saved-test-queue=(qeu [project=@t test-id=@ux])
   ==
 ::
 +$  build-result  (each [bat=* pay=*] @t)
@@ -124,14 +127,16 @@
   $:  our=@p
       now=@da
       =test-results
-      project=@tas
+      project-name=@t
+      desk-name=@tas
       =configs
   ==
 ::
 +$  ca-scry-cache  (map [@tas path] (pair @ux vase))
 ::
 +$  action
-  $:  project=@t
+  $:  project-name=@t
+      desk-name=@tas
       request-id=(unit @t)
       $%  [%new-project sync-ships=(list @p)]
           [%delete-project ~]
@@ -141,8 +146,8 @@
           [%delete-sync-desk-vships ships=(list @p)]
       ::
           [%change-focus ~]
-          [%add-project-link ~]
-          [%delete-project-link ~]
+          [%add-project-desk index=(unit @ud)]  ::  ~ -> add to end
+          [%delete-project-desk ~]
       ::
           [%save-file file=path text=@t]  ::  generates new file or overwrites existing
           [%delete-file file=path]
@@ -229,20 +234,19 @@
       %sync-desk-to-vship
       %cis-setup-done
       %status
-      %focused-linked
       %save-file
       %settings
       %state-views
+      %add-project-desk
+      %delete-project-desk
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
 +$  update-info
-  [project-name=@t source=@tas request-id=(unit @t)]
-::
-+$  focused-linked-data
-  $:  focused-project=@t
-      linked-projects=(jug @t @t)
-      unfocused-project-snaps=(map (set @t) path)
+  $:  project-name=@t
+      desk-name=@tas
+      source=@tas
+      request-id=(unit @t)
   ==
 ::
 ++  data  |$(this (each this [level=error-level message=@t]))
@@ -268,7 +272,7 @@
       [%test-results update-info payload=(data shown-test-results) test-id=@ux thread-id=@t =test-steps]
       [%dir update-info payload=(data (list path)) ~]
       [%poke update-info payload=(data ~) ~]
-      [%test-queue update-info payload=(data (qeu [@t @ux])) ~]
+      [%test-queue update-info payload=(data (qeu [@t @tas @ux])) ~]
       [%pyro-agent-state update-info payload=(data [agent-state=vase wex=boat:gall sup=bitt:gall]) ~]
       [%shown-pyro-agent-state update-info payload=(data [agent-state=@t wex=boat:gall sup=bitt:gall]) ~]
       [%pyro-chain-state update-info payload=(data (map @ux batch:ui)) ~]
@@ -276,16 +280,24 @@
       [%sync-desk-to-vship update-info payload=(data sync-desk-to-vship) ~]
       [%cis-setup-done update-info payload=(data ~) ~]
       [%status update-info payload=(data status) ~]
-      [%focused-linked update-info payload=(data focused-linked-data) ~]
       [%save-file update-info payload=(data path) ~]
       [%settings update-info payload=(data settings) ~]
       [%state-views update-info payload=(data (list [@p (unit @tas) path])) ~]
+      [%add-project-desk update-info payload=(data ~) ~]
+      [%delete-project-desk update-info payload=(data ~) ~]
   ==
 ::
 +$  shown-projects  (map @t shown-project)
 +$  shown-project
-  $:  dir=(list path)
-      user-files=(set path)  ::  not on list -> grayed out in GUI
+  $:  desks=(list (pair @tas shown-desk))
+      pyro-ships=(list @p)
+      most-recent-snap=path
+      saved-test-queue=(qeu [project-name=@t desk-name=@tas test-id=@ux])
+  ==
++$  shown-desk
+  $:  name=@tas
+      dir=(list path)
+      user-files=(set path)
       to-compile=(set path)
       tests=shown-tests
   ==
@@ -302,10 +314,4 @@
   ==
 +$  shown-test-results  (list shown-test-result)
 +$  shown-test-result   (list [success=? expected=@t result=@t])
-+$  shown-agent-state
-  $:  %pyro-agent-state
-      update-info
-      payload=(data [agent-state=@t wex=boat:gall sup=bitt:gall])
-      ~
-  ==
 --
