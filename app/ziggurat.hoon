@@ -594,6 +594,11 @@
       ~
     ::
         %queue-thread
+      =.  payload.act
+        ?:  ?=(%lard -.payload.act)    payload.act
+        ?.  =(!>(~) args.payload.act)  payload.act
+        :-  %fard
+        !>(`[project-name desk-name request-id]:act)
       =.  thread-queue
         %-  ~(put to thread-queue)
         [project-name desk-name thread-name payload]:act
