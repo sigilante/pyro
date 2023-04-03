@@ -2313,6 +2313,10 @@
         [%compile-contract (ot ~[[%path pa]])]
         [%read-desk ul]
     ::
+        [%queue-thread queue-thread]
+        [%save-thread save-thread]
+        [%delete-thread (ot ~[[%thread-name (se %tas)]])]
+    ::
         :: [%run-queue ul]
         :: [%clear-queue ul]
     ::
@@ -2335,11 +2339,68 @@
         [%suspend-uninstall-to-make-dev-desk ul]
     ==
   ::
+  ++  queue-thread
+    ^-  $-(json [@tas thread-queue-payload:zig])
+    %-  ot
+    :+  [%thread-name (se %tas)]
+      [%payload thread-queue-payload]
+    ~
+  ::
+  ++  save-thread
+    ^-  $-(json [@tas imports:zig test-steps:zig])
+    %-  ot
+    :^    [%thread-name (se %tas)]
+        [%test-imports (om pa)]
+      [%test-steps (ar test-step)]
+    ~
+  ::
+  ++  thread-queue-payload
+    ^-  $-(json thread-queue-payload:zig)
+    %-  of
+    :_  ~
+    [%fard special-configuration-args]
+  ::
+  ++  test-step
+    ^-  $-(json test-step:zig)
+    %-  of
+    :~  [%scry (ot ~[[%payload scry-payload] [%expected so]])]
+        [%wait (ot ~[[%until (se %dr)]])]
+        [%dojo (ot ~[[%payload dojo-payload]])]
+        [%poke (ot ~[[%payload poke-payload]])]
+    ==
+  ::
+  ++  scry-payload
+    ^-  $-(json scry-payload:zig)
+    %-  ot
+    :~  [%who (se %p)]
+        [%mold-name so]
+        [%care (se %tas)]
+        [%app (se %tas)]
+        [%path pa]
+    ==
+  ::
+  ++  dojo-payload
+    ^-  $-(json dojo-payload:zig)
+    %-  ot
+    :+  [%who (se %p)]
+      [%payload so]
+    ~
+  ::
+  ++  poke-payload
+    ^-  $-(json poke-payload:zig)
+    %-  ot
+    :~  [%who (se %p)]
+        [%to (se %p)]
+        [%app (se %tas)]
+        [%mark (se %tas)]
+        [%payload special-configuration-args]
+    ==
+  ::
   ++  new-project
     ^-  $-(json [(list @p) (unit @p) vase])
     %-  ot
     :^    [%sync-ships (ar (se %p))]
-        [%fetch-data-from-remote-ship (se-soft %p)]
+        [%fetch-desk-from-remote-ship (se-soft %p)]
       :-  %special-configuration-args
       special-configuration-args
     ~
