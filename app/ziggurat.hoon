@@ -735,7 +735,11 @@
         (~(gut by projects) project-name.act *project:zig)
       =?  ships.act  ?=(~ ships.act)  default-ships:zig-lib
       =/  new-ships=(list @p)
-        ?:  =('zig' project-name.act)  default-ships:zig-lib
+        ?:  ?&  =('zig' project-name.act)
+                ?=(~ pyro-ships.project)
+            ==
+          ::  special case for initial setup of %zig project
+          default-ships:zig-lib
         %+  diff-ship-lists:zig-lib
           ?^  pyro-ships.project  pyro-ships.project
           default-ships:zig-lib
