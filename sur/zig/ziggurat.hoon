@@ -162,32 +162,15 @@
           [%deploy-contract who=(unit @p) town-id=@ux contract-jam-path=path]
       ::
           [%compile-contracts ~]
-          [%compile-contract =path]  ::  path of form /con/foo/hoon within project desk
+          [%compile-contract =path]  ::  path of form /con/foo/hoon within given desk
+          [%compile-non-contract =path]
           [%read-desk ~]
       ::
           [%queue-thread thread-name=@tas payload=thread-queue-payload]
           [%save-thread thread-name=@tas test-imports=imports =test-steps] :: TODO; take in test-steps(?) and convert to thread
           [%delete-thread thread-name=@tas] :: TODO; take in test-steps(?) and convert to thread
-          :: [%edit-thread old=path new=path ] :: TODO: delete old, create new w/ %save-thread
-      ::
-      ::     [%add-test name=(unit @t) =test-imports =test-steps]
-      ::     [%add-and-run-test name=(unit @t) =test-imports =test-steps]
-      ::     [%add-and-queue-test name=(unit @t) =test-imports =test-steps]
-      ::     [%save-test-to-file id=@ux =path]
-      :: ::
-      ::     [%add-test-file name=(unit @t) =path]
-      ::     [%add-and-run-test-file name=(unit @t) =path]
-      ::     [%add-and-queue-test-file name=(unit @t) =path]
-      :: ::
-      ::     [%edit-test id=@ux name=(unit @t) =test-imports =test-steps]
-      ::     [%delete-test id=@ux]
-      ::     [%run-test id=@ux]
           [%run-queue ~]
           [%clear-queue ~]
-      ::     [%queue-test id=@ux]
-      :: ::
-      ::     [%add-custom-step test-id=@ux tag=@tas =path]
-      ::     [%delete-custom-step test-id=@ux tag=@tas]
       ::
           [%stop-pyro-ships ~]
           [%start-pyro-ships ships=(list @p)]  ::  ships=~ -> ~[~nec ~bud ~wes]
@@ -244,6 +227,7 @@
       %ziggurat-state
       %configs
       %ship-to-address-map
+      %build-result
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -290,5 +274,6 @@
       [%ziggurat-state update-info payload=(data state-0) ~]
       [%configs update-info payload=(data configs) ~]
       [%ship-to-address-map update-info payload=(data (map @p @ux)) ~]
+      [%build-result update-info payload=(data ~) ~]
   ==
 --
