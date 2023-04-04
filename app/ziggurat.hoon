@@ -1048,7 +1048,13 @@
       =*  project-name  project-name.update-info
       =*  desk-name     desk-name.update-info
       =*  request-id    request-id.update-info
-      =/  cards=(list card)
+      =/  config-file-path=path
+        :-  (scot %p our.bowl)
+        %+  weld  /[desk-name]/(scot %da now.bowl)
+        /ted/ziggurat/configuration/[desk-name]/hoon
+      =/  does-config-exist=?  .^(? %cu config-file-path)
+      ~&  %z^%np^%does-config-exist^does-config-exist
+      ?:  does-config-exist
         :_  ~
         %-  ~(poke-self pass:io /self-wire)
         :-  %ziggurat-action
@@ -1065,13 +1071,32 @@
             !>(request-id)
             special-configuration-args
         ==
-      =/  config-file-path=path
-        :-  (scot %p our.bowl)
-        %+  weld  /[desk-name]/(scot %da now.bowl)
-        /ted/ziggurat/configuration/[desk-name]/hoon
-      =/  does-config-exist=?  .^(? %cu config-file-path)
-      ~&  %z^%np^%does-config-exist^does-config-exist
-      ?:  does-config-exist  cards
+      =/  cards=(list card)
+        :_  ~
+        %-  ~(poke-self pass:io /self-wire)
+        :-  %ziggurat-action
+        !>  ^-  action:zig
+        :^  project-name  desk-name  request-id
+        :^  %queue-thread
+          (cat 3 'ziggurat-configuration-' desk-name)  %lard
+        %:  setup-desk:zig-threads
+            project-name
+            desk-name
+            request-id
+            !>(~)
+            ~
+            ~
+            ~
+            %.n
+            ~
+        ==
+      ?:  %.  desk-name
+          %~  has  in
+          .^  (set @tas)
+              %cd
+              /(scot %p our.bowl)//(scot %da now.bowl)
+          ==
+        cards
       :_  cards
       %-  ~(poke-self pass:io /self-wire)
       :-  %ziggurat-action

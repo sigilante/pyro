@@ -436,8 +436,6 @@
   ;<  ~  bind:m  make-mount
   ;<  ~  bind:m  make-bill
   ;<  ~  bind:m  make-deletions
-  :: ;<  ~  bind:m  make-read-desk
-  ;<  ~  bind:m  make-configuration-file
   ;<  ~  bind:m  (sleep ~s1)
   (pure:m !>(~))
   ::
