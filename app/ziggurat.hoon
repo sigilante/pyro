@@ -425,7 +425,7 @@
       %~  delete-config  make-update-vase:zig-lib
       update-info
     ::
-        %register-contract-for-compilation
+        %register-for-compilation
       =/  =project:zig  (~(got by projects) project-name.act)
       =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
       ?:  (~(has in to-compile.desk) file.act)  `state
@@ -440,7 +440,7 @@
           [project-name desk-name request-id]:act
       state(projects (~(put by projects) project-name.act project))
     ::
-        %unregister-contract-for-compilation
+        %unregister-for-compilation
       =/  =project:zig  (~(got by projects) project-name.act)
       =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
       ?.  (~(has in to-compile.desk) file.act)  `state
@@ -1211,13 +1211,21 @@
               /(scot %da now.bowl)/yaki/(scot %uv tako)
           ==
       ~(key by q.yaki)
+    =/  files-to-compile=(list path)
+      ~(tap in (~(int in updated-files) to-compile.desk))
     :_  this
-    :-  ?:  .=  0
-            %~  wyt  in
-            (~(int in updated-files) to-compile.desk)
-          (make-read-desk:zig-lib project-name desk-name ~)
-        %^  make-compile-contracts:zig-lib  project-name
-        desk-name  ~
+    %+  weld
+      ?:  =(0 (lent files-to-compile))
+        :_  ~
+        (make-read-desk:zig-lib project-name desk-name ~)
+      %+  murn  files-to-compile
+      |=  file-path=path
+      ?~  file-path  ~
+      :-  ~
+      %.  [[project-name desk-name %$ ~] file-path]
+      ?:  =(%con i.file-path)
+        make-compile-contract:zig-lib
+      make-compile-non-contract:zig-lib
     %+  turn
       %~  tap  in
       (~(get ju sync-desk-to-vship) desk-name)

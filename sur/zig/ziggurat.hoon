@@ -157,8 +157,8 @@
           [%add-config who=@p what=@tas item=@]
           [%delete-config who=@p what=@tas]
       ::
-          [%register-contract-for-compilation file=path]
-          [%unregister-contract-for-compilation file=path]
+          [%register-for-compilation file=path]
+          [%unregister-for-compilation file=path]
           [%deploy-contract who=(unit @p) town-id=@ux contract-jam-path=path]
       ::
           [%compile-contracts ~]

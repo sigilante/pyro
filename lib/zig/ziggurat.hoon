@@ -157,6 +157,32 @@
   :^  project-name  desk-name  request-id
   [%compile-contracts ~]
 ::
+++  make-compile-contract
+  |=  [=update-info:zig file-path=path]
+  ^-  card
+  =*  project-name  project-name.update-info
+  =*  desk-name     desk-name.update-info
+  =*  request-id    request-id.update-info
+  ?>  ?=(%con -.file-path)
+  %-  ~(poke-self pass:io /self-wire)
+  :-  %ziggurat-action
+  !>  ^-  action:zig
+  :^  project-name  desk-name  request-id
+  [%compile-contract file-path]
+::
+++  make-compile-non-contract
+  |=  [=update-info:zig file-path=path]
+  ^-  card
+  =*  project-name  project-name.update-info
+  =*  desk-name     desk-name.update-info
+  =*  request-id    request-id.update-info
+  ?<  ?=(%con -.file-path)
+  %-  ~(poke-self pass:io /self-wire)
+  :-  %ziggurat-action
+  !>  ^-  action:zig
+  :^  project-name  desk-name  request-id
+  [%compile-non-contract file-path]
+::
 ++  make-read-desk
   |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
   ^-  card
@@ -2328,8 +2354,8 @@
         [%add-config (ot ~[[%who (se %p)] [%what (se %tas)] [%item ni]])]
         [%delete-config (ot ~[[%who (se %p)] [%what (se %tas)]])]
     ::
-        [%register-contract-for-compilation (ot ~[[%file pa]])]
-        [%unregister-contract-for-compilation (ot ~[[%file pa]])]
+        [%register-for-compilation (ot ~[[%file pa]])]
+        [%unregister-for-compilation (ot ~[[%file pa]])]
         [%deploy-contract deploy]
     ::
         [%compile-contracts ul]
