@@ -425,7 +425,7 @@
       %~  delete-config  make-update-vase:zig-lib
       update-info
     ::
-        %register-contract-for-compilation
+        %register-for-compilation
       =/  =project:zig  (~(got by projects) project-name.act)
       =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
       ?:  (~(has in to-compile.desk) file.act)  `state
@@ -440,7 +440,7 @@
           [project-name desk-name request-id]:act
       state(projects (~(put by projects) project-name.act project))
     ::
-        %unregister-contract-for-compilation
+        %unregister-for-compilation
       =/  =project:zig  (~(got by projects) project-name.act)
       =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
       ?.  (~(has in to-compile.desk) file.act)  `state
@@ -498,7 +498,7 @@
         %~  compile-contract  make-error-vase:zig-lib
         [update-info %error]
       =/  build-results=(list (pair path build-result:zig))
-        %^  build-contract-projects:zig-lib  smart-lib-vase
+        %^  build-contracts:zig-lib  smart-lib-vase
           /(scot %p our.bowl)/[project-name.act]/(scot %da now.bowl)
         to-compile.desk
       =/  error-cards=(list card)
@@ -536,7 +536,7 @@
         'contract path must not be empty'
       ::
       =/  =build-result:zig
-        %^  build-contract-project:zig-lib  smart-lib-vase
+        %^  build-contract:zig-lib  smart-lib-vase
           /(scot %p our.bowl)/[project-name.act]/(scot %da now.bowl)
         path.act
       ?:  ?=(%| -.build-result)
@@ -572,6 +572,18 @@
         [project-name desk-name request-id]:act
       ~
     ::
+        %compile-non-contract
+      :_  state
+      :_  ~
+      %-  %~  arvo  pass:io
+          ^-  path
+          :^  %build-result  project-name.act  desk-name.act
+          path.act
+      :^  %k  %fard  %suite
+      :-  %ziggurat-build
+      :-  %noun
+      !>(`[project-name desk-name request-id path]:act)
+    ::
         %read-desk
       ::  for internal use -- app calls itself to scry clay
       =/  =project:zig  (~(got by projects) project-name.act)
@@ -594,19 +606,52 @@
       ~
     ::
         %queue-thread
+      ?:  ?=(%lard -.payload.act)
+        =^  update-vase=vase  thread-queue
+          %-  add-to-queue:zig-lib
+          :^  thread-queue  thread-name.act  payload.act
+          update-info
+        :_  state
+        :_  ~
+        (update-vase-to-card:zig-lib update-vase)
       =.  payload.act
-        ?:  ?=(%lard -.payload.act)    payload.act
         ?.  =(!>(~) args.payload.act)  payload.act
         :-  %fard
         !>(`[project-name desk-name request-id]:act)
-      =.  thread-queue
-        %-  ~(put to thread-queue)
-        [project-name desk-name thread-name payload]:act
+      =/  thread-path=(unit path)
+        %^  get-fit:clay
+          [our.bowl desk-name.act %da now.bowl]
+        %ted  thread-name.act
+      ?~  thread-path  !!  ::  TODO
       :_  state
       :_  ~
-      %-  update-vase-to-card:zig-lib
-      %.  thread-queue
-      ~(thread-queue make-update-vase:zig-lib update-info)
+      %-  %~  arvo  pass:io
+          ^-  path
+          :^  %build-result  project-name.act
+          desk-name.act  u.thread-path
+      :^  %k  %lard  q.byk.bowl
+      =/  m  (strand ,vase)
+      ^-  form:m
+      ;<  result=vase  bind:m
+        (build:zig-threads request-id.act u.thread-path)
+      ?~  q.result  (pure:m result)
+      =^  update-vase=vase  thread-queue
+        %-  add-to-queue:zig-lib
+        :^  thread-queue  thread-name.act  payload.act
+        update-info
+      ;<  ~  bind:m
+        %+  poke-our:strandio  %ziggurat
+        :-  %ziggurat-action
+        !>  ^-  action:zig
+        :^  project-name.act  desk-name.act  request-id.act
+        [%set-ziggurat-state -.state]
+      ;<  ~  bind:m
+        %+  poke-our:strandio  %ziggurat
+        :-  %ziggurat-action
+        !>  ^-  action:zig
+        :^  project-name.act  desk-name.act  request-id.act
+        [%send-update !<(update:zig update-vase)]
+      (pure:m result)
     ::
         %save-thread
       =/  =project:zig  (~(got by projects) project-name.act)
@@ -1060,6 +1105,31 @@
     :-  %ziggurat-action
     !>(`action:zig`['zig' %zig ~ %new-project ~ ~ !>(~)])
   ::
+      [%build-result @ @ *]
+    =*  project-name  i.t.w
+    =*  desk-name     i.t.t.w
+    =*  file-path     t.t.t.w
+    ?.  ?&  ?=(%khan -.sign-arvo)
+            ?=(%arow -.+.sign-arvo)
+        ==
+      (on-arvo:def w sign-arvo)
+    =/  build-error
+      %~  build-result  make-error-vase:zig-lib
+      [[project-name desk-name %build-result ~] %error]
+    :_  this
+    ?:  ?=(%| -.p.+.sign-arvo)
+      :_  ~
+      %-  update-vase-to-card:zig-lib
+      %-  build-error
+      (reformat-compiler-error:zig-lib p.p.+.sign-arvo)
+    ?^  q.q.p.p.+.sign-arvo  ~
+    :_  ~
+    %-  update-vase-to-card:zig-lib
+    %-  build-error
+    %-  crip
+    %+  weld  "{<file-path>} build failed,"
+    " please see dojo for compilation errors"
+  ::
       [%thread-result @ @ @ ~]
     =*  project-name  i.t.w
     =*  desk-name     i.t.t.w
@@ -1070,7 +1140,7 @@
       (on-arvo:def w sign-arvo)
     =.  status  [%ready ~]
     ?:  ?=(%| -.p.+.sign-arvo)
-      ~&  (reformat-compiler-error:zig-lib p.p.+.sign-arvo)
+      ~&  (reformat-compiler-error:zig-lib p.p.+.sign-arvo)  ::  TODO
       `this(status status)
     =/  cards=(list card)
       ?.  ?=(%ziggurat-configuration (end [3 22] thread-name))
@@ -1141,13 +1211,21 @@
               /(scot %da now.bowl)/yaki/(scot %uv tako)
           ==
       ~(key by q.yaki)
+    =/  files-to-compile=(list path)
+      ~(tap in (~(int in updated-files) to-compile.desk))
     :_  this
-    :-  ?:  .=  0
-            %~  wyt  in
-            (~(int in updated-files) to-compile.desk)
-          (make-read-desk:zig-lib project-name desk-name ~)
-        %^  make-compile-contracts:zig-lib  project-name
-        desk-name  ~
+    %+  weld
+      ?:  =(0 (lent files-to-compile))
+        :_  ~
+        (make-read-desk:zig-lib project-name desk-name ~)
+      %+  murn  files-to-compile
+      |=  file-path=path
+      ?~  file-path  ~
+      :-  ~
+      %.  [[project-name desk-name %$ ~] file-path]
+      ?:  =(%con i.file-path)
+        make-compile-contract:zig-lib
+      make-compile-non-contract:zig-lib
     %+  turn
       %~  tap  in
       (~(get ju sync-desk-to-vship) desk-name)
