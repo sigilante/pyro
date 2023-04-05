@@ -2108,7 +2108,6 @@
         ['dir' (dir dir.d)]
         ['user_files' (dir ~(tap in user-files.d))]
         ['to_compile' (dir ~(tap in to-compile.d))]
-        ['threads' (threads threads.d)]
         ['saved_test_steps' (saved-test-steps saved-test-steps.d)]
         ['index' (numb i)]
     ==

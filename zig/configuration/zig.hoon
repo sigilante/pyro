@@ -2,9 +2,13 @@
     ui=zig-indexer,
     w=zig-wallet,
     zig=zig-ziggurat
-/+  ziggurat-threads=zig-ziggurat-threads
+/+  strandio,
+    ziggurat-threads=zig-ziggurat-threads
 ::
 =*  strand     strand:spider
+=*  build-file  build-file:strandio
+=*  get-bowl    get-bowl:strandio
+=*  get-time    get-time:strandio
 ::
 =/  m  (strand ,vase)
 =|  project-name=@t
@@ -12,7 +16,7 @@
 =|  ship-to-address=(map @p @ux)
 =*  zig-threads
   ~(. ziggurat-threads project-name desk-name ship-to-address)
-|^  ted
+|%
 ::
 +$  arg-mold
   $:  project-name=@t
@@ -20,47 +24,43 @@
       request-id=(unit @t)
   ==
 ::
+++  make-desk-dependencies
+  |=  =bowl:strand
+  ^-  desk-dependencies:zig
+  :_  ~
+  [our.bowl %zig [%da now.bowl] ~]
+::
 ++  make-config
   ^-  config:zig
   %-  ~(gas by *config:zig)
   [[~nec %sequencer] 0x0]~
-::
-++  make-state-views
-  ^-  state-views:zig
-  ::  app=~ -> chain view, not an agent view
-  =/  pfix  (cury welp `path`/zig/state-views)
-  :~  [~nec ~ (pfix /chain/transactions/hoon)]
-      [~nec ~ (pfix /chain/chain/hoon)]
-      [~nec ~ (pfix /chain/holder-our/hoon)]
-      [~nec ~ (pfix /chain/source-zigs/hoon)]
-  ::
-      [~nec `%wallet (pfix /agent/wallet-metadata-store/hoon)]
-      [~nec `%wallet (pfix /agent/wallet-our-items/hoon)]
-  ==
 ::
 ++  make-virtualships-to-sync
   ^-  (list @p)
   ~[~nec ~bud ~wes]
 ::
 ++  make-install
-  ^-  ?
-  %.y
+  ^-  (map desk-name=@tas whos=(list @p))
+  %-  ~(gas by *(map @tas (list @p)))
+  :_  ~
+  [%zig make-virtualships-to-sync]
 ::
 ++  make-start-apps
-  ^-  (list @tas)
-  ~[%subscriber]
+  ^-  (map desk-name=@tas (list @tas))
+  %-  ~(gas by *(map @tas (list @tas)))
+  :_  ~
+  [%zig ~[%subscriber]]
 ::
-++  run-setup-desk
+++  run-setup-project
   |=  request-id=(unit @t)
   =/  m  (strand ,vase)
   ^-  form:m
-  %:  setup-desk:zig-threads
-      project-name
-      desk-name
+  ;<  =bowl:strand  bind:m  get-bowl
+  %:  setup-project:zig-threads
       request-id
-      !>(~)
+      :: !>(~)
+      (make-desk-dependencies bowl)
       make-config
-      make-state-views
       make-virtualships-to-sync
       make-install
       make-start-apps
@@ -179,7 +179,7 @@
     'flee alter erode parrot turkey harvest pass combine casual interest receive album coyote shrug envelope turtle broken purity wear else fluid transaction theme buyer'
   --
 ::
-++  ted
+++  $
   ^-  thread:spider
   |=  args-vase=vase
   ^-  form:m
@@ -193,8 +193,8 @@
   =*  request-id    request-id.u.args
   ::
   ~&  %zcz^%top^%0
-  ;<  setup-desk-result=vase  bind:m
-    (run-setup-desk request-id)
+  ;<  setup-project-result=vase  bind:m
+    (run-setup-project request-id)
   ~&  %zcz^%top^%1
   ;<  setup-ships-result=vase  bind:m  setup-virtualship-state
   ~&  %zcz^%top^%2
