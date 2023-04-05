@@ -1,6 +1,8 @@
 /-  docket,
     engine=zig-engine,
-    wallet=zig-wallet
+    ui=zig-indexer,
+    wallet=zig-wallet,
+    zink=zig-zink
 /+  engine-lib=zig-sys-engine,
     mip,
     smart=zig-sys-smart
@@ -23,11 +25,13 @@
       smart-lib-vase=vase
       =ca-scry-cache
   ==
-+$  eng  $_  ~(engine engine:engine-lib !>(0) *(map * @) %.n %.n)  ::  sigs off, hints off
++$  eng  $_  ~(engine engine-lib !>(0) *(map * @) jets:zink %.y %.n)  ::  sigs off, hints off
 ::
 +$  settings
   $:  test-result-num-characters=@ud
+      state-num-characters=@ud
       compiler-error-num-lines=@ud
+      code-max-characters=@ud
   ==
 ::
 +$  status
@@ -74,23 +78,25 @@
 +$  test-steps  (list test-step)
 +$  test-step  $%(test-read-step test-write-step)
 +$  test-read-step
-  $%  [%scry payload=scry-payload expected=@t]
-      [%read-subscription payload=read-sub-payload expected=@t]
+  $%  [%scry =result-face payload=scry-payload expected=@t]
+      [%read-subscription =result-face payload=read-sub-payload expected=@t]
       [%wait until=@dr]
-      [%custom-read tag=@tas payload=@t expected=@t]
+      [%custom-read tag=@tas =result-face payload=@t expected=@t]
   ==
 +$  test-write-step
-  $%  [%dojo payload=dojo-payload expected=(list test-read-step)]
-      [%poke payload=poke-payload expected=(list test-read-step)]
-      [%subscribe payload=sub-payload expected=(list test-read-step)]
-      [%custom-write tag=@tas payload=@t expected=(list test-read-step)]
+  $%  [%dojo =result-face payload=dojo-payload expected=(list test-read-step)]
+      [%poke =result-face payload=poke-payload expected=(list test-read-step)]
+      [%subscribe =result-face payload=sub-payload expected=(list test-read-step)]
+      [%custom-write tag=@tas =result-face payload=@t expected=(list test-read-step)]
   ==
 +$  scry-payload
-  [who=@p mold-name=@t care=@tas app=@tas =path]
+  [who=@p mold-name=@t care=@tas app=@tas path=@t]
 +$  read-sub-payload  [who=@p to=@p app=@tas =path]
 +$  dojo-payload  [who=@p payload=@t]
 +$  poke-payload  [who=@p to=@p app=@tas mark=@tas payload=@t]
 +$  sub-payload  [who=@p to=@p app=@tas =path]
+::
++$  result-face  (unit @tas)
 ::
 +$  custom-step-definitions
   (map @tas (pair path custom-step-compiled))
@@ -109,6 +115,7 @@
       ships=(list @p)
       install=?
       start=(list @tas)
+      state-views=(list [who=@p app=(unit @tas) file=path])
       setup=(map @p test-steps)
       imports=(list [@tas path])
   ==
@@ -144,6 +151,7 @@
           [%delete-config who=@p what=@tas]
       ::
           [%register-contract-for-compilation file=path]
+          [%unregister-contract-for-compilation file=path]
           [%deploy-contract town-id=@ux =path]
       ::
           [%compile-contracts ~]
@@ -182,7 +190,8 @@
       ::
           [%send-pyro-dojo who=@p command=tape]
       ::
-          [%pyro-agent-state who=@p app=@tas grab=@t]
+          [%pyro-agent-state who=@p app=@tas =test-imports grab=@t]
+          [%pyro-chain-state =test-imports grab=@t]
       ::
           [%cis-panic ~]
       ::
@@ -196,7 +205,6 @@
   $?  %project-names
       %projects
       %project
-      %state
       %new-project
       %add-config
       %delete-config
@@ -215,12 +223,16 @@
       %poke
       %test-queue
       %pyro-agent-state
+      %shown-pyro-agent-state
+      %pyro-chain-state
+      %shown-pyro-chain-state
       %sync-desk-to-vship
       %cis-setup-done
       %status
       %focused-linked
       %save-file
       %settings
+      %state-views
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -240,7 +252,6 @@
   $%  [%project-names update-info payload=(data ~) project-names=(set @t)]
       [%projects update-info payload=(data ~) projects=shown-projects]
       [%project update-info payload=(data ~) shown-project]
-      [%state update-info payload=(data ~) state=(map @ux chain:engine)]
       [%new-project update-info payload=(data =sync-desk-to-vship) ~]
       [%add-config update-info payload=(data [who=@p what=@tas item=@]) ~]
       [%delete-config update-info payload=(data [who=@p what=@tas]) ~]
@@ -260,12 +271,15 @@
       [%test-queue update-info payload=(data (qeu [@t @ux])) ~]
       [%pyro-agent-state update-info payload=(data [agent-state=vase wex=boat:gall sup=bitt:gall]) ~]
       [%shown-pyro-agent-state update-info payload=(data [agent-state=@t wex=boat:gall sup=bitt:gall]) ~]
+      [%pyro-chain-state update-info payload=(data (map @ux batch:ui)) ~]
+      [%shown-pyro-chain-state update-info payload=(data @t) ~]
       [%sync-desk-to-vship update-info payload=(data sync-desk-to-vship) ~]
       [%cis-setup-done update-info payload=(data ~) ~]
       [%status update-info payload=(data status) ~]
       [%focused-linked update-info payload=(data focused-linked-data) ~]
       [%save-file update-info payload=(data path) ~]
       [%settings update-info payload=(data settings) ~]
+      [%state-views update-info payload=(data (list [@p (unit @tas) path])) ~]
   ==
 ::
 +$  shown-projects  (map @t shown-project)

@@ -7,9 +7,10 @@
   |=  $:  [who=@p contract=@ux transaction=@t]
           expected=(list test-read-step:zig)
       ==
-  ^-  test-steps:zig
+  ^-  [test-steps:zig configs:zig]
+  :_  configs:test-globals
   :_  ~
-  :+  %poke
+  :^  %poke  ~
     :-  who
     :^  who  %uqbar  %wallet-poke
     %-  crip

@@ -28,51 +28,51 @@
 ::
 ++  item
   ^-  @ux
-  0x89a0.89d8.dddf.d13a.418c.0d93.d4b4.e7c7.637a.d56c.96c0.7f91.3a14.8174.c7a7.71e6
+  0x7810.2b9f.109c.e44e.7de3.cd7b.ea4f.45dd.aed8.054c.0b52.b2c8.2788.93c6.5bb4.bb85
 ::
 ++  $
   ^-  test-steps:zig
-  :~  :+  %dojo
+  :~  :^  %dojo  ~
         :-  who
         %-  crip
         "=old-pending %~  key  by  .^((map @ux *) %gx /=wallet=/pending-store/{<address>}/noun)"
       ~
   ::
-      :+  %poke
+      :^  %poke  ~
         :-  who
         :^  who  %uqbar  %wallet-poke
         %-  crip
         "[%transaction ~ from={<address>} contract={<contract>} town=0x0 action=[%give to={<to>} amount=123.456 item={<item>}]]"
       ~
   ::
-      :+  %dojo
+      :^  %dojo  ~
         :-  who
         %-  crip
         "=new-pending %~  key  by  .^((map @ux *) %gx /=wallet=/pending-store/{<address>}/noun)"
       ~
   ::
-      :+  %dojo
+      :^  %dojo  ~
         :-  who
         '=diff-pending (~(dif in new-pending) old-pending)'
       ~
   ::
-      :+  %dojo
+      :^  %dojo  ~
         :-  who
         '=tx-hash ?>  =(1 ~(wyt in diff-pending))  -.diff-pending'
       ~
   ::
-      :+  %dojo
+      :^  %dojo  ~
         :-  who
         %-  crip
         ":uqbar &wallet-poke [%submit from={<address>} hash=tx-hash gas=[rate=1 bud=1.000.000]]"
       ~
   ::
-      :+  %dojo  [who ':sequencer|batch']
+      :^  %dojo  ~  [who ':sequencer|batch']
       :_  ~
-      :+  %scry
+      :^  %scry  ~
         :-  who
         :^  'update:indexer'  %gx  %indexer
-        /newest/item/(scot %ux item)/noun/noun
+        (crip "/newest/item/{<item>}/noun/noun")
       ''
   ==
 --

@@ -4,11 +4,14 @@
 ::
 /-  spider,
     pyro=zig-pyro,
-    zig=zig-ziggurat
+    ui=zig-indexer,
+    zig=zig-ziggurat,
+    zink=zig-zink
 /+  agentio,
     dbug,
     default-agent,
     mip,
+    strandio,
     verb,
     conq=zink-conq,
     dock=docket,
@@ -34,14 +37,15 @@
 +*  this  .
     def      ~(. (default-agent this %|) bowl)
     io       ~(. agentio bowl)
+    strand   strand:spider
     zig-lib  ~(. ziggurat-lib bowl settings)
 ::
 ++  on-init
   =/  smart-lib=vase  ;;(vase (cue +.+:;;([* * @] smart-lib-noun)))
   =/  =eng:zig
-    %~  engine  engine:engine
+    %~  engine  engine
     ::  sigs off, hints off
-    [smart-lib ;;((map * @) (cue +.+:;;([* * @] zink-cax-noun))) %.n %.n]
+    [smart-lib ;;((map * @) (cue +.+:;;([* * @] zink-cax-noun))) jets:zink %.y %.n]
   =*  nec-address
     0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70
   =*  bud-address
@@ -59,10 +63,11 @@
     ::
         %+  ~(put by *configs:zig)  'global'
         %-  ~(gas by *config:zig)
-        :^    [[~nec %address] nec-address]
+        :~  [[~nec %address] nec-address]
             [[~bud %address] bud-address]
-          [[~wes %address] wes-address]
-        ~
+            [[~wes %address] wes-address]
+            [[~nec %sequencer] 0x0]
+        ==
     ::
         ~
         ''
@@ -70,7 +75,7 @@
         ~
         ~
         [%uninitialized ~]
-        [1.024 10]
+        [1.024 10.000 10 200]
     ==
   ==
 ::
@@ -81,9 +86,9 @@
   ::  on-load: pre-cue our compiled smart contract library
   =/  smart-lib=vase  ;;(vase (cue +.+:;;([* * @] smart-lib-noun)))
   =/  =eng:zig
-    %~  engine  engine:engine
+    %~  engine  engine
     ::  sigs off, hints off
-    [smart-lib ;;((map * @) (cue +.+:;;([* * @] zink-cax-noun))) %.n %.n]
+    [smart-lib ;;((map * @) (cue +.+:;;([* * @] zink-cax-noun))) jets:zink %.y %.n]
   `this(state [!<(state-0:zig old-vase) eng smart-lib ~])
 ::
 ++  on-watch
@@ -838,6 +843,14 @@
           [project request-id]:act
       state(projects (~(put by projects) project.act project))
     ::
+        %unregister-contract-for-compilation
+      =/  =project:zig  (~(got by projects) project.act)
+      ?:  (~(has in to-compile.project) file.act)  `state
+      =.  to-compile.project
+        (~(del in to-compile.project) file.act)
+      :-  ~
+      state(projects (~(put by projects) project.act project))
+    ::
         %deploy-contract
       =/  =project:zig  (~(got by projects) project.act)
       =/  add-test-error
@@ -872,6 +885,14 @@
         %+  add-test-error  0x0
         %^  cat  3  'compilation of test-imports failed:\0a'
         p.subject
+      =*  service-host  ~nec  ::  TODO: remove hardcode
+      =.  path.act
+        ?+    (rear path.act)  !!  ::  TODO: error handle
+            %jam   path.act
+            %hoon
+          %-  need  ::  TODO: error handle
+          (convert-contract-hoon-to-jam:zig-lib path.act)
+        ==
       =/  =test:zig
         :*  `test-name
             ~
@@ -880,13 +901,17 @@
             ~
         ::
             :_  ~
-            :^  %custom-write  %send-wallet-transaction
+            :-  %custom-write
+            :^  %send-wallet-transaction  ~
               %-  crip
               %-  noah
               !>  ^-  [@p @p test-write-step:zig]
-              :+  u.who  ~nec  ::  TODO: remove hardcode
-              :^  %custom-write  %deploy-contract
-              (crip "[{<u.who>} {<path.act>} ~]")  ~
+              :+  u.who  service-host
+              :-  %custom-write
+              :^  %deploy-contract  ~
+                %-  crip
+                "[{<u.who>} {<service-host>} {<path.act>} %.n ~]"
+              ~
             ~
         ::
             ~
@@ -910,6 +935,24 @@
               projects
             (~(put by projects) project.act project)
           ==
+      :-  %-  %~  arvo  pass:io
+              /delete-test/[project.act]/(scot %ux test-id)
+          :^  %k  %lard  q.byk.bowl
+          =/  m  (strand ,vase)
+          ^-  form:m
+          ;<  ~  bind:m
+            %^  watch-our:strandio  /updates  %ziggurat
+            /project
+          |-
+          ;<  update-cage=cage  bind:m
+            (take-fact:strandio /updates)
+          ?.  ?=(%ziggurat-update -.update-cage)  $
+          =+  !<(=update:zig q.update-cage)
+          ?~  update                              $
+          ?.  ?=(%test-results -.update)          $
+          ?.  =(test-id test-id.update)           $
+          (pure:m !>(`?`-.payload.update))
+      ^-  (list card)
       :^    (make-run-queue:zig-lib [project request-id]:act)
           %-  update-vase-to-card:zig-lib
           %.  test-queue
@@ -1380,33 +1423,92 @@
         %pyro-agent-state
       =/  who=@ta  (scot %p who.act)
       =*  app      app.act
-      =*  grab     grab.act
-      =?  grab  =('' grab)  '-'
+      =?  grab.act  =('' grab.act)  '-'
       =/  now=@ta  (scot %da now.bowl)
-      =+  .^  agent-state=vase
+      =/  state-error
+        %~  pyro-agent-state  make-error-vase:zig-lib
+        [update-info %error]
+      ?.  .^  ?
               %gx
-              :+  (scot %p our.bowl)  %pyro
-              /[now]/[who]/[app]/dbug/state/noun/noun
+              :-  (scot %p our.bowl)
+              /pyro/[now]/i/[who]/gu/[who]/[app]/[now]/noun
           ==
-      =.  agent-state
-        %-  slap  :_  (ream grab)
-        (slop agent-state !>([bowl=bowl ..zuse]))
+        :_  state
+        :_  ~
+        %-  update-vase-to-card:zig-lib
+        %-  state-error
+        %-  crip
+        "%pyro ship {<who.act>} not running agent {<`@tas`app>}"
       =/  [wex=boat:gall sup=bitt:gall]
         .^  [boat:gall bitt:gall]
             %gx
             :+  (scot %p our.bowl)  %pyro
             /[now]/[who]/[app]/dbug/subscriptions/noun/noun
         ==
+      =+  .^  agent-state=vase
+              %gx
+              :+  (scot %p our.bowl)  %pyro
+              /[now]/[who]/[app]/dbug/state/noun/noun
+          ==
+      =^  subject=(each vase @t)  state
+        %^  compile-test-imports:zig-lib  `@tas`project.act
+        ~(tap by test-imports.act)  state
+      ?:  ?=(%| -.subject)
+        :_  state
+        :_  ~
+        %-  update-vase-to-card:zig-lib
+        %-  state-error
+        %^  cat  3  'compilation of test-imports failed:\0a'
+        p.subject
+      =.  p.subject
+        (slop agent-state (slop !>(bowl=bowl) p.subject))
+      =/  modified-state=vase
+        (slap p.subject (loud-ream:zig-lib grab.act /))
       ::  %shown-pyro-agent-state over %pyro-agent-state
       ::   because there are casts deep in vanes that don't
-      ::   take too kindly to vases within vases: ideally
-      ::   this should be a %pyro-agent-state like the scry
+      ::   take too kindly to vases within vases
       :_  state
       :_  ~
       %-  update-vase-to-card:zig-lib
-      %.  [(show-agent-state:zig-lib agent-state) wex sup]
+      %.  [(show-state:zig-lib modified-state) wex sup]
       %~  shown-pyro-agent-state  make-update-vase:zig-lib
-      ['' %pyro-agent-state ~]
+      update-info
+    ::
+        %pyro-chain-state
+      =?  grab.act  =('' grab.act)  '-'
+      ::  %shown-pyro-chain-state over %pyro-chain-state
+      ::   because there are casts deep in vanes that don't
+      ::   take too kindly to vases within vases
+      =/  state-error
+        %~  pyro-chain-state  make-error-vase:zig-lib
+        [update-info %error]
+      =/  chain-state=(each (map @ux batch:ui) @t)
+        (get-chain-state:zig-lib project.act configs)
+      ?:  ?=(%| -.chain-state)
+        :_  state
+        :_  ~
+        %-  update-vase-to-card:zig-lib
+        (state-error p.chain-state)
+      =^  subject=(each vase @t)  state
+        %^  compile-test-imports:zig-lib  `@tas`project.act
+        ~(tap by test-imports.act)  state
+      ?:  ?=(%| -.subject)
+        :_  state
+        :_  ~
+        %-  update-vase-to-card:zig-lib
+        %-  state-error
+        %^  cat  3  'compilation of test-imports failed:\0a'
+        p.subject
+      =.  p.subject
+        (slop !>(p.chain-state) (slop !>(bowl=bowl) p.subject))
+      =/  modified-state=vase
+        (slap p.subject (loud-ream:zig-lib grab.act /))
+      :_  state
+      :_  ~
+      %-  update-vase-to-card:zig-lib
+      %.  (show-state:zig-lib modified-state)
+      %~  shown-pyro-chain-state  make-update-vase:zig-lib
+      update-info
     ::
         %change-settings
       `state(settings settings.act)
@@ -1444,7 +1546,9 @@
         ~
       ::
           %thread-done
-        =+  !<(result=(each test-results:zig @t) q.cage.sign)
+        =/  result=(each (pair test-results:zig configs:zig) @t)
+          !<  (each [test-results:zig configs:zig] @t)
+          q.cage.sign
         ?:  ?=(%| -.result)
           =.  status  [%ready ~]
           :_  this
@@ -1456,7 +1560,7 @@
             %~  status  make-update-vase:zig-lib
             [project-name %ziggurat-test-run-thread-fail ~]
           ~
-        =*  test-results  p.result
+        =*  test-results  p.p.result
         =/  =shown-test-results:zig
           (show-test-results:zig-lib test-results)
         =.  tests.project
@@ -1470,6 +1574,9 @@
           %~  test-results  make-update-vase:zig-lib
           [project-name %ziggurat-test-run-thread-done ~]
         :_  %=  this
+                configs
+              (uni-configs:zig-lib configs q.p.result)
+            ::
                 projects
               (~(put by projects) project-name project)
             ==
@@ -1673,6 +1780,17 @@
     =/  new-status=status:zig  [%ready ~]
     :_  this(status new-status)
     (make-done-cards:zig-lib status desk)
+  ::
+      [%delete-test @ @ ~]
+    ?.  ?&  ?=(%khan -.sign-arvo)
+            ?=(%arow -.+.sign-arvo)
+            ?=(%& -.p.+.sign-arvo)
+        ==
+      (on-arvo:def w sign-arvo)
+    =*  project-name  i.t.w
+    =*  test-id=@ux   (slav %ux i.t.t.w)
+    :_  this
+    ~[(make-delete-test:zig-lib test-id project-name ~)]
   ==
   ::
   ++  is-cis-done
@@ -1715,16 +1833,6 @@
     ?~  project  !>(`update:zig`~)
     %.  u.project
     ~(project make-update-vase:zig-lib [project-name %project ~])
-  ::
-      [%state @ ~]
-    =*  project-name  i.t.t.p
-    =/  project=(unit project:zig)
-      (~(get by projects) project-name)
-    :^  ~  ~  %ziggurat-update
-    !>  ^-  update:zig
-    ?~  project  ~
-    :^  %state  [project-name %state ~]  [%& ~]
-    (get-state:zig-lib project-name u.project configs)
   ::
       [%test-queue ~]
     :^  ~  ~  %ziggurat-update
@@ -1804,36 +1912,24 @@
   ::   %+  frond:enjs:format  %user-files
   ::   (dir:enjs:zig-lib ~(tap in user-files.u.project))
   ::
-      [%pyro-agent-state @ @ @ ~]
-    =*  who      i.t.t.p
-    =*  app      `@tas`i.t.t.t.p
-    =/  grab=@t  `@t`i.t.t.t.t.p
-    =?  grab  =('' grab)  '-'
-    =/  now=@ta  (scot %da now.bowl)
-    =+  .^  agent-state=vase
-            %gx
-            :+  (scot %p our.bowl)  %pyro
-            /[now]/[who]/[app]/dbug/state/noun/noun
-        ==
-    =.  agent-state
-      %-  slap  :_  (ream grab)
-      (slop agent-state !>([bowl=bowl ..zuse]))
-    =/  [wex=boat:gall sup=bitt:gall]
-      .^  [boat:gall bitt:gall]
-          %gx
-          :+  (scot %p our.bowl)  %pyro
-          /[now]/[who]/[app]/dbug/subscriptions/noun/noun
-      ==
-    :^  ~  ~  %ziggurat-update
-    %.  [agent-state wex sup]
-    %~  pyro-agent-state  make-update-vase:zig-lib
-    ['' %pyro-agent-state ~]
-  ::
       [%settings ~]
     :^  ~  ~  %ziggurat-update
     %.  settings
     %~  settings  make-update-vase:zig-lib
     ['' %settings ~]
+  ::
+      [%state-views @ ~]
+    =*  project-name  i.t.t.p
+    =*  update-info  [project-name %state-views ~]
+    =/  [* cfo=(unit configuration-file-output:zig) *]
+      (load-configuration-file:zig-lib update-info state)
+    :^  ~  ~  %json
+    !>  ^-  json
+    ?~  cfo  ~
+    %-  update:enjs:zig-lib
+    !<  update:zig
+    %.  state-views.u.cfo
+    %~  state-views  make-update-vase:zig-lib  update-info
   ::
       [%file-exists @ ^]
     =/  des=@ta    i.t.t.p
