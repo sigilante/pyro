@@ -108,8 +108,8 @@
   ^-  $>(%park task:clay)
   ::
   =/  desk-path=path  /(scot %p ship)/[desk]/(scot case)
-  =/  =dome:clay  .^(dome:clay %cv desk-path)
-  =*  tako=tako:clay  (~(got by hit.dome) let.dome)
+  =/  =domo:clay  .^(domo:clay %cv desk-path)
+  =*  tako=tako:clay  (~(got by hit.domo) let.domo)
   =*  path-to-lobe
     q:.^(yaki:clay %cs (weld desk-path /yaki/(scot %uv tako)))
   ::
@@ -127,7 +127,6 @@
   %-  send-events
   %+  ue-to-pes  hers
   [/c/commit (park ship desk case)]
-
 ::
 ++  enjs
   =,  enjs:format
