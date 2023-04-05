@@ -29,7 +29,7 @@
     dbug, verb
 ::
 /=  arvo-core  /lib/pyro/arvo :: TODO this compiles it against zuse, WRONG
-/=  ames-core  /lib/pyro/vane/ames :: ctrl+F "13", replace with 23
+/=  ames-core  /lib/pyro/vane/ames
 /=  behn-core  /lib/pyro/vane/behn
 /=  clay-core  /lib/pyro/vane/clay
 /=  dill-core  /lib/pyro/vane/dill
@@ -512,11 +512,11 @@
       .^(rang:clay %cx /(scot %p our.bowl)//(scot %da now.bowl)/rang)
     =.  dos.rom.raft :: populate domestic desks, basically just %base
       =/  =cone:clay  .^(cone:clay %cx /(scot %p our.bowl)//(scot %da now.bowl)/domes)
-      =/  =foam:clay  (~(got by cone) our.bowl desk.act)
+      =/  =dome:clay  (~(got by cone) our.bowl desk.act)
       ^-  (map desk dojo:clay-types)
       %+  ~(put by dos.rom.raft)  desk.act
       =|  doj=dojo:clay-types
-      =.(dom.doj [let hit lab tom nor ~ fod ~ liv ren]:foam doj)
+      =.(dom.doj dome doj)
     `state
   ==
 ::
