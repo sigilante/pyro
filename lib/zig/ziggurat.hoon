@@ -2366,8 +2366,8 @@
         [%save-thread save-thread]
         [%delete-thread (ot ~[[%thread-name (se %tas)]])]
     ::
-        :: [%run-queue ul]
-        :: [%clear-queue ul]
+        [%run-queue ul]
+        [%clear-queue ul]
     ::
         [%stop-pyro-ships ul]
         [%start-pyro-ships (ot ~[[%ships (ar (se %p))]])]
