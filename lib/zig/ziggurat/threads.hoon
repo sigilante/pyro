@@ -547,67 +547,7 @@
       %-  send-error
       (crip "{<`@tas`project-name>} face reserved")
     return-failure
-  ::  get desks via desk-dependencies
   ;<  ~  bind:m  get-dependency-desks
-  :: ;<  desk-names=(set desk)  bind:m  (scry (set desk) /cd/$)
-  :: ;<  ~  bind:m
-  ::   |-
-  ::   ?~  desk-dependencies  (pure:m ~)
-  ::   =*  dep  i.desk-dependencies
-  ::   =*  who           who.dep
-  ::   =*  desk-name     desk-name.dep
-  ::   =*  c             case.dep
-  ::   =*  desired-hash  commit-hash.dep
-  ::   ?.  (~(has in desk-names) desk-name)
-  ::     ;<  ~  bind:m  (fetch-desk who desk-name c)
-  ::     $(desk-dependencies t.desk-dependencies)
-  ::   ?~  desired-hash
-  ::     $(desk-dependencies t.desk-dependencies)
-  ::   ;<  =dome:clay  bind:m
-  ::     (scry dome:clay /cv/[desk-name])
-  ::   =/  commits=(list (pair @ud @uvi))  ~(tap by hit.dome)
-  ::   ;<  revision-number=(unit @ud)  bind:m
-  ::     |-
-  ::     ?~  commits  (pure:m ~)
-  ::     =*  revision-number  p.i.commits
-  ::     =*  commit-hash      q.i.commits
-  ::     ?.  =(desired-hash commit-hash)  $(commits t.commits)
-  ::     (pure:m `revision-number)
-  ::   ?^  revision-number
-  ::     ;<  ~  bind:m
-  ::       %^  fetch-desk  our.bowl  desk-name
-  ::       [%ud u.revision-number]
-  ::     ;<  result=(pair wire sign-arvo)  bind:m
-  ::       take-sign-arvo
-  ::     ::  todo: validate merge worked
-  ::     $(desk-dependencies t.desk-dependencies)
-  ::   ;<  ~  bind:m  (fetch-desk who desk-name c)
-  ::   $(desk-dependencies t.desk-dependencies)
-    :: ;<  ~  bind:m
-    ::   %-  send-raw-card
-    ::   :^  %pass  /merge-to-load-commit  %arvo
-    ::   :^  %c  %merg  desk-name
-    ::   ?~  revision-number
-    ::     [who desk-name c %only-that]
-    ::   :^  our.bowl  desk-name  [%ud u.revision-number]
-    ::   %only-that
-    :: ;<  result=(pair wire sign-arvo)  bind:m
-    ::   take-sign-arvo
-    :: ::  TODO: validate merge worked
-    :: $(desk-dependencies t.desk-dependencies)
-    ::
-    :: ;<  commit=(unit @uvI)  bind:m
-    ::   |-
-    ::   ?~  commits  (pure:m ~)
-    ::   =*  commit-hash      q.i.commits
-    ::   ?.  =(desired-hash commit-hash)  $(commits t.commits)
-    ::   (pure:m `commit-hash)
-    :: ?^  commit
-    ::   ;<  =yaki:clay  bind:m
-    ::     %+  scry  yaki:clay
-    ::     /cs/[desk-name]/yaki/(scot %uv u.commit)
-    :: t.yaki
-  ::  setup desks
   ;<  ~  bind:m
     (iterate-over-dependency-desks make-dev-desk)
   ~&  %sp^%1
@@ -640,73 +580,11 @@
           (~(all by install) |=(a=(list @) ?=(~ a)))
       ==
     return-success
-  :: =/  installs=(list (pair @tas (list @p)))
-  ::   ~(tap by install)
   ~&  %sp^%7
   ;<  ~  bind:m
     (install-and-start-apps ~(tap by install))
-    :: |-
-    :: ?~  installs  (pure:m ~)
-    :: =*  desk-name        p.i.installs
-    :: =*  whos-to-install  q.i.installs
-    :: ;<  ~  bind:m
-    ::   %+  iterate-over-whos  whos-to-install
-    ::   (curr install-desk desk-name)
-    :: ?~  apps-to-start=(~(get by start-apps) desk-name)
-    ::   $(installs t.installs)
-    :: ;<  ~  bind:m
-    ::   %+  iterate-over-whos  whos-to-install
-    ::   (curr do-start-apps [desk-name u.apps-to-start])
-    :: $(installs t.installs)
   ~&  %sp^%8
   return-success
-  ::  
-  :: =/  p=(unit project:zig)
-  ::   (~(get by projects.state) project-name)
-  :: ~&  %sd^p
-  :: ?:  ?&  ?=(^ p)
-  ::         (has-desk:zig-lib u.p desk-name)
-  ::         ?=(^ (~(int in (~(gas in *(set @p)) pyro-ships.u.p)) (~(gas in *(set @p)) whos)))
-  ::     ==
-  ::   ;<  ~  bind:m
-  ::     %-  send-error
-  ::     %-  crip
-  ::     %+  weld  "project {<`@tas`project-name>} already has"
-  ::     " desk {<`@tas`desk-name>}"
-  ::   return-failure
-  :: ;<  new-state=state-0:zig  bind:m  update-project
-  :: =.  state  new-state
-  :: ~&  %sd^%1
-  :: ;<  ~  bind:m  make-dev-desk
-  :: ~&  %sd^%3
-  :: ;<  new-state=state-0:zig  bind:m  set-initial-state
-  :: =.  state  new-state
-  :: ~&  %sd^%4
-  :: ;<  ~  bind:m  make-read-desk
-  :: ;<  ~  bind:m  start-new-ships
-  :: ;<  ~  bind:m  (block-on-previous-operation ~)
-  :: ~&  %sd^%6
-  :: ;<  ~  bind:m  send-new-project-update
-  :: ~&  %sd^%7
-  :: ;<  ~  bind:m
-  ::   %+  poke-our  %ziggurat
-  ::   :-  %ziggurat-action
-  ::   !>  ^-  action:zig
-  ::   :^  project-name  desk-name  request-id
-  ::   [%send-state-views state-views]
-  :: ~&  %sd^%8
-  :: ;<  =bowl:strand  bind:m  get-bowl
-  :: ;<  ~  bind:m
-  ::   (commit:pyro-lib whos our.bowl desk-name %da now.bowl)
-  :: ~&  %sd^%9
-  :: ;<  ~  bind:m  (iterate-over-whos block-on-commit)
-  :: ?.  install  return-success
-  :: ~&  %sd^%10
-  :: ;<  ~  bind:m  (iterate-over-whos install-desk)
-  :: ~&  %sd^%11
-  :: ;<  ~  bind:m  (iterate-over-whos do-start-apps)
-  :: ~&  %sd^%12
-  :: return-success
   ::
   ++  make-state-views
     =/  m  (strand ,state-views:zig)
@@ -749,69 +627,6 @@
     ;<  =cass:clay  bind:m  (get-cass who desk-name p.c)
     ;<  ~  bind:m  (fetch-desk who desk-name %ud ud.cass)
     $(desk-dependencies t.desk-dependencies)
-    ::
-    :: ?:  =(our.bowl who)
-    ::   ?~  desired-hash
-    ::     ;<  ~  bind:m  (fetch-desk who desk-name c)
-    ::   ;<  =dome:clay  bind:m  (get-local-dome desk-name)
-    ::   =/  revision-number=(unit @ud)
-    ::     (get-revision-number-of-hash u.desired-hash dome)
-    ::   ?~  revision-number  !!  ::  TODO
-    ::   ;<  ~  bind:m
-    ::     (fetch-desk who desk-name %ud u.revision-number)
-    :: ?^  desired-hash
-    ::   ;<  =dome:clay  bind:m  (get-remote-dome who desk-name)
-    ::   =/  revision-number=(unit @ud)
-    ::     (get-revision-number-of-hash u.desired-hash dome)
-    ::   ?~  revision-number  !!  ::  TODO
-    ::   ;<  ~  bind:m
-    ::     (fetch-desk who desk-name %ud u.revision-number)
-    ::
-    :: ~&  %z^%get-dependency-desks^who^desk-name^c^desired-hash
-    :: ;<  a=arch  bind:m  (scry arch /cy/[desk-name])
-    :: ?:  &(?=(~ fil.a) ?=(~ dir.a))
-    ::   ::  desk does not exist (or is empty, which happens,
-    ::   ::                       e.g., on failed merges)
-    ::   ?:  =(our.bowl who)  !!  ::  TODO: handle error
-    ::   =.  c
-    ::     ?.  ?=(%da -.c)  c
-    ::     ;<  =dome:clay  bind:m
-    ::       (get-remote-dome who desk-name)
-    ::
-    ::   ;<  ~  bind:m  (fetch-desk who desk-name c)
-    ::   $(desk-dependencies t.desk-dependencies)
-    :: ?~  desired-hash
-    ::   $(desk-dependencies t.desk-dependencies)
-    :: ;<  =dome:clay  bind:m
-    ::   (scry dome:clay /cv/[desk-name])
-    :: =/  commits=(list (pair @ud @uvi))  ~(tap by hit.dome)
-    :: =/  revision-number=(unit @ud)
-    ::   |-
-    ::   ?~  commits  ~
-    ::   =*  revision-number  p.i.commits
-    ::   =*  commit-hash      q.i.commits
-    ::   ?.  =(desired-hash commit-hash)  $(commits t.commits)
-    ::   `revision-number
-    :: ?~  revision-number
-    ::   ;<  ~  bind:m  (fetch-desk who desk-name c)
-    ::   $(desk-dependencies t.desk-dependencies)
-    :: ;<  ~  bind:m
-    ::   %^  fetch-desk  our.bowl  desk-name
-    ::   [%ud u.revision-number]
-    :: ;<  result=(pair wire sign-arvo)  bind:m
-    ::   take-sign-arvo
-    :: ::  todo: validate merge worked
-    :: $(desk-dependencies t.desk-dependencies)
-  :: ::
-  :: ++  get-local-dome
-  ::   |=  desk-name=@tas
-  ::   =/  m  (strand ,dome:clay)
-  ::   ^-  form:m
-  ::   ;<  =dome:clay  bind:m
-  ::     (scry dome:clay /cv/[desk-name])
-  ::   (pure:m dome)
-  :: ::
-  :: ++  get-remote-dome
   ::
   ++  does-desk-exist
     |=  desk-name=@tas
@@ -838,16 +653,6 @@
       (warp who desk-name ~ %sing %v da+now /)
     ?~  riot  !!  :: TODO
     (pure:m !<(dome:clay q.r.u.riot))
-  :: ::
-  :: ++  get-remote-most-recent-revision-number
-  ::   |=  [who=@p desk-name=@tas]
-  ::   =/  m  (strand ,(unit @ud))
-  ::   ^-  form:m
-  ::   ;<  now=@da  bind:m  get-time
-  ::   ;<  =riot:clay  bind:m
-  ::     (warp who desk-name ~ %sing %w da+now /)
-  ::   ?~  riot  ~  :: TODO
-  ::   (pure:m `ud:!<(cass:clay q.r.u.riot))
   ::
   ++  get-revision-number-of-hash
     |=  [desired-hash=@ux =dome:clay]
@@ -894,13 +699,8 @@
       :^  who  desk-name  c
       ?.(exists %init %only-that)
     ~&  %z^%fetch-desk^%sent
-    :: ;<  result=(pair wire sign-arvo)  bind:m
-    ::   take-sign-arvo
-    :: ~&  %z^%fetch-desk^%done^wire^sign-arvo
-    ;<  [w=wire s=sign-arvo]  bind:m
-      take-sign-arvo
-    ?>  ?=(%clay -.s)
-    ?>  ?=(%mere -.+.s)
+    ;<  [w=wire s=sign-arvo]  bind:m  take-sign-arvo
+    ?>  &(?=(%clay -.s) ?=(%mere -.+.s))
     ?:  ?=(%| -.p.+.s)
       ~&  %z^%fetch-desk^%merge-failed^who^desk-name^c^p.p.p.+.s^q.p.p.+.s
       !!
@@ -972,24 +772,6 @@
     ^-  sync-desk-to-vship:zig
     %-  ~(gas ju sync-desk-to-vship.state)
     (turn whos |=(who=@p [desk-name who]))
-  :: ::
-  :: ++  update-project
-  ::   =/  m  (strand ,state-0:zig)
-  ::   ^-  form:m
-  ::   =|  =desk:zig
-  ::   =/  =project:zig
-  ::     (~(gut by projects.state) project-name *project:zig)
-  ::   =.  projects.state
-  ::     %+  ~(put by projects.state)  project-name
-  ::     %^  put-desk:zig-lib  project  desk-name
-  ::     desk(special-configuration-args special-configuration-args)
-  ::   ;<  ~  bind:m
-  ::     %+  poke-our  %ziggurat
-  ::     :-  %ziggurat-action
-  ::     !>  ^-  action:zig
-  ::     :-  project-name
-  ::     [desk-name request-id %set-ziggurat-state state]
-  ::   (pure:m state)
   ::
   ++  set-initial-state
     =/  m  (strand ,state-0:zig)
