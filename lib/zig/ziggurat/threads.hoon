@@ -284,13 +284,16 @@
 ++  block-on-previous-operation
   =+  done-duration=`@dr`~m1
   |=  project-name=(unit @t)
+  =|  iris-timeout=(unit (pair @ux @da))
   |^
   =/  m  (strand ,~)
   ^-  form:m
   ;<  ~  bind:m  (sleep `@dr`1)
   |-
-  ;<  is-stack-empty=?  bind:m  get-is-stack-empty
-  ?.  is-stack-empty
+  ;<  is-stack-empty=(each ~ (unit (pair @ux @da)))  bind:m
+    (get-is-stack-empty iris-timeout)
+  ?:  ?=(%| -.is-stack-empty)
+    =.  iris-timeout  p.is-stack-empty
     ;<  ~  bind:m  (sleep (div ~s1 4))
     $
   ;<  =bowl:strand  bind:m  get-bowl
@@ -305,12 +308,31 @@
   $
   ::
   ++  get-is-stack-empty
-    =/  m  (strand ,?)
+    |=  iris-timeout=(unit (pair @ux @da))
+    |^
+    =/  m  (strand ,(each ~ (unit (pair @ux @da))))
     ^-  form:m
-    ::  /i//whey from sys/vane/iris/hoon:386
-    ;<  maz=(list mass)  bind:m  (scry (list mass) /i//whey)
-    =/  by-id  (snag 2 maz)
-    (pure:m ?=(~ p.q.by-id))
+    ;<  is-iris-empty=(each ~ mass)  bind:m  get-is-iris-empty
+    ?:  ?=(%& -.is-iris-empty)  (pure:m [%.y ~])
+    ;<  now=@da  bind:m  get-time
+    ?:  ?=(~ iris-timeout)
+      ~&  %z^%iris-timeout^%start^`[(jam p.is-iris-empty) (add now ~s15)]
+      (pure:m [%.n `[(jam p.is-iris-empty) (add now ~s15)]])
+    ?:  ?&  =(p.u.iris-timeout (jam p.is-iris-empty))
+            (lth q.u.iris-timeout now)
+        ==
+      ~&  %z^%iris-timeout^%timed-out
+      (pure:m [%.y ~])
+    (pure:m [%.n iris-timeout])
+    ::
+    ++  get-is-iris-empty
+      =/  m  (strand ,(each ~ mass))
+      ^-  form:m
+      ::  /i//whey from sys/vane/iris/hoon:386
+      ;<  maz=(list mass)  bind:m  (scry (list mass) /i//whey)
+      =/  by-id  (snag 2 maz)
+      (pure:m ?:(?=(~ p.q.by-id) [%.y ~] [%.n by-id]))
+    --
   ::
   ++  ignored-virtualship-timer-prefixes
     ^-  (list path)
