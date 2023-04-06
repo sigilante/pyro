@@ -617,15 +617,7 @@
       ;<  ~  bind:m
         (fetch-desk who desk-name %ud u.revision-number)
       $(desk-dependencies t.desk-dependencies)
-    ?:  =(our.bowl who)
-      ;<  ~  bind:m  (fetch-desk who desk-name c)
-      $(desk-dependencies t.desk-dependencies)
-    :: ;<  =dome:clay  bind:m  (get-dome who desk-name)
-    ?.  ?=(%da -.c)
-      ;<  ~  bind:m  (fetch-desk who desk-name c)
-      $(desk-dependencies t.desk-dependencies)
-    ;<  =cass:clay  bind:m  (get-cass who desk-name p.c)
-    ;<  ~  bind:m  (fetch-desk who desk-name %ud ud.cass)
+    ;<  ~  bind:m  (fetch-desk who desk-name c)
     $(desk-dependencies t.desk-dependencies)
   ::
   ++  does-desk-exist
