@@ -370,8 +370,8 @@
     ?~  project-name  ~
     =+  .^  =update:zig
             %gx
-            :-  (scot %p our)
-            /ziggurat/(scot %da now)/sync-desk-to-vship/noun
+            :^  (scot %p our)  %ziggurat  (scot %da now)
+            /sync-desk-to-vship/[u.project-name]/noun
         ==
     ?~  update                            ~
     ?.  ?=(%sync-desk-to-vship -.update)  ~  ::  TODO: throw error?
@@ -762,15 +762,19 @@
   ::
   ++  make-sync-desk-to-vship
     ^-  sync-desk-to-vship:zig
-    %-  ~(gas ju sync-desk-to-vship.state)
+    %-  ~(gas ju *sync-desk-to-vship:zig)
     (turn whos |=(who=@p [desk-name who]))
   ::
   ++  set-initial-state
     =/  m  (strand ,state-0:zig)
     ^-  form:m
+    =/  =project:zig
+      (~(gut by projects.state) project-name *project:zig)
     =.  state
       %=  state
-          sync-desk-to-vship  make-sync-desk-to-vship
+          projects
+        %+  ~(put by projects.state)  project-name
+        project(sync-desk-to-vship make-sync-desk-to-vship)
       ::
           configs
         %+  ~(put by configs.state)  project-name

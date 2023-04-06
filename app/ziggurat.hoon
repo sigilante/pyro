@@ -71,7 +71,6 @@
             [[~nec %sequencer] 0x0]
         ==
     ::
-        ~
         ''
         ~
         [%uninitialized ~]
@@ -207,18 +206,22 @@
       :: ~
     ::
         %delete-sync-desk-vships
-      :-  ~
-      %=  state
-          sync-desk-to-vship
+      =/  =project:zig
+        (~(got by projects) project-name.act)
+      =.  sync-desk-to-vship.project
         |-
-        ?~  ships.act  sync-desk-to-vship
+        ?~  ships.act  sync-desk-to-vship.project
         %=  $
             ships.act  t.ships.act
         ::
-            sync-desk-to-vship
-          %-  ~(del ju sync-desk-to-vship)
+            sync-desk-to-vship.project
+          %-  ~(del ju sync-desk-to-vship.project)
           [project-name i.ships]:act
         ==
+      :-  ~
+      %=  state
+          projects
+        (~(put by projects) project-name.act project)
       ==
     ::
         %send-state-views
@@ -1226,6 +1229,7 @@
     =*  project-name  i.t.w
     =*  desk-name     i.t.t.w
     =/  =project:zig  (~(got by projects) project-name)
+    =*  sync-desk-to-vship  sync-desk-to-vship.project
     =/  =desk:zig  (got-desk:zig-lib project desk-name)
     ?~  p.sign-arvo
       :_  this
@@ -1236,6 +1240,7 @@
       =+  !<(=dome:clay q.r.u.p.sign-arvo)
       =/  =tako:clay  (~(got by hit.dome) let.dome)
       =+  .^  =yaki:clay
+
               %cs
               %+  weld  /(scot %p our.bowl)/[desk-name]
               /(scot %da now.bowl)/yaki/(scot %uv tako)
@@ -1319,11 +1324,15 @@
     %~  thread-queue  make-update-vase:zig-lib
     ['' %$ %thread-queue ~]
   ::
-      [%sync-desk-to-vship ~]
+      [%sync-desk-to-vship @ ~]
+    =*  project-name  i.t.t.p
+    =/  p=(unit project:zig)
+      (~(get by projects) project-name)
+    ?~  p  ``ziggurat-update+!>(~)
     :^  ~  ~  %ziggurat-update
-    %.  sync-desk-to-vship
+    %.  sync-desk-to-vship.u.p
     %~  sync-desk-to-vship  make-update-vase:zig-lib
-    ['' %$ %sync-desk-to-vship ~]
+    [project-name %$ %sync-desk-to-vship ~]
   ::
       [%status ~]
     :^  ~  ~  %ziggurat-update

@@ -11,7 +11,6 @@
   $:  %0
       =projects
       =configs
-      =sync-desk-to-vship
       focused-project=@t
       =thread-queue
       =status
@@ -68,6 +67,7 @@
 +$  project
   $:  desks=(list (pair @tas desk))
       pyro-ships=(list @p)
+      =sync-desk-to-vship
       most-recent-snap=path
       saved-thread-queue=thread-queue
   ==
