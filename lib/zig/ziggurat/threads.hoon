@@ -526,11 +526,6 @@
     :-  %ziggurat-action
     !>  ^-  action:zig
     [focused-project %$ request-id %take-snapshot ~]
-  :: ;<  ~  bind:m
-  ::   %+  poke-our  %pyro
-  ::   :-  %pyro-action
-  ::   !>  ^-  action:pyro
-  ::   [%restore-snap default-snap-path:zig-lib]
   (pure:m !>(~))
 ::
 ++  get-state
@@ -544,6 +539,145 @@
   ?>  ?=(%& -.payload.update)
   (pure:m p.payload.update)
 ::
+++  iterate-over-desks
+  =/  m  (strand ,~)
+  |=  [desk-names=(list @tas) gate=$-(@tas form:m)]
+  ^-  form:m
+  |-
+  ?~  desk-names  (pure:m ~)
+  =*  desk-name  i.desk-names
+  ;<  ~  bind:m  (gate desk-name)
+  $(desk-names t.desk-names)
+::
+++  commit-install-start
+  |=  $:  whos=(list @p)
+          desk-names=(list @tas)
+          install=(map @tas (list @p))
+          start-apps=(map @tas (list @tas))
+      ==
+  =/  commit-poll-duration=@dr  ~s1
+  =/  start-poll-duration=@dr   (div ~s1 10)
+  |^
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ;<  =bowl:strand  bind:m  get-bowl
+  ;<  ~  bind:m
+    %+  iterate-over-desks  desk-names
+    |=  desk-name=@tas
+    (commit:pyro-lib whos our.bowl desk-name %da now.bowl)
+  ~&  %cis^%0
+  ;<  ~  bind:m
+    (iterate-over-whos whos (block-on-commit desk-names))
+  ?:  ?|  =(0 ~(wyt by install))
+          (~(all by install) |=(a=(list @) ?=(~ a)))
+      ==
+    (pure:m !>(~))
+  ~&  %cis^%1
+  ;<  ~  bind:m  install-and-start-apps
+  ~&  %cis^%2
+  (pure:m !>(~))
+  ::
+  ++  scry-virtualship-desks
+    |=  who=@p
+    =/  m  (strand ,(set @tas))
+    ^-  form:m
+    =/  w=@ta  (scot %p who)
+    (scry (set @tas) /gx/pyro/i/[w]/cd/[w]//0/noun)
+  ::
+  ++  virtualship-desks-exist
+    |=  [who=@p desired-desk-names=(set @tas)]
+    =/  m  (strand ,?)
+    ^-  form:m
+    ;<  existing-desk-names=(set @tas)  bind:m
+      (scry-virtualship-desks who)
+    %-  pure:m
+    .=  desired-desk-names
+    (~(int in existing-desk-names) desired-desk-names)
+  ::
+  ++  block-on-commit
+    |=  desk-names=(list @tas)
+    |=  who=@p
+    =/  m  (strand ,~)
+    ^-  form:m
+    |-
+    ;<  ~  bind:m  (sleep commit-poll-duration)
+    ;<  does-exist=?  bind:m
+      %+  virtualship-desks-exist  who
+      (~(gas in *(set @tas)) desk-names)
+    ?.  does-exist  $
+    (pure:m ~)
+  ::
+  ++  virtualship-is-running-app
+    |=  [who=@p app=@tas]
+    =/  m  (strand ,?)
+    ^-  form:m
+    =/  w=@ta    (scot %p who)
+    (scry ? /gx/pyro/i/[w]/gu/[w]/[app]/0/noun)
+  ::
+  ++  iterate-over-whos
+    =/  m  (strand ,~)
+    |=  [whos=(list @p) gate=$-(@p form:m)]
+    ^-  form:m
+    |-
+    ?~  whos  (pure:m ~)
+    =*  who  i.whos
+    ;<  ~  bind:m  (gate who)
+    $(whos t.whos)
+  ::
+  ++  do-install-desk
+    |=  desk-name=@tas
+    |=  who=@p
+    =/  m  (strand ,~)
+    ^-  form:m
+    ;<  empty-vase=vase  bind:m
+      %+  send-pyro-dojo  who
+      (crip "|install our {<desk-name>}")
+    (pure:m ~)
+  ::
+  ++  block-on-start
+    |=  [who=@p next-app=@tas]
+    =/  m  (strand ,~)
+    ^-  form:m
+    |-
+    ;<  ~  bind:m  (sleep start-poll-duration)
+    ;<  is-running=?  bind:m
+      (virtualship-is-running-app who next-app)
+    ?.  is-running  $
+    (pure:m ~)
+  ::
+  ++  do-start-apps
+    |=  [desk-name=@tas start-apps=(list @tas)]
+    |=  who=@p
+    =/  m  (strand ,~)
+    ^-  form:m
+    |-
+    ?~  start-apps  (pure:m ~)
+    =*  next-app  i.start-apps
+    ;<  empty-vase=vase  bind:m
+      %+  send-pyro-dojo  who
+      (crip "|start {<`@tas`desk-name>} {<`@tas`next-app>}")
+    ;<  ~  bind:m  (block-on-start who next-app)
+    $(start-apps t.start-apps)
+  ::
+  ++  install-and-start-apps
+    =/  m  (strand ,~)
+    ^-  form:m
+    =/  installs  ~(tap by install)
+    |-
+    ?~  installs  (pure:m ~)
+    =*  desk-name        p.i.installs
+    =*  whos-to-install  q.i.installs
+    ;<  ~  bind:m
+      %+  iterate-over-whos  whos-to-install
+      (do-install-desk desk-name)
+    ?~  apps-to-start=(~(get by start-apps) desk-name)
+      $(installs t.installs)
+    ;<  ~  bind:m
+      %+  iterate-over-whos  whos-to-install
+      (do-start-apps desk-name u.apps-to-start)
+    $(installs t.installs)
+  --
+::
 ++  setup-project
   |=  $:  request-id=(unit @t)
           :: special-configuration-args=vase
@@ -553,9 +687,9 @@
           install=(map @tas (list @p))
           start-apps=(map @tas (list @tas))
       ==
-  =/  commit-poll-duration=@dr   ~s1
-  =/  install-poll-duration=@dr  ~s1
-  =/  start-poll-duration=@dr    (div ~s1 10)
+  :: =/  commit-poll-duration=@dr   ~s1
+  :: :: =/  install-poll-duration=@dr  ~s1
+  :: =/  start-poll-duration=@dr    (div ~s1 10)
   =/  m  (strand ,vase)
   ^-  form:m
   ~&  %so^%0
@@ -571,13 +705,15 @@
     return-failure
   ;<  ~  bind:m  get-dependency-desks
   ;<  ~  bind:m
-    (iterate-over-dependency-desks make-dev-desk)
+    %+  iterate-over-desks  desk-dependency-names
+    make-dev-desk
   ~&  %sp^%1
   ;<  new-state=state-0:zig  bind:m  set-initial-state
   =.  state  new-state
   ~&  %sp^%2
   ;<  ~  bind:m
-    (iterate-over-dependency-desks make-read-desk)
+    %+  iterate-over-desks  desk-dependency-names
+    make-read-desk
   ;<  ~  bind:m  start-new-ships
   :: ;<  ~  bind:m  (block-on-previous-operation ~)  ::  TODO: blocks on iris connection for a long time; is this ever actually needed?
   ~&  %sp^%3
@@ -591,21 +727,9 @@
     :^  project-name  %$  request-id
     [%send-state-views state-views]
   ~&  %sp^%5
-  ;<  =bowl:strand  bind:m  get-bowl
-  ;<  ~  bind:m
-    %-  iterate-over-dependency-desks
-    |=  desk-name=@tas
-    (commit:pyro-lib whos our.bowl desk-name %da now.bowl)
-  ~&  %sp^%6
-  ;<  ~  bind:m  (iterate-over-whos whos block-on-commit)
-  ?:  ?|  =(0 ~(wyt by install))
-          (~(all by install) |=(a=(list @) ?=(~ a)))
-      ==
-    return-success
-  ~&  %sp^%7
-  ;<  ~  bind:m
-    (install-and-start-apps ~(tap by install))
-  ~&  %sp^%8
+  ;<  empty-vase=vase  bind:m
+    %-  commit-install-start
+    [whos desk-dependency-names install start-apps]
   return-success
   ::
   ++  make-state-views
@@ -678,26 +802,6 @@
     =*  commit-hash      q.i.commits
     ?.  =(desired-hash commit-hash)  $(commits t.commits)
     `revision-number
-  ::
-  ++  install-and-start-apps
-    |=  installs=(list (pair @tas (list @p)))
-    =/  m  (strand ,~)
-    ^-  form:m
-    |-
-    ?~  installs  (pure:m ~)
-    =*  desk-name        p.i.installs
-    =*  whos-to-install  q.i.installs
-    ;<  ~  bind:m
-      %+  iterate-over-whos  whos-to-install
-      (do-install-desk desk-name)
-      :: `$-(@p form:m)`(curr install-desk desk-name)
-    ?~  apps-to-start=(~(get by start-apps) desk-name)
-      $(installs t.installs)
-    ;<  ~  bind:m
-      %+  iterate-over-whos  whos-to-install
-      (do-start-apps desk-name u.apps-to-start)
-      :: (curr do-start-apps [desk-name u.apps-to-start])
-    $(installs t.installs)
   ::
   ++  fetch-desk
     |=  [who=@p desk-name=@tas c=case:clay]
@@ -820,90 +924,6 @@
     !>  ^-  action:zig
     [project-name desk-name request-id %read-desk ~]
   ::
-  ++  iterate-over-dependency-desks
-    =/  m  (strand ,~)
-    |=  gate=$-(@tas form:m)
-    ^-  form:m
-    |-
-    ?~  desk-dependency-names  (pure:m ~)
-    =*  desk-name  i.desk-dependency-names
-    ;<  ~  bind:m  (gate desk-name)
-    $(desk-dependency-names t.desk-dependency-names)
-  ::
-  ++  iterate-over-whos
-    =/  m  (strand ,~)
-    |=  [whos=(list @p) gate=$-(@p form:m)]
-    ^-  form:m
-    |-
-    ?~  whos  (pure:m ~)
-    =*  who  i.whos
-    ;<  ~  bind:m  (gate who)
-    $(whos t.whos)
-  ::
-  ++  block-on-commit
-    |=  who=@p
-    =/  m  (strand ,~)
-    ^-  form:m
-    |-
-    ;<  ~  bind:m  (sleep commit-poll-duration)
-    ;<  does-exist=?  bind:m
-      %+  virtualship-desks-exist  who
-      (~(gas in *(set @tas)) desk-dependency-names)
-    ?.  does-exist  $
-    (pure:m ~)
-  ::
-  ++  do-install-desk
-    |=  desk-name=@tas
-    |=  who=@p
-    =/  m  (strand ,~)
-    ^-  form:m
-    ;<  empty-vase=vase  bind:m
-      %+  send-pyro-dojo  who
-      (crip "|install our {<desk-name>}")
-    (pure:m ~)
-  ::
-  ++  block-on-install
-    |=  who=@p
-    =/  m  (strand ,~)
-    ^-  form:m
-    |-
-    ;<  ~  bind:m  (sleep install-poll-duration)
-    ;<  =bowl:strand  bind:m  get-bowl
-    =/  app=(unit @tas)
-      (get-final-app-to-install desk-name [our now]:bowl)
-    ::  if no desk.bill (i.e. get ~), -> install done
-    ?~  app  (pure:m)
-    ::  if the final app is installed -> install done
-    ;<  is-running=?  bind:m
-      (virtualship-is-running-app who u.app)
-    ?.  is-running  $
-    (pure:m ~)
-  ::
-  ++  do-start-apps
-    |=  [desk-name=@tas start-apps=(list @tas)]
-    |=  who=@p
-    =/  m  (strand ,~)
-    ^-  form:m
-    |-
-    ?~  start-apps  (pure:m ~)
-    =*  next-app  i.start-apps
-    ;<  empty-vase=vase  bind:m
-      %+  send-pyro-dojo  who
-      (crip "|start {<`@tas`desk-name>} {<`@tas`next-app>}")
-    ;<  ~  bind:m  (block-on-start who next-app)
-    $(start-apps t.start-apps)
-  ::
-  ++  block-on-start
-    |=  [who=@p next-app=@tas]
-    =/  m  (strand ,~)
-    ^-  form:m
-    |-
-    ;<  ~  bind:m  (sleep start-poll-duration)
-    ;<  is-running=?  bind:m
-      (virtualship-is-running-app who next-app)
-    ?.  is-running  $
-    (pure:m ~)
-  ::
   ++  return-failure
     =/  m  (strand ,vase)
     ^-  form:m
@@ -922,37 +942,5 @@
       [desk-name request-id %set-ziggurat-state state]
     ;<  ~  bind:m  (block-on-previous-operation `project-name)
     (pure:m !>(`?`%.y))
-  ::
-  ++  scry-virtualship-desks
-    |=  who=@p
-    =/  m  (strand ,(set @tas))
-    ^-  form:m
-    =/  w=@ta  (scot %p who)
-    (scry (set @tas) /gx/pyro/i/[w]/cd/[w]//0/noun)
-  ::
-  ++  virtualship-desks-exist
-    |=  [who=@p desired-desk-names=(set @tas)]
-    =/  m  (strand ,?)
-    ^-  form:m
-    ;<  existing-desk-names=(set @tas)  bind:m
-      (scry-virtualship-desks who)
-    %-  pure:m
-    .=  desired-desk-names
-    (~(int in existing-desk-names) desired-desk-names)
-  ::
-  ++  virtualship-is-running-app
-    |=  [who=@p app=@tas]
-    =/  m  (strand ,?)
-    ^-  form:m
-    =/  w=@ta    (scot %p who)
-    (scry ? /gx/pyro/i/[w]/gu/[w]/[app]/0/noun)
-  ::
-  ++  get-final-app-to-install
-    |=  [desk-name=@tas our=@p now=@da]
-    ^-  (unit @tas)
-    =/  bill-path=path
-      /(scot %p our)/[desk-name]/(scot %da now)/desk/bill
-    ?.  .^(? %cu bill-path)  ~
-    `(rear .^((list @tas) %cx bill-path))
   --
 --
