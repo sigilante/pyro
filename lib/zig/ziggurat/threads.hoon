@@ -283,14 +283,15 @@
 ::
 ++  block-on-previous-operation
   =+  done-duration=`@dr`~m1
+  =+  iris-timeout-duration=`@dr`~s5
   |=  project-name=(unit @t)
-  =|  iris-timeout=(unit (pair @ux @da))
+  =|  iris-timeout=(map duct @da)
   |^
   =/  m  (strand ,~)
   ^-  form:m
   ;<  ~  bind:m  (sleep `@dr`1)
   |-
-  ;<  is-stack-empty=(each ~ (unit (pair @ux @da)))  bind:m
+  ;<  is-stack-empty=(each ~ (map duct @da))  bind:m
     (get-is-stack-empty iris-timeout)
   ?:  ?=(%| -.is-stack-empty)
     =.  iris-timeout  p.is-stack-empty
@@ -308,30 +309,31 @@
   $
   ::
   ++  get-is-stack-empty
-    |=  iris-timeout=(unit (pair @ux @da))
+    |=  iris-timeout=(map duct @da)
     |^
-    =/  m  (strand ,(each ~ (unit (pair @ux @da))))
+    =/  m  (strand ,(each ~ (map duct @da)))
     ^-  form:m
-    ;<  is-iris-empty=(each ~ mass)  bind:m  get-is-iris-empty
+    ;<  is-iris-empty=(each ~ (set duct))  bind:m  get-is-iris-empty
     ?:  ?=(%& -.is-iris-empty)  (pure:m [%.y ~])
     ;<  now=@da  bind:m  get-time
-    ?:  ?=(~ iris-timeout)
-      ~&  %z^%iris-timeout^%start^`[(jam p.is-iris-empty) (add now ~s15)]
-      (pure:m [%.n `[(jam p.is-iris-empty) (add now ~s15)]])
-    ?:  ?&  =(p.u.iris-timeout (jam p.is-iris-empty))
-            (lth q.u.iris-timeout now)
-        ==
-      ~&  %z^%iris-timeout^%timed-out
-      (pure:m [%.y ~])
-    (pure:m [%.n iris-timeout])
+    =^  no-wait=?  iris-timeout
+      %+  roll  ~(tap in p.is-iris-empty)
+      |:  [d=`duct`~ no-wait=`?`%.y it=`(map duct @da)`iris-timeout]
+      ?~  to=(~(get by it) d)
+        [%.n (~(put by it) d (add now iris-timeout-duration))]
+      ?:  (lth u.to now)  [no-wait it]  [%.n it]
+    (pure:m ?:(no-wait [%.y ~] [%.n iris-timeout]))
     ::
     ++  get-is-iris-empty
-      =/  m  (strand ,(each ~ mass))
+      =/  m  (strand ,(each ~ (set duct)))
       ^-  form:m
       ::  /i//whey from sys/vane/iris/hoon:386
       ;<  maz=(list mass)  bind:m  (scry (list mass) /i//whey)
-      =/  by-id  (snag 2 maz)
-      (pure:m ?:(?=(~ p.q.by-id) [%.y ~] [%.n by-id]))
+      =/  by-duct=(map duct @ud)
+        ((map duct @ud) p.q:(snag 3 maz))
+      %-  pure:m
+      ?:  =(0 ~(wyt by by-duct))  [%.y ~]
+      [%.n ~(key by by-duct)]
     --
   ::
   ++  ignored-virtualship-timer-prefixes
