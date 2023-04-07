@@ -179,31 +179,26 @@
       `state(projects (~(del by projects) project-name.act))
     ::
         %add-sync-desk-vships
-      !!
-      :: :_  state
-      :: :+  %-  ~(poke-self pass:io /self-wire)
-      ::     :-  %ziggurat-action
-      ::     !>  ^-  action:zig
-      ::     :^  project-name.act  desk-name.act  request-id.act
-      ::     :^  %queue-thread
-      ::       (cat 3 'add-and-sync-' desk-name.act)  %lard
-      ::     %:  setup-desk:zig-threads
-      ::         project-name.act
-      ::         desk-name.act
-      ::         request-id.act
-      ::         !>(~)
-      ::         ~
-      ::         ~
-      ::         ships.act
-      ::         install.act
-      ::         start-apps.act
-      ::     ==
-      ::   %-  ~(poke-self pass:io /self-wire)
-      ::   :-  %ziggurat-action
-      ::   !>  ^-  action:zig
-      ::   :^  project-name.act  desk-name.act  request-id.act
-      ::   [%run-queue ~]
-      :: ~
+      :_  state
+      :+  %-  ~(poke-self pass:io /self-wire)
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  project-name.act  desk-name.act  request-id.act
+          :^    %queue-thread
+              (cat 3 'add-sync-desk-vships-' desk-name.act)
+            %lard
+          %-  commit-install-start:zig-threads
+          :^  ships.act  ~[desk-name.act]
+            %-  ~(put by *(map @tas (list @p)))
+            [desk-name install]:act
+          %-  ~(put by *(map @tas (list @tas)))
+          [desk-name start-apps]:act
+        %-  ~(poke-self pass:io /self-wire)
+        :-  %ziggurat-action
+        !>  ^-  action:zig
+        :^  project-name.act  desk-name.act  request-id.act
+        [%run-queue ~]
+      ~
     ::
         %delete-sync-desk-vships
       =/  =project:zig

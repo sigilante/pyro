@@ -119,7 +119,7 @@
       $%  [%new-project sync-ships=(list @p) fetch-desk-from-remote-ship=(unit @p) special-configuration-args=vase]
           [%delete-project ~]
       ::
-          [%add-sync-desk-vships ships=(list @p) install=? start-apps=(list @tas)]
+          [%add-sync-desk-vships ships=(list @p) install=(list @p) start-apps=(list @tas)]
           [%delete-sync-desk-vships ships=(list @p)]
       ::
           [%send-state-views =state-views]

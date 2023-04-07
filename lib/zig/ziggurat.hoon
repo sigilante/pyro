@@ -2494,10 +2494,10 @@
     ==
   ::
   ++  add-sync-desk-vships
-    ^-  $-(json [(list @p) ? (list @tas)])
+    ^-  $-(json [(list @p) (list @p) (list @tas)])
     %-  ot
     :^    [%ships (ar (se %p))]
-        [%install bo]
+        [%install (ar (se %p))]
       [%start-apps (ar (se %tas))]
     ~
   ::
