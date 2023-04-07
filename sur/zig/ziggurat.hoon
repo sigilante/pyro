@@ -116,7 +116,7 @@
   $:  project-name=@t
       desk-name=@tas
       request-id=(unit @t)
-      $%  [%new-project sync-ships=(list @p) fetch-desk-from-remote-ship=(unit @p) special-configuration-args=vase]
+      $%  [%new-project fetch-desk-from-remote-ship=(unit @p) special-configuration-args=vase]
           [%delete-project ~]
       ::
           [%add-sync-desk-vships ships=(list @p) install=(list @p) start-apps=(list @tas)]

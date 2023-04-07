@@ -142,8 +142,7 @@
         :-  ~
         !>  ^-  action:zig
         :^  project-name.act  desk-name.act  request-id.act
-        :^  %new-project  sync-ships.act  ~
-        special-configuration-args.act
+        [%new-project ~ special-configuration-args.act]
       ::
       ~&  %z^%np^%1
       =/  cards=(list card)
@@ -1131,7 +1130,7 @@
     :_  ~
     %-  ~(poke-self pass:io /self-wire)
     :-  %ziggurat-action
-    !>(`action:zig`['zig-dev' %zig-dev ~ %new-project ~ ~ !>(~)])
+    !>(`action:zig`['zig-dev' %zig-dev ~ %new-project ~ !>(~)])
   ::
       [%build-result @ @ *]
     =*  project-name  i.t.w

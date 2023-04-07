@@ -2445,10 +2445,9 @@
     ==
   ::
   ++  new-project
-    ^-  $-(json [(list @p) (unit @p) vase])
+    ^-  $-(json [(unit @p) vase])
     %-  ot
-    :^    [%sync-ships (ar (se %p))]
-        [%fetch-desk-from-remote-ship (se-soft %p)]
+    :+  [%fetch-desk-from-remote-ship (se-soft %p)]
       :-  %special-configuration-args
       special-configuration-args
     ~
