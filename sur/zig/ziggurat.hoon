@@ -132,6 +132,7 @@
       ::
           [%save-file file=path text=@t]  ::  generates new file or overwrites existing
           [%delete-file file=path]
+          [%make-configuration-file ~]
       ::
           [%add-config who=@p what=@tas item=@]
           [%delete-config who=@p what=@tas]

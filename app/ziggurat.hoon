@@ -359,6 +359,24 @@
       %-  ~(arvo pass:io /del-wire)
       [%c %info desk-name.act %& [file.act %del ~]~]
     ::
+        %make-configuration-file
+      =/  =project:zig  (~(got by projects) project-name.act)
+      =/  desk-dependencies=(list @t)
+        %+  turn  desks.project
+        |=  [n=@tas *]
+        (crip "[our.bowl {<n>} da+now.bowl ~]")
+      =*  configuration-file-text
+        %+  make-configuration-template:zig-lib
+        desk-dependencies  pyro-ships.project
+      =*  configuration-file-path
+        /zig/configuration/[desk-name.act]/hoon
+      =^  cards=(list card)  state
+        %-  handle-poke
+        :^  project-name.act  desk-name.act  request-id.act
+        :+  %save-file  configuration-file-path
+        configuration-file-text
+      [cards state]
+    ::
         %add-config
       =.  configs
         %^  ~(put bi:mip configs)  project-name.act

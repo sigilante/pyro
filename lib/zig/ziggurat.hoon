@@ -1252,88 +1252,117 @@
   --
 ::
 ++  make-configuration-template
+  |=  [desk-dependencies=(list @t) pyro-ships=(list @p)]
   ^-  @t
-  '''
-  /-  spider,
-      zig=zig-ziggurat
-  /+  ziggurat-threads=zig-ziggurat-threads
-  ::
-  =*  strand     strand:spider
-  ::
-  =/  m  (strand ,vase)
-  =|  project-name=@t
-  =|  desk-name=@tas
-  =|  ship-to-address=(map @p @ux)
-  =*  zig-threads
-    ~(. ziggurat-threads project-name desk-name ship-to-address)
-  |^  ted
-  ::
-  +$  arg-mold
-    $:  project-name=@t
-        desk-name=@tas
-        request-id=(unit @t)
-    ==
-  ::
-  ++  make-config
-    ^-  config:zig
-    ~
-  ::
-  ++  make-state-views
-    ^-  state-views:zig
-    ~
-  ::
-  ++  make-virtualships-to-sync
-    ^-  (list @p)
-    ~  ::  ~ -> default-ships:zig-lib
-  ::
-  ++  make-install
-    ^-  ?
-    %.n
-  ::
-  ++  make-start-apps
-    ^-  (list @tas)
-    ~
-  ::
-  ++  run-setup-desk
-    |=  request-id=(unit @t)
-    =/  m  (strand ,vase)
-    ^-  form:m
-    %:  setup-desk:zig-threads
-        project-name
-        desk-name
-        request-id
-        !>(~)
-        make-config
-        make-state-views
-        make-virtualships-to-sync
-        make-install
-        make-start-apps
-    ==
-  ::
-  ++  setup-virtualship-state
-    =/  m  (strand ,vase)
-    ^-  form:m
-    (pure:m !>(~))
-  ::
-  ++  ted
-    ^-  thread:spider
-    |=  args-vase=vase
-    ^-  form:m
-    =/  args  !<((unit arg-mold) args-vase)
-    ?~  args
-      ~&  >>>  "Usage:"
-      ~&  >>>  "-!ziggurat-configuration- project-name=@t desk-name=@tas request-id=(unit @t)"
-      (pure:m !>(~))
-    =.  project-name  project-name.u.args
-    =.  desk-name     desk-name.u.args
-    =*  request-id    request-id.u.args
+  %+  rap  3
+  %-  zing
+  :~
+    :_  ~
+    '''
+    /-  spider,
+        zig=zig-ziggurat
+    /+  ziggurat-threads=zig-ziggurat-threads
     ::
-    ;<  setup-desk-result=vase  bind:m
-      (run-setup-desk request-id)
-    ;<  setup-ships-result=vase  bind:m  setup-virtualship-state
-    (pure:m !>(`(each ~ @t)`[%.y ~]))
-  --
-  '''
+    =*  strand  strand:spider
+    ::
+    =/  m  (strand ,vase)
+    =|  project-name=@t
+    =|  desk-name=@tas
+    =|  ship-to-address=(map @p @ux)
+    =*  zig-threads
+      ~(. ziggurat-threads project-name desk-name ship-to-address)
+    |%
+    ::
+    +$  arg-mold
+      $:  project-name=@t
+          desk-name=@tas
+          request-id=(unit @t)
+      ==
+    ::
+    ++  make-desk-dependencies
+      |=  =bowl:strand
+      ^-  desk-dependencies:zig
+
+    '''
+  ::
+    ?~  desk-dependencies
+      ~['  ~\0a']
+    %-  snoc  :_  '\0a  ==\0a'
+    :-  '  :~\0a    '
+    (join '\0a    ' desk-dependencies)
+  ::
+    :_  ~
+    '''
+    ::
+    ++  make-config
+      ^-  config:zig
+      ~
+    ::
+    ++  make-virtualships-to-sync
+      ^-  (list @p)
+
+    '''
+  ::
+    :_  ~
+    %-  crip
+    """
+      {<pyro-ships>}
+
+    """
+  ::
+    :_  ~
+    '''
+    ::
+    ++  make-install
+      ^-  (map desk-name=@tas whos=(list @p))
+      ~
+    ::
+    ++  make-start-apps
+      ^-  (map desk-name=@tas (list @tas))
+      ~
+    ::
+    ++  run-setup-desk
+      |=  request-id=(unit @t)
+      =/  m  (strand ,vase)
+      ^-  form:m
+      ;<  =bowl:strand  bind:m  get-bowl
+      %:  setup-project:zig-threads
+          request-id
+          (make-desk-dependencies bowl)
+          make-config
+          make-virtualships-to-sync
+          make-install
+          make-start-apps
+      ==
+    ::
+    ++  setup-virtualship-state
+      =/  m  (strand ,vase)
+      ^-  form:m
+      ::  for examples, see
+      ::   https://github.com/uqbar-dao/zig-dev/blob/master/zig/configuration/zig-dev.hoon#L69-L180
+      ::   https://github.com/uqbar-dao/pokur-dev/blob/master/zig/configuration/pokur-dev.hoon#L75-L192
+      (pure:m !>(~))
+    ::
+    ++  $
+      ^-  thread:spider
+      |=  args-vase=vase
+      ^-  form:m
+      =/  args  !<((unit arg-mold) args-vase)
+      ?~  args
+        ~&  >>>  "Usage:"
+        ~&  >>>  "-!ziggurat-configuration- project-name=@t desk-name=@tas request-id=(unit @t)"
+        (pure:m !>(~))
+      =.  project-name  project-name.u.args
+      =.  desk-name     desk-name.u.args
+      =*  request-id    request-id.u.args
+      ::
+      ;<  setup-desk-result=vase  bind:m
+        (run-setup-desk request-id)
+      ;<  setup-ships-result=vase  bind:m  setup-virtualship-state
+      (pure:m !>(`(each ~ @t)`[%.y ~]))
+    --
+    '''
+  ==
 ::
 ++  make-template
   |=  file-path=path
@@ -2349,6 +2378,7 @@
     ::
         [%save-file (ot ~[[%file pa] [%text so]])]
         [%delete-file (ot ~[[%file pa]])]
+        [%make-configuration-file ul]
     ::
         [%add-config (ot ~[[%who (se %p)] [%what (se %tas)] [%item ni]])]
         [%delete-config (ot ~[[%who (se %p)] [%what (se %tas)]])]

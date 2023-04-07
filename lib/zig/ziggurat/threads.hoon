@@ -491,16 +491,6 @@
     %^  send-clay-card  /delete  %info
     [desk-name %& (clean-desk:zig-lib desk-name)]
   ::
-  ++  make-configuration-file
-    =/  m  (strand ,~)
-    ^-  form:m
-    ;<  ~  bind:m
-    %-  send-raw-card
-    %^  make-save-file:zig-lib  update-info
-      /ted/ziggurat/configuration/[desk-name]/hoon
-    make-configuration-template:zig-lib
-    (pure:m ~)
-  ::
   ++  send-clay-card
     |=  [w=wire =task:clay]
     =/  m  (strand ,~)
