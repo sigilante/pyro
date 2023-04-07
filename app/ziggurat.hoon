@@ -309,51 +309,30 @@
       ==
     ::
         %delete-project-desk
-      !!
-      :: =/  delete-project-desk-error
-      ::   %~  delete-project-desk  make-error-vase:zig-lib
-      ::   [update-info %error]
-      :: =/  =project:zig  (~(got by projects) project-name.act)
-      :: ?.  (has-desk:zig-lib project desk-name.act)
-      ::   :_  state
-      ::   :_  ~
-      ::   %-  update-vase-to-card:zig-lib
-      ::   %-  delete-project-desk-error(level %warning)
-      ::   %-  crip
-      ::   %+  weld  "project {<`@tas`project-name.act>}"
-      ::   " doesn't have desk {<`@tas`desk-name.act>}"
-      :: =.  project  (del-desk:zig-lib project desk-name.act)
-      :: =/  desk-names=(list [@tas vase])
-      ::   %+  turn  desks.project
-      ::   |=  [desk-name=@tas =desk:zig]
-      ::   [desk-name special-configuration-args.desk]
-      :: :-  :-  %-  ~(poke-self pass:io /self-wire)
-      ::         :-  %ziggurat-action
-      ::         !>  ^-  action:zig
-      ::         :^  project-name.act  desk-name.act
-      ::           request-id.act
-      ::         :^  %queue-thread
-      ::           (cat 3 'make-snap-' desk-name.act)  %lard
-      ::         %+  make-snap:zig-threads  project-name.act
-      ::         request-id.act
-      ::     %+  snoc  %-  update-project-from-desk-change
-      ::               desk-names
-      ::     %-  ~(poke-self pass:io /self-wire)
-      ::     :-  %ziggurat-action
-      ::     !>  ^-  action:zig
-      ::     :^  project-name.act  desk-name.act  request-id.act
-      ::     [%run-queue ~]
-      :: %=  state
-      ::     projects
-      ::   %-  ~(gas by projects)
-      ::   =+  [project-name.act project(desks ~)]~
-      ::   ?:  =('' focused-project)  -
-      ::   :_  -
-      ::   :-  focused-project
-      ::   =/  old=project:zig
-      ::     (~(got by projects) focused-project)
-      ::   old(saved-thread-queue thread-queue)
-      :: ==
+      =/  delete-project-desk-error
+        %~  delete-project-desk  make-error-vase:zig-lib
+        [update-info %error]
+      =/  =project:zig  (~(got by projects) project-name.act)
+      ?.  (has-desk:zig-lib project desk-name.act)
+        :_  state
+        :_  ~
+        %-  update-vase-to-card:zig-lib
+        %-  delete-project-desk-error(level %warning)
+        %-  crip
+        %+  weld  "project {<`@tas`project-name.act>}"
+        " doesn't have desk {<`@tas`desk-name.act>}"
+      =.  project
+        %-  del-desk:zig-lib  :_  desk-name.act
+        %=  project
+            sync-desk-to-vship
+          %.  desk-name.act
+          ~(del by sync-desk-to-vship.project)
+        ==
+      :-  ~
+      %=  state
+          projects
+        (~(put by projects) project-name.act project)
+      ==
     ::
         %save-file
       =/  =project:zig  (~(got by projects) project-name.act)
@@ -968,28 +947,6 @@
         make-error-vase:zig-lib  [update-info %warning]
       ~
     ==
-    ::
-    ++  update-project-from-desk-change
-      |=  desk-names=(list [@tas vase])
-      ^-  (list card)
-      =*  project-name  project-name.update-info
-      =*  request-id    request-id.update-info
-      =/  cards=(list card)
-        %+  roll  desk-names
-        |=  [[desk-name=@tas special-configuration-args=vase] cards=(list card)]
-        %+  weld  cards
-        %+  setup-project-desk
-          update-info(desk-name desk-name)
-        special-configuration-args
-      :-  %+  ~(poke-our pass:io /pyro-poke)  %pyro
-          :-  %pyro-action
-          !>  ^-  action:pyro
-          [%restore-snap default-snap-path:zig-lib]
-      %+  snoc  cards
-      %-  ~(poke-self pass:io /self-wire)
-      :-  %ziggurat-action
-      !>  ^-  action:zig
-      [project-name %$ request-id [%run-queue ~]]
     ::
     ++  compile-imports
       |=  imports=(list [face=@tas =path])
