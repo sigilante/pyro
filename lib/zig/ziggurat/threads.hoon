@@ -283,7 +283,7 @@
 ::
 ++  block-on-previous-operation
   =+  done-duration=`@dr`~m1
-  =+  iris-timeout-duration=`@dr`~s5
+  =+  iris-timeout-duration=`@dr`~s15
   |=  project-name=(unit @t)
   =|  iris-timeout=(map duct @da)
   |^
@@ -330,10 +330,37 @@
       ::  /i//whey from sys/vane/iris/hoon:386
       ;<  maz=(list mass)  bind:m  (scry (list mass) /i//whey)
       =/  by-duct=(map duct @ud)
+        %+  filter-iris-by-duct  ignored-iris-prefixes
         ((map duct @ud) p.q:(snag 3 maz))
       %-  pure:m
       ?:  =(0 ~(wyt by by-duct))  [%.y ~]
       [%.n ~(key by by-duct)]
+    ::
+    ++  ignored-iris-prefixes
+      ^-  (list [path @tas])
+      :_  ~
+      [/gall/use/spider/0w1.SsEZ5/~nec/thread %docket]
+    ::
+    ++  filter-iris-by-duct
+      ::  filter out those that have prefix that matches
+      ::   an ignored-prefixes path and the first characters
+      ::   of the next element in the path matches @tas
+      |=  $:  ignored-prefixes=(list (pair path @tas))
+              by-duct=(map duct @ud)
+          ==
+      ^-  (map duct @ud)
+      %-  ~(gas by *(map duct @ud))
+      %+  murn  ~(tap by by-duct)
+      |=  [d=duct n=@ud]
+      %+  roll  ignored-prefixes
+      |:  [[p=`path`/ t=`@tas`%$] item=`(unit [duct @ud])``[d n]]
+      ?~  d  ~
+      =*  w  i.d
+      =*  lp  (lent p)
+      =*  lt  (met 3 t)
+      ?.  =(p (scag lp w))  item
+      ?:  =(t (cut 3 [0 lt] (snag lp w)))  ~
+      item
     --
   ::
   ++  ignored-virtualship-timer-prefixes
@@ -365,10 +392,10 @@
     |=  [time=@da d=duct]
     ?~  d               `[time d]  ::  ?
     ?:  (gth now time)  ~
-    =*  p  i.d
+    =*  w  i.d
     %+  roll  ignored-prefixes
     |:  [ignored-prefix=`path`/ timer=`(unit [@da duct])``[time d]]
-    ?:  =(ignored-prefix (scag (lent ignored-prefix) p))  ~
+    ?:  =(ignored-prefix (scag (lent ignored-prefix) w))  ~
     timer
   ::
   ++  get-virtualship-timers
@@ -422,7 +449,6 @@
     %^  filter-timers  now  ignored-virtualship-timer-prefixes
     (get-virtualship-timers project-name our now)
   --
-::
 ::
 ++  fetch-desk-from-remote-ship
   |=  [who=@p desk-name=@tas followup-action=(unit vase)]
@@ -672,19 +698,15 @@
 ::
 ++  setup-project
   |=  $:  request-id=(unit @t)
-          :: special-configuration-args=vase
           =desk-dependencies:zig
           =config:zig
           whos=(list @p)
           install=(map @tas (list @p))
           start-apps=(map @tas (list @tas))
       ==
-  :: =/  commit-poll-duration=@dr   ~s1
-  :: :: =/  install-poll-duration=@dr  ~s1
-  :: =/  start-poll-duration=@dr    (div ~s1 10)
   =/  m  (strand ,vase)
   ^-  form:m
-  ~&  %so^%0
+  ~&  %sp^%0
   ;<  state=state-0:zig  bind:m  get-state
   =/  desk-dependency-names=(list @tas)
     %+  turn  desk-dependencies
@@ -826,7 +848,7 @@
     =*  new-project-error
       %~  new-project  make-error-vase:zig-lib
       :_  %error
-      [project-name desk-name %setup-desk request-id]
+      [project-name desk-name %setup-project request-id]
     %+  poke-our  %ziggurat
     :-  %ziggurat-action
     !>  ^-  action:zig
@@ -845,7 +867,7 @@
     !<  update:zig
     %.  make-sync-desk-to-vship
     %~  new-project  make-update-vase:zig-lib
-    [project-name %$ %setup-desk request-id]
+    [project-name %$ %setup-project request-id]
   ::
   ++  start-new-ships
     =/  m  (strand ,~)

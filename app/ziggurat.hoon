@@ -564,6 +564,7 @@
         (~(gut by projects) project-name.act *project:zig)
       =/  =desk:zig
         (gut-desk:zig-lib project desk-name.act *desk:zig)
+      =?  name.desk  =(desk *desk:zig)  desk-name.act
       =.  dir.desk
         =-  .^((list path) %ct -)
         /(scot %p our.bowl)/(scot %tas desk-name.act)/(scot %da now.bowl)
