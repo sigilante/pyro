@@ -2344,7 +2344,7 @@
         [%delete-sync-desk-vships (ot ~[[%ships (ar (se %p))]])]
     ::
         [%change-focus ul]
-        [%add-project-desk (ot ~[[%index ni:dejs-soft:format] [%fetch-desk-from-remote-ship (se-soft %p)] [%special-configuration-args special-configuration-args]])]
+        [%add-project-desk (ot ~[[%index ni:dejs-soft:format] [%fetch-desk-from-remote-ship (se-soft %p)]])]
         [%delete-project-desk ul]
     ::
         [%save-file (ot ~[[%file pa] [%text so]])]

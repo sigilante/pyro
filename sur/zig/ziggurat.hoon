@@ -127,7 +127,7 @@
           [%send-update =update]
       ::
           [%change-focus ~]
-          [%add-project-desk index=(unit @ud) fetch-desk-from-remote-ship=(unit @p) special-configuration-args=vase]  ::  index=~ -> add to end
+          [%add-project-desk index=(unit @ud) fetch-desk-from-remote-ship=(unit @p)]  ::  index=~ -> add to end
           [%delete-project-desk ~]
       ::
           [%save-file file=path text=@t]  ::  generates new file or overwrites existing

@@ -739,7 +739,8 @@
     ;<  state-views-vase=(unit vase)  bind:m
       %+  build-file  [our.bowl desk-name %da now.bowl]
       /zig/state-views/[project-name]/hoon
-    (pure:m !<(state-views:zig (need state-views-vase)))
+    ?~  state-views-vase  (pure:m ~)
+    (pure:m !<(state-views:zig u.state-views-vase))
   ::
   ++  get-dependency-desks
     =/  m  (strand ,~)
