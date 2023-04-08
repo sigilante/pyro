@@ -559,7 +559,6 @@
     ::
         %read-desk
       ::  for internal use -- app calls itself to scry clay
-      :: =/  =project:zig  (~(got by projects) project-name.act)
       =/  =project:zig
         (~(gut by projects) project-name.act *project:zig)
       =/  =desk:zig
@@ -689,8 +688,8 @@
         ?:  ?&  ?=(^ top)
                 =('zig-dev' project-name.u.top)
                 ?=(%zig-dev desk-name.u.top)
-                ?=(%fard -.payload.u.top)
-                ?=(%ziggurat-configuration-zig-dev thread-name.u.top)
+                ?=(%lard -.payload.u.top)
+                ?=(%zig-configuration-zig-dev thread-name.u.top)
             ==
           =.  status  [%ready ~]
           $
@@ -1006,26 +1005,31 @@
       =/  config-file-path=path
         :-  (scot %p our.bowl)
         %+  weld  /[desk-name]/(scot %da now.bowl)
-        /ted/ziggurat/configuration/[desk-name]/hoon
+        /zig/configuration/[desk-name]/hoon
+        :: /ted/ziggurat/configuration/[desk-name]/hoon
       =/  does-config-exist=?  .^(? %cu config-file-path)
       ~&  %z^%np^%does-config-exist^does-config-exist
       ?:  does-config-exist
+        =+  .^(configuration-thread=vase %ca config-file-path)
         :_  ~
         %-  ~(poke-self pass:io /self-wire)
         :-  %ziggurat-action
         !>  ^-  action:zig
         :^  project-name  desk-name  request-id
         :^  %queue-thread
-          (cat 3 'ziggurat-configuration-' desk-name)  %fard
-        ?:  =(!>(~) special-configuration-args)
-          !>(`[project-name desk-name request-id])
-        ;:  slop
-            !>(~)
-            !>(project-name)
-            !>(desk-name)
-            !>(request-id)
-            special-configuration-args
-        ==
+          (cat 3 'zig-configuration-' desk-name)  %lard
+        !<  shed:khan
+          %+  slam  (slap configuration-thread (ream '$'))
+          !>  ^-  vase
+          ?:  =(!>(~) special-configuration-args)
+            !>(`[project-name desk-name request-id])
+          ;:  slop
+              !>(~)
+              !>(project-name)
+              !>(desk-name)
+              !>(request-id)
+              special-configuration-args
+          ==
       =/  cards=(list card)
         :_  ~
         %-  ~(poke-self pass:io /self-wire)
@@ -1036,7 +1040,6 @@
           (cat 3 'ziggurat-configuration-' desk-name)  %lard
         %:  setup-project:zig-threads
             request-id
-            :: !>(~)
             [our.bowl desk-name [%da now.bowl] ~]~
             ~
             default-ships:zig-lib
