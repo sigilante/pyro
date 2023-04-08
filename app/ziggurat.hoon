@@ -1037,7 +1037,7 @@
         !>  ^-  action:zig
         :^  project-name  desk-name  request-id
         :^  %queue-thread
-          (cat 3 'ziggurat-configuration-' desk-name)  %lard
+          (cat 3 'zig-configuration-' desk-name)  %lard
         %:  setup-project:zig-threads
             request-id
             [our.bowl desk-name [%da now.bowl] ~]~
@@ -1124,7 +1124,7 @@
       ~&  (reformat-compiler-error:zig-lib p.p.+.sign-arvo)  ::  TODO
       `this(status status)
     =/  cards=(list card)
-      ?.  ?=(%ziggurat-configuration (end [3 22] thread-name))
+      ?.  ?=(%zig-configuration (end [3 17] thread-name))
         ~
       =*  snap-path=path
         ?:  ?=(%zig desk-name)  default-snap-path:zig-lib
