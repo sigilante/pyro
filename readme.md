@@ -13,9 +13,8 @@ The `%dev-suite` is comprised of `%pyro`, a ship virtualizer; `%pyre`, a virtual
 * [Broad overview](#broad-overview)
 * [Initial installation](#initial-installation)
 * [Example usage](#example-usage)
-* [`%pyro` ship I/O](#pyro-ship-io)
-* [Test steps](#test-steps)
-* [Custom inputs](#custom-inputs)
+* [Projects and desks](#project-and-desks)
+* [Using threads for setup and testing](#using-threads-for-setup-and-testing)
 * [Deploying contracts](#deploying-contracts)
 * [Project configuration](#project-configuration)
 
@@ -77,16 +76,12 @@ There is also a convenience scry for `%gx` cares into agents running on `%pyro` 
 ```
 
 ---
----
----
----
----
 
 # `%ziggurat` documentation
 
 The `%ziggurat` dev suite is built on top of the `%pyro` ship virtualizer and is the backend for the [Ziggurat IDE](https://github.com/uqbar-dao/ziggurat-ui).
 
-Last updated as of Feb 13, 2023.
+Last updated as of Apr 10, 2023.
 
 ## Broad overview
 
@@ -98,99 +93,109 @@ For example, `%pyre` picks up ames packets sent from one `%pyro` ship and passes
 
 `%pyro` can snapshot and load `%pyro` ship state.
 
-`%ziggurat` must be loaded with a series of `test-steps` before they can be run.
-These `test-steps` are sequences of steps, such as `%poke`, `%scry`, `%dojo`, `%subscribe`, and so on.
-Each `test-step` may optionally have expectations.
+`%ziggurat` runs threads to put `%pyro` ships into specific states and test functionality of contracts and apps.
+These threads can either be added by hand to `/zig/ziggurat/[thread-name]/hoon` or added via the `test-steps` UI.
 
-`%ziggurat` is made to be run in conjunction with [Uqbar Core](https://github.com/uqbar-dao/uqbar-core).
-It is specifically designed to make smart contract development easy, but without sacrificing Gall agent development.
-As such, `%ziggurat` is the premier development environment for integrated on- and off-chain computing not only on Urbit, but in the world,
-
-By default we run `~nec`, `~bud`, and `~wes` as `%pyro` ships.
+`%ziggurat` is specifically designed to make smart contract and Gall agent development easy.
+As such, `%ziggurat` is the premier development environment for integrated on- and off-chain computing.
 
 ##  Initial installation
 
-1. Follow the [Initial Installation instuctions on Uqbar Core](https://github.com/uqbar-dao/uqbar-core#initial-installation).
-   Uqbar Core is required for the `%ziggurat` dev suite to work properly.
-2. Clone the official Urbit repository and add this repository as a submodule.
+### Fakeship installation
+
+1. Set env vars pointing to repo-containing and ship-containing dirs.
+   ```bash
+   export REPO_DIR=~/git
+   export SHIP_DIR=~/urbit
+   ```
+2. Create a fake `~zod`.
+   ```bash
+   cd $SHIP_DIR
+   ./vere -F zod
+   ```
+3. Clone the official Urbit repository and add required repositories, including this one, as submodules.
    This structure is necessary to resolve symbolic links to other desks like `base-dev` and `garden-dev`.
    ```bash
-   cd ~/git/urbit/pkg  # Replace with your urbit pkg directory.
-   git submodule add git@github.com:uqbar-dao/dev-suite.git dev-suite
+   cd $REPO_DIR
+   git clone https://github.com/urbit/urbit.git
+   cd ${REPO_DIR}/urbit/pkg
+
+   git submodule add git@github.com:uqbar-dao/dev-suite.git
+   git submodule add git@github.com:uqbar-dao/uqbar-core.git
+   git submodule add git@github.com:uqbar-dao/zig-dev.git
    ```
-3. In the Dojo of the fakeship set up in the Uqbar Core installation, set up a `%suite` desk, where we will copy the files in this repo:
+4. On the fake `~zod`, create and mount appropriate desks.
    ```hoon
    |new-desk %suite
+   |new-desk %zig
+   |new-desk %zig-dev
+   |mount %suite
+   |mount %zig
+   |mount %zig-dev
    ```
-5. In a new terminal, copy the files from this repo into the `%suite` desk:
+5. Copy submodule contents into the appropriate desks.
    ```bash
-   cd ~/git/urbit/pkg  # Replace with your chosen directory.
-
-   rm -rf zod/suite/*
-   cp -RL dev-suite/* zod/suite/
+   rm -rf ${SHIP_DIR}/nec/suite && cp -RL ${REPO_DIR}/urbit/pkg/dev-suite
+   rm -rf ${SHIP_DIR}/nec/zig && cp -RL ${REPO_DIR}/urbit/pkg/uqbar-core
+   rm -rf ${SHIP_DIR}/nec/zig-dev && cp -RL ${REPO_DIR}/urbit/pkg/zig-dev
    ```
-6. In the Dojo of the fakeship, commit the copied files and install.
+6. On the fake `~zod`, commit the files.
    ```hoon
    |commit %suite
-
-   ::  Installing will set up the default `%pyro` ships, ~nec, ~bud, and ~wes,
-   ::   with ~nec as host, of a testnet in the same state as following
-   ::   the steps here:
-   ::   https://github.com/uqbar-dao/uqbar-core#starting-a-fakeship-testnet
+   |commit %zig
+   |commit %zig-dev
+   ```
+7. Install `%suite`.
+   As a part of installation, `%pyro` will start three virtualized ships (`~nec`, `~bud`, and `~wes`) and the `%zig-dev` project will be initialized, installing the `%zig` desk on each `%pyro` ship and starting a testnet, hosted by `~nec`, the same as if these instructions had been followed: https://github.com/uqbar-dao/uqbar-core#starting-a-fakeship-testnet
+   ```hoon
    |install our %suite
    ```
 
+### Liveship installation
+
+Coming soon.
+
 ## Example usage
-
-The following creates a project called `%foo` and runs a number of `test-steps`.
-When `%new-project` is called, `%ziggurat` looks for the project/desk, and if it finds it, looks for a [configuration file](#project-configuration) at `/zig/configs/[project-name]/hoon`.
-If found, the project is setup according to that configuration.
-Else, a default setup is used.
-```hoon
-::  Run the subscribe thread to print %ziggurat output to
-::   the Dojo -- then press <Backspace> to background it.
--suite!ziggurat-test-subscribe ~
-
-:ziggurat &ziggurat-action [%foo ~ %new-project ~[~bud ~wes]]
-
-:ziggurat &ziggurat-action [%foo ~ %add-and-queue-test-file `%scry-nec /zig/test-steps/scry-nec/hoon]
-:ziggurat &ziggurat-action [%foo ~ %add-and-queue-test-file `%scry-bud /zig/test-steps/scry-bud/hoon]
-:ziggurat &ziggurat-action [%foo ~ %add-and-queue-test-file `%scry-clay /zig/test-steps/scry-clay/hoon]
-:ziggurat &ziggurat-action [%foo ~ %add-and-queue-test-file `%subscribe-nec /zig/test-steps/subscribe-nec/hoon]
-
-::  The same ZIGS send done in two ways:
-::   Using a custom-step-definition and pokes,
-::   Using Dojo commands.
-:ziggurat &ziggurat-action [%foo ~ %add-and-queue-test-file `%send-nec /zig/test-steps/send-nec/hoon]
-:ziggurat &ziggurat-action [%foo ~ %add-and-queue-test-file `%send-nec-dojo /zig/test-steps/send-nec-dojo/hoon]
-
-:ziggurat &ziggurat-action [%$ ~ %run-queue ~]
-
-::  Tell `%ziggurat` not to run any more tests right now.
-::   Also resets state when `%start-pyro-ships` is called again.
-:ziggurat &ziggurat-action [%foo ~ %stop-pyro-ships ~]
-```
 
 ### Import %pokur, set up a table, and join it
 
-As a more real-world example, import the %pokur project (requires https://github.com/dr-frmr/pokur/pull/29 at least to work).
+As a more real-world example, import the %pokur-dev project.
+
+Similar to in the [installation instructions](#fakeship-installation) above, add the pokur-dev repo as a submodule, and get the files into the %pokur-dev desk:
+```
+#  In terminal
+cd ${REPO_DIR}/urbit/pkg
+git submodule add git@github.com:uqbar-dao/pokur-dev.git
+
+::  On ship
+|new-desk %pokur-dev
+
+#  In terminal
+rm -rf ${SHIP_DIR}/nec/pokur-dev && cp -RL ${REPO_DIR}/urbit/pkg/pokur-dev
+
+::  On ship
+|commit %pokur-dev
+```
+
+Then, adding %pokur-dev using %new-project will create a new project and run the [pokur-dev configuration file](https://github.com/uqbar-dao/pokur-dev/blob/master/zig/configuration/pokur-dev.hoon).
 
 ```hoon
-::  Run the subscribe thread to print %ziggurat output to
-::   the Dojo -- then press <Backspace> to background it.
+:ziggurat &ziggurat-action [%pokur-dev %pokur-dev ~ %new-project ~ !>(~)]
+```
 
--suite!ziggurat-test-subscribe ~
-|new-desk %pokur
+The project will have a functional testnet with the escrow contract deployed, with `~nec` as the pokur-host and `~bud` leading a table.
 
-::  Copy in appropriate files to %pokur, then:
-|commit %pokur
+Also included in the %pokur-dev project is a thread that causes `~wes` to join `~bud`s table.
+It can be run as follows:
+```hoon
+::  Examine state of %pokur app running on ~bud: note the table hosted by ~nec and led by ~bud
+:pyro|dojo ~bud ":pokur +dbug"
 
-::  Set up %pokur, installing on ~nec, ~bud, ~wes, setting up ~nec as host, launching a table on ~bud.
-:ziggurat &ziggurat-action [%pokur ~ %new-project ~]
+:ziggurat &ziggurat-action [%pokur-dev %pokur-dev ~ %queue-thread %ziggurat-wes-join-table %fard !>(~)]
+:ziggurat &ziggurat-action [%pokur-dev %pokur-dev ~ %run-queue ~]
 
-::  Join the ~bud table from ~wes.
-:ziggurat &ziggurat-action [%pokur ~ %add-and-queue-test-file `%wes-join-table /zig/test-steps/wes-join-table/hoon]
-:ziggurat &ziggurat-action [%$ ~ %run-queue ~]
+::  Examine state of %pokur app running on ~bud: note the table hosted by ~nec and led by ~bud now has ~wes as a player
+:pyro|dojo ~bud ":pokur +dbug"
 ```
 
 Some other stuff you may want to do:
@@ -200,41 +205,8 @@ Some other stuff you may want to do:
 ::   (The `/my-state/0` is an arbitrary `path` that is a label).
 :pyro|snap /my-state/0 ~[~nec ~bud ~wes]
 
-::  If you want to restore to pre-%pokur-install state (or any other state, specified by the label `path`):
-:pyro|restore /testnet
-
-::  If you want to inspect state of apps:
-:pyro|dojo ~bud ":pokur +dbug"
-```
-
-### `send-nec` from the `%pyro` ship Dojo
-
-```hoon
-:pyro|dojo ~nec ":uqbar &wallet-poke [%transaction from=0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70 contract=0x74.6361.7274.6e6f.632d.7367.697a town=0x0 action=[%give to=0xd6dc.c8ff.7ec5.4416.6d4e.b701.d1a6.8e97.b464.76de amount=123.456 item=0x89a0.89d8.dddf.d13a.418c.0d93.d4b4.e7c7.637a.d56c.96c0.7f91.3a14.8174.c7a7.71e6]]"
-:pyro|dojo ~nec ":uqbar &wallet-poke [%submit from=0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70 hash=0xa99c.4c8e.1c8d.abb8.e870.81e8.8c96.2cf5 gas=[rate=1 bud=1.000.000]]"
-:pyro|dojo ~nec ":sequencer|batch"
-```
-
-### Alternative `test-steps` input
-
-Test steps can also be added by directly inputting them.
-This is useful for commandline testing or for frontends.
-For example, an equivalent to adding and queueing `%send-nec` above would be:
-```hoon
-=test-imports (~(put by *(map @tas path)) %indexer /sur/zig/indexer)
-=test-steps ~[[%scry [~nec 'update:indexer' %gx %indexer /batch-order/0x0/noun] '[%batch-order batch-order=~[0xd85a.d919.9806.cbc2.b841.eb0d.854d.22af]]']]
-:ziggurat &ziggurat-action [%foo %add-and-queue-test `%scry-nec-direct test-imports test-steps]
-```
-A `test-steps` added this way is assigned a test id like any other test.
-It can be saved to a file by looking up this id.
-As of this writing is was `0x3825.4e68.9717.b400.b727.fdee.5c7b.90e0`; look it up using:
-```hoon
-=zig -build-file /=zig=/sur/zig/ziggurat/hoon
-.^(projects:zig %gx /=ziggurat=/projects/noun)
-```
-Then save via:
-```hoon
-:ziggurat &ziggurat-action [%foo %save-test-to-file 0x3825.4e68.9717.b400.b727.fdee.5c7b.90e0 /zig/test-steps/my-scry-nec/hoon]
+::  Restore to a snapshot:
+:pyro|restore /my-state/0
 ```
 
 ### `update:zig`
@@ -249,6 +221,7 @@ In addition, scries will also often return `update:zig`.
 * A tag, indicating the action or scry that triggered the update or the piece of state that changed,
 * `update-info:zig`, which itself contains metadata about the state/triggering action:
   * `project-name`,
+  * `desk-name`,
   * `source`: where did this `update` or error originate from?
   * `request-id`: pokes may include a `(unit @t)`, an optional `request-id` to make finding the resulting update easier; if a poke caused this `update`, and it included a `request-id`, it is copied here.
 * `payload`: a piece of data or an error.
@@ -258,50 +231,34 @@ In addition, scries will also often return `update:zig`.
   * `message`: an description of the error.
 * other optional metadata that should be reported whether a success or a failure.
 
-## Test steps
+## Projects and desks
 
-`test-steps` are sequences of `test-step`s: a command to do something that optionally has an expected result.
-E.g., a `test-step` can be a `%poke` or a `%scry`.
-A `%scry` `test-step`, an example of a read from state, has an `expected` field that is a `@t`: the expectation of output as a result of completing that scry.
-In contract, a `test-step` like a `%poke` that writes to state has an `expected` field that is a `list` of read steps: a single `%poke` can have cascading effects and so it is important to have the ability to query multiple times.
+`%ziggurat` projects are sets of desks that maintain state amongst them.
+For example, the `%pokur-dev` project comes with the `%zig` desk to run an Uqbar testnet and the `%pokur` desk to run the pokur contracts (specifically escrow) and apps (specifically %pokur and %pokur-host).
 
-`test-steps` are defined in the `$` arm of a core.
-Examples can be seen in the `zig/test-steps/` dir](https://github.com/uqbar-dao/dev-suite/tree/master/zig/test-steps).
+A project can be started from scratch using the IDE.
 
-The subject of a `test-steps` is defined by the `/=` imports at the top of the `test-steps` file.
-In addition, this subject will be applied for [`custom-step-definitions`](#custom-inputs), so those dependencies must be included in `test-steps`.
-`test-globals` also includes `our=@p`, `now=@da`, and `project=@tas`.
-Finally, some `test-globals` will be accessible by `test-steps` (see sur/zig/ziggurat.hoon):
+Projects can also be imported.
 
-`configs:test-globals` is a `(map project-name=@t (map [who=@p what=@tas] @)` (or a `(mip project-name=@t [who=@p what=@tas] @)` for short) that stores general data that can be added to with `%add-config`.
-It is loaded with some useful items by default, as well:
-* The default testnet address associated with that `@p` is stored at `[project-name=~ who=@p what=%address]`,
-* The host running the `%sequencer` for a town given by the `map` value is stored at `[project-name=[~ @t] who=@p what=%sequencer]`.
+Imported projects may optionally have a configuration thread.
+See [project configuration](#project-configuration) for further discussion.
 
-`test-results:test-globals` are also accessible, so that the results of a previous `test-step` is usable in the current one.
-Results from previous steps can be accessed more ergonomically by attaching a [`result-face`](https://github.com/uqbar-dao/dev-suite/blob/master/sur/zig/ziggurat.hoon#L77-L96) to them, and can then be accessed using that face in subsequent steps.
-See [`zig/custom-step-definitions/send-wallet-transaction.hoon`](https://github.com/uqbar-dao/dev-suite/blob/master/zig/custom-step-definitions/send-wallet-transaction.hoon) for an example.
+## Using threads for setup and testing
 
-## Custom inputs
+Aside from running the initial configuration thread when importing a project, threads are used to put `%pyro` ships into specific, consistent states and to run tests.
+The [ziggurat threads lib](https://github.com/uqbar-dao/dev-suite/blob/master/lib/zig/ziggurat/threads.hoon) is provided to make manipulation of and testing with `%pyro` ships easier.
+Some examples of threads used for testing actions coordinating multiple ships are `%zig-dev`s [`send-bud`](https://github.com/uqbar-dao/zig-dev/blob/master/ted/ziggurat/send-bud.hoon) and `%pokur-dev`s [`wes-join-table`](https://github.com/uqbar-dao/pokur-dev/blob/master/ted/ziggurat/wes-join-table.hoon).
 
-Custom steps are useful for reducing boilerplate when a certain `test-step` is used frequently.
-For example, to write to the `%pyro` ship testnet, a transaction is sent with a `%wallet-poke`.
-However, the transaction must also be signed, and the sequencer must submit a batch before the transaction is posted.
-Thus, the following must occur:
-1. Scry current pending transactions in the wallet,
-2. Send the transaction,
-3. Scry newly updated pending transactions in the wallet,
-4. Compute the diff on the pending transaction scries to find the our pending transaction hash,
-5. Sign that pending transaction and send it to the sequencer,
-6. Tell the sequencer to process the batch.
+Threads can either be written directly or created through the IDE UI, in which case they are presented in a simplified form, "test steps".
 
-Rather than requiring every `%pyro` ship testnet write `test-steps` do the common work, use the `custom-write-step` [`zig/custom-step-definitions/send-wallet-transaction.hoon`](https://github.com/uqbar-dao/dev-suite/blob/master/zig/custom-step-definitions/send-wallet-transaction.hoon).
-For an example of usage, see [`zig/test-steps/send-nec.hoon`](https://github.com/uqbar-dao/dev-suite/blob/master/zig/test-steps/send-nec.hoon).
+### Test steps
 
-More examples can be found in the [`zig/custom-step-definitions/` dir](https://github.com/uqbar-dao/dev-suite/tree/master/zig/custom-step-definitions).
+`test-steps` are sequences of `test-step`s.
+A `test-step` can be a `%poke`,`%scry`, `%wait`, or `%dojo`.
+`%poke` and `%scry` are pretty self-explanatory; `%wait` pauses for the given `@dr`.
+`%dojo` executes the given string in the Dojo of the given `%pyro` ship.
 
-Custom steps are labeled by a `tag=@tas` -- the name of the step that will be referenced when calling it.
-A custom step is a core whose `$` arm takes in arguments and an `expected` (either a `@t` if a `custom-read-step` or a `(list test-read-step)` if a `custom-write-step`) and must return a `(list test-step)`.
+`test-steps` are compiled to a thread and run in the same way hand-written threads are.
 
 ## Deploying contracts
 
@@ -313,18 +270,24 @@ Contracts can be deployed to the `%pyro` ship testnet for a project using the `%
 ## Project configuration
 
 Projects can be configured so that they are in a predictable state when imported.
-Configuration is accomplished by a `hoon` file that lives at `/zig/configs/[project-name]/hoon`.
-For example, see `/zig/configs/zig/hoon` that ships with this repository.
+Configuration is accomplished by a `hoon` file that lives at `/zig/configuration/[project-name]/hoon`, and it must have a `$`-arm that returns a `form:m`.
+That `$`-arm is run when the project is installed.
+For examples, see the [zig-dev configuration file](https://github.com/uqbar-dao/zig-dev/blob/master/zig/configuration/zig-dev.hoon) and the [pokur-dev configuration file](https://github.com/uqbar-dao/pokur-dev/blob/master/zig/configuration/pokur-dev.hoon).
 
-The configuration file has a specified form.
-Imports may be specified using the `/=` rune at the top of the file.
-The file is then composed of a core with the following arms:
+### State views
 
-Arm name                     | Return type                                      | Description
----------------------------- | ------------------------------------------------ | -----------
-`+make-config`               | `config:zig`                                     | Set global state for the project, accessible during `test-steps`.
-`+make-virtualships-to-sync` | `(list @p)`                                      | Set `%pyro` ships to mirror the project desk on.
-`+make-install`              | `?`                                              | Install the mirrored desk on synced `%pyro` ships?
-`+make-start-apps`           | `(list @tas)`                                    | Additional apps to start on synced `%pyro` ships (that are not included in the project's `desk.bill`).
-`+make-state-views`          | `(list [who=@p app=(unit @tas) file-path=path])` | Default state views, specified in the file path. `app=~` -> chain view, not an agent view.
-`+make-setup`                | `(map @p test-steps:zig)`                        | Set the initial state on synced `%pyro` ships by running these `test-steps`.
+Access the state of apps that import the `dbug library running on `%pyro` ships using state views in the IDE UI.
+Projects can be configured to come pre-loaded with state views.
+State view files live in either `/zig/state-views/agent` or `/zig/state-views/chain` -- which retrieve data from Gall apps or the Uqbar chain respectively.
+State view files contain Hoon that is directly analogous to Hoon that would be input to the `+dbug` generator.
+For example,
+```hoon
+::  Get entire %ziggurat state.
+:ziggurat +dbug [%state '-']
+
+::  Get %zig-dev project from within %ziggurat state.
+:ziggurat +dbug [%state '(~(get by projects) %zig-dev)']
+```
+
+To load pre-defined state views at import-time, `/zig/state-views/[project-name]/hoon` must exist.
+For examples of that file format, see [zig-dev](https://github.com/uqbar-dao/zig-dev/blob/master/zig/state-views/zig-dev.hoon) and [pokur-dev](https://github.com/uqbar-dao/pokur-dev/blob/master/zig/state-views/pokur-dev.hoon).
