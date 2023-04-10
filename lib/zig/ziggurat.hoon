@@ -2113,6 +2113,7 @@
     %-  pairs
     :~  ['desks' (desks desks.p)]
         ['pyro_ships' (list-ships pyro-ships.p)]
+        ['sync_desk_to_vship' (sync-desk-to-vship sync-desk-to-vship.p)]
         ['most_recent_snap' (path most-recent-snap.p)]
         ['saved_thread_queue' (thread-queue (show-thread-queue saved-thread-queue.p))]
     ==
