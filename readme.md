@@ -276,7 +276,7 @@ For examples, see the [zig-dev configuration file](https://github.com/uqbar-dao/
 
 ### State views
 
-Access the state of apps that import the `dbug library running on `%pyro` ships using state views in the IDE UI.
+Access the state of apps that import the dbug library running on `%pyro` ships using state views in the IDE UI.
 Projects can be configured to come pre-loaded with state views.
 State view files live in either `/zig/state-views/agent` or `/zig/state-views/chain` -- which retrieve data from Gall apps or the Uqbar chain respectively.
 State view files contain Hoon that is directly analogous to Hoon that would be input to the `+dbug` generator.
