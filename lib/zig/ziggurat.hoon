@@ -735,6 +735,17 @@
   %.  thread-queue
   ~(thread-queue make-update-vase update-info)
 ::
+++  make-state-views
+  |=  project-desk-name=@tas
+  ^-  state-views:zig
+  !<  state-views:zig
+  .^  vase
+      %ca
+      :^  (scot %p our.bowl)  project-desk-name
+        (scot %da now.bowl)
+      /zig/state-views/[project-desk-name]/hoon
+  ==
+::
 ++  convert-test-steps-to-thread
   |=  $:  project-name=@t
           desk-name=@tas

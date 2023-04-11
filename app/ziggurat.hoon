@@ -1295,27 +1295,23 @@
     ['' %$ %settings ~]
   ::
       [%state-views @ ~]
-    !!
-    :: =*  desk-name     i.t.t.p
-    :: =*  update-info  ['' desk-name %state-views ~]
-    :: =/  [[* cfo=(unit configuration-file-output:zig)] *]
-    ::   (load-configuration-file:zig-lib update-info state)
-    :: :^  ~  ~  %json
-    :: !>  ^-  json
-    :: ?~  cfo  ~
-    :: %-  update:enjs:zig-lib
-    :: !<  update:zig
-    :: %.  state-views.u.cfo
-    :: %~  state-views  make-update-vase:zig-lib  update-info
+    =*  project-desk-name  i.t.t.p
+    =*  update-info
+      [project-desk-name project-desk-name %state-views ~]
+    =/  =state-views:zig
+      (make-state-views:zig-lib project-desk-name)
+    :^  ~  ~  %json
+    !>  ^-  json
+    %-  update:enjs:zig-lib
+    !<  update:zig
+    %.  state-views
+    %~  state-views  make-update-vase:zig-lib  update-info
   ::
       [%file-exists @ ^]
     =/  des=@ta    i.t.t.p
     =/  pat=path  `path`t.t.t.p
     =/  pre=path  /(scot %p our.bowl)/(scot %tas des)/(scot %da now.bowl)
     ``json+!>(`json`[%b .^(? %cu (weld pre pat))])
-  ::
-      [%thread-queue ~]
-    ``noun+!>(thread-queue)
   ::
   ::  APP-PROJECT JSON
   ::

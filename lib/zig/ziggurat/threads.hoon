@@ -750,11 +750,9 @@
     =/  m  (strand ,state-views:zig)
     ^-  form:m
     ;<  =bowl:strand  bind:m  get-bowl
-    ;<  state-views-vase=(unit vase)  bind:m
-      %+  build-file  [our.bowl desk-name %da now.bowl]
-      /zig/state-views/[project-name]/hoon
-    ?~  state-views-vase  (pure:m ~)
-    (pure:m !<(state-views:zig u.state-views-vase))
+    %-  pure:m
+    %.  project-name
+    make-state-views:zig-lib(our.bowl our.bowl, now.bowl now.bowl)
   ::
   ++  get-dependency-desks
     =/  m  (strand ,~)
