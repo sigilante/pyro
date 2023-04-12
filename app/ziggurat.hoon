@@ -489,6 +489,66 @@
         =.  projects  (~(put by projects) 'zig' *project:zig)
         %+  start-ships-then-rerun  default-ships:zig-lib
         [project-name desk-name request-id]:act
+      ::  is requested desk remote?
+      ?^  fetch-desk-from-remote-ship.act
+        :_  state
+        :_  ~
+        %-  %~  arvo  pass:io
+            /new-project-from-remote/[desk-name.act]
+        :^  %k  %lard  q.byk.bowl
+        =/  m  (strand ,vase)
+        ^-  form:m
+        ;<  ~  bind:m
+          %+  poke-our:strandio  %ziggurat
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  ''  desk-name.act  request-id.act
+          [%get-dev-desk u.fetch-desk-from-remote-ship.act]
+        ::  if no sleep, get crash;
+        ::   TODO: replace with better, non-hacky solution
+        ;<  ~  bind:m  (sleep:strandio ~s1)
+        ;<  ~  bind:m
+          %+  poke-our:strandio  %ziggurat
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  project-name.act  desk-name.act  request-id.act
+          [%new-project sync-ships.act ~]
+        (pure:m !>(`?`%.y))
+      ::  is requested desk already installed?
+      =/  apps-running=(set [@tas ?])
+        .^  (set [@tas ?])
+            %ge
+            :-  (scot %p our.bowl)
+            /[desk-name.act]/(scot %da now.bowl)
+        ==
+      ?:  ?&  !=(0 ~(wyt in apps-running))
+              (~(any in apps-running) |=([@tas r=?] r))
+          ==
+        ::  TODO: should this be interactive?
+        :_  state
+        :_  ~
+        %-  %~  arvo  pass:io
+            /new-project-uninstall/[desk-name.act]
+        :^  %k  %lard  q.byk.bowl
+        =/  m  (strand ,vase)
+        ^-  form:m
+        ;<  ~  bind:m
+          %+  poke-our:strandio  %ziggurat
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  project-name.act  desk-name.act  request-id.act
+          [%suspend-uninstall-to-make-dev-desk ~]
+        ::  if no sleep, get crash;
+        ::   TODO: replace with better, non-hacky solution
+        ;<  ~  bind:m  (sleep:strandio ~s1)
+        ;<  ~  bind:m
+          %+  poke-our:strandio  %ziggurat
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  project-name.act  desk-name.act  request-id.act
+          :-  %new-project
+          [sync-ships fetch-desk-from-remote-ship]:act
+        (pure:m !>(`?`%.y))
       =/  desks=(set desk)
         .^  (set desk)
             %cd
@@ -1547,6 +1607,22 @@
     ::
         %change-settings
       `state(settings settings.act)
+    ::
+        %get-dev-desk
+      :_  state
+      :+  (make-new-desk:zig-lib desk-name.act)
+        (get-dev-desk:zig-lib [who desk-name]:act)
+      ~
+    ::
+        %suspend-uninstall-to-make-dev-desk
+      :_  state
+      :^    (suspend-desk:zig-lib desk-name.act)
+          (uninstall-desk:zig-lib desk-name.act)
+        %-  update-vase-to-card:zig-lib
+        %.  'suspending and unsyncing dev desk'
+        %~  suspend-uninstall-to-make-dev-desk
+        make-error-vase:zig-lib  [update-info %warning]
+      ~
     ==
   --
 ::
@@ -1695,6 +1771,9 @@
   |=  [w=wire =sign-arvo:agent:gall]
   |^  ^-  (quip card _this)
   ?+    w  (on-arvo:def w sign-arvo)
+      [%new-project-from-remote @ ~]  `this
+      [%new-project-uninstall @ ~]    `this
+  ::
       [%on-init-zig-setup ~]
     =*  our  (scot %p our.bowl)
     =*  now  (scot %da now.bowl)
@@ -1703,7 +1782,7 @@
     :_  ~
     %-  ~(poke-self pass:io /self-wire)
     :-  %ziggurat-action
-    !>(`action:zig`['zig' %zig ~ %new-project ~])
+    !>(`action:zig`['zig' %zig ~ %new-project ~ ~])
   ::
       [%on-new-project-ship-rerun @ @ ~]
     =*  mark           i.t.w
@@ -1727,6 +1806,15 @@
         desk-name
     ~&  >>>  "failed to make new desk"
     `this
+  ::
+      [%get-dev-desk @ ~]
+    ?:  ?=([%clay %mere %.y ~] sign-arvo)  `this
+    :_  this
+    :_  ~
+    %-  update-vase-to-card:zig-lib
+    %.  (crip "merge fail: {<sign-arvo>}")
+    %~  get-dev-desk  make-error-vase:zig-lib
+    [['' i.t.w %get-dev-desk ~] %error]
   ::
       [%clay @ @ ~]
     ?>  ?=([%clay %writ *] sign-arvo)

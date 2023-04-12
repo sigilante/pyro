@@ -138,7 +138,7 @@
   $:  project-name=@t
       desk-name=@tas
       request-id=(unit @t)
-      $%  [%new-project sync-ships=(list @p)]
+      $%  [%new-project sync-ships=(list @p) fetch-desk-from-remote-ship=(unit @p)]
           [%delete-project ~]
           [%save-config-to-file ~]
       ::
@@ -201,6 +201,9 @@
           [%cis-panic ~]
       ::
           [%change-settings =settings]
+      ::
+          [%get-dev-desk who=@p]
+          [%suspend-uninstall-to-make-dev-desk ~]
       ==
   ==
 ::
@@ -239,6 +242,8 @@
       %state-views
       %add-project-desk
       %delete-project-desk
+      %get-dev-desk
+      %suspend-uninstall-to-make-dev-desk
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -285,6 +290,8 @@
       [%state-views update-info payload=(data (list [@p (unit @tas) path])) ~]
       [%add-project-desk update-info payload=(data ~) ~]
       [%delete-project-desk update-info payload=(data ~) ~]
+      [%get-dev-desk update-info payload=(data ~) ~]
+      [%suspend-uninstall-to-make-dev-desk update-info payload=(data ~) ~]
   ==
 ::
 +$  shown-projects  (map @t shown-project)
