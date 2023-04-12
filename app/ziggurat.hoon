@@ -1327,7 +1327,7 @@
     ?+    mark  =-  q.q.-
         !<(mime (.^(tube:clay %cc (weld pre /[mark]/mime)) .^(vase %cr padh)))
       %hoon    .^(@t %cx padh)
-      %kelvin  (crip ~(ram re (cain !>(.^([@tas @ud] %cx padh)))))
+      %kelvin  (crip ~(ram re (cain !>(.^(waft:clay %cx padh)))))
       %ship    (crip ~(ram re (cain !>(.^(@p %cx padh)))))
       %bill    (crip ~(ram re (cain !>(.^((list @tas) %cx padh)))))
         %docket-0
