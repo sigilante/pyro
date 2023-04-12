@@ -726,7 +726,8 @@
   =.  state  new-state
   ~&  %sp^%2
   ;<  ~  bind:m
-    %+  iterate-over-desks  desk-dependency-names
+    %+  iterate-over-desks
+      [project-name desk-dependency-names]
     make-read-desk
   ;<  ~  bind:m  start-new-ships
   :: ;<  ~  bind:m  (block-on-previous-operation ~)  ::  TODO: blocks on iris connection for a long time; is this ever actually needed?
