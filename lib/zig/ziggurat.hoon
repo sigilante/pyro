@@ -2420,6 +2420,8 @@
         [%add-user-file (ot ~[[%file pa]])]
         [%delete-user-file (ot ~[[%file pa]])]
     ::
+        [%send-pyro-dojo (ot ~[[%who (se %p)] [%command sa]])]
+    ::
         [%pyro-agent-state pyro-agent-state]
         [%pyro-chain-state pyro-chain-state]
     ::

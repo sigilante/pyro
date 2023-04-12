@@ -162,6 +162,8 @@
           [%add-user-file file=path]
           [%delete-user-file file=path]
       ::
+          [%send-pyro-dojo who=@p command=tape]
+      ::
           [%pyro-agent-state who=@p app=@tas =imports grab=@t]
           [%pyro-chain-state =imports grab=@t]
       ::

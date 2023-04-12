@@ -859,6 +859,17 @@
       %~  delete-user-file  make-update-vase:zig-lib
       update-info
     ::
+        %send-pyro-dojo
+      :_  state
+      :_  ~
+      %+  %~  poke-our  pass:io
+          :+  %dojo  (scot %p who.act)
+          /(scot %ux `@ux`(jam command.act))
+        %pyro
+      :-  %pyro-events
+      !>  ^-  (list pyro-event:pyro)
+      (dojo-events:pyro-lib [who command]:act)
+    ::
         %pyro-agent-state
       =/  who=@ta  (scot %p who.act)
       =*  app      app.act
