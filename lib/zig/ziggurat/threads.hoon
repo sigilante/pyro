@@ -7,16 +7,18 @@
     smart=zig-sys-smart,
     zig-lib=zig-ziggurat
 ::
-=*  strand         strand:spider
-=*  build-file     build-file:strandio
-=*  get-bowl       get-bowl:strandio
-=*  get-time       get-time:strandio
-=*  poke-our       poke-our:strandio
-=*  scry           scry:strandio
-=*  send-raw-card  send-raw-card:strandio
-=*  sleep          sleep:strandio
-=*  take-poke-ack  take-poke-ack:strandio
-=*  wait           wait:strandio
+=*  strand          strand:spider
+=*  build-file      build-file:strandio
+=*  get-bowl        get-bowl:strandio
+=*  get-time        get-time:strandio
+=*  poke-our        poke-our:strandio
+=*  scry            scry:strandio
+=*  send-raw-card   send-raw-card:strandio
+=*  sleep           sleep:strandio
+=*  take-poke-ack   take-poke-ack:strandio
+=*  take-sign-arvo  take-sign-arvo:strandio
+=*  wait            wait:strandio
+=*  warp            warp:strandio
 ::
 |_  $:  project-name=@t
         desk-name=@tas
@@ -281,14 +283,18 @@
 ::
 ++  block-on-previous-operation
   =+  done-duration=`@dr`~m1
+  =+  iris-timeout-duration=`@dr`~s15
   |=  project-name=(unit @t)
+  =|  iris-timeout=(map duct @da)
   |^
   =/  m  (strand ,~)
   ^-  form:m
   ;<  ~  bind:m  (sleep `@dr`1)
   |-
-  ;<  is-stack-empty=?  bind:m  get-is-stack-empty
-  ?.  is-stack-empty
+  ;<  is-stack-empty=(each ~ (map duct @da))  bind:m
+    (get-is-stack-empty iris-timeout)
+  ?:  ?=(%| -.is-stack-empty)
+    =.  iris-timeout  p.is-stack-empty
     ;<  ~  bind:m  (sleep (div ~s1 4))
     $
   ;<  =bowl:strand  bind:m  get-bowl
@@ -303,12 +309,59 @@
   $
   ::
   ++  get-is-stack-empty
-    =/  m  (strand ,?)
+    |=  iris-timeout=(map duct @da)
+    |^
+    =/  m  (strand ,(each ~ (map duct @da)))
     ^-  form:m
-    ::  /i//whey from sys/vane/iris/hoon:386
-    ;<  maz=(list mass)  bind:m  (scry (list mass) /i//whey)
-    =/  by-id  (snag 2 maz)
-    (pure:m ?=(~ p.q.by-id))
+    ;<  is-iris-empty=(each ~ (set duct))  bind:m  get-is-iris-empty
+    ?:  ?=(%& -.is-iris-empty)  (pure:m [%.y ~])
+    ;<  now=@da  bind:m  get-time
+    =^  no-wait=?  iris-timeout
+      %+  roll  ~(tap in p.is-iris-empty)
+      |:  [d=`duct`~ no-wait=`?`%.y it=`(map duct @da)`iris-timeout]
+      ?~  to=(~(get by it) d)
+        [%.n (~(put by it) d (add now iris-timeout-duration))]
+      ?:  (lth u.to now)  [no-wait it]  [%.n it]
+    (pure:m ?:(no-wait [%.y ~] [%.n iris-timeout]))
+    ::
+    ++  get-is-iris-empty
+      =/  m  (strand ,(each ~ (set duct)))
+      ^-  form:m
+      ::  /i//whey from sys/vane/iris/hoon:386
+      ;<  maz=(list mass)  bind:m  (scry (list mass) /i//whey)
+      =/  by-duct=(map duct @ud)
+        %+  filter-iris-by-duct  ignored-iris-prefixes
+        ((map duct @ud) p.q:(snag 3 maz))
+      %-  pure:m
+      ?:  =(0 ~(wyt by by-duct))  [%.y ~]
+      [%.n ~(key by by-duct)]
+    ::
+    ++  ignored-iris-prefixes
+      ^-  (list [path @tas])
+      :_  ~
+      [/gall/use/spider/0w1.SsEZ5/~nec/thread %docket]
+    ::
+    ++  filter-iris-by-duct
+      ::  filter out those that have prefix that matches
+      ::   an ignored-prefixes path and the first characters
+      ::   of the next element in the path matches @tas
+      |=  $:  ignored-prefixes=(list (pair path @tas))
+              by-duct=(map duct @ud)
+          ==
+      ^-  (map duct @ud)
+      %-  ~(gas by *(map duct @ud))
+      %+  murn  ~(tap by by-duct)
+      |=  [d=duct n=@ud]
+      %+  roll  ignored-prefixes
+      |:  [[p=`path`/ t=`@tas`%$] item=`(unit [duct @ud])``[d n]]
+      ?~  d  ~
+      =*  w  i.d
+      =*  lp  (lent p)
+      =*  lt  (met 3 t)
+      ?.  =(p (scag lp w))  item
+      ?:  =(t (cut 3 [0 lt] (snag lp w)))  ~
+      item
+    --
   ::
   ++  ignored-virtualship-timer-prefixes
     ^-  (list path)
@@ -326,6 +379,7 @@
         /gall/use/notify
         /gall/use/ping
         /gall/use/pyre
+        /gall/use/spider
     ==
   ::
   ++  filter-timers
@@ -338,10 +392,10 @@
     |=  [time=@da d=duct]
     ?~  d               `[time d]  ::  ?
     ?:  (gth now time)  ~
-    =*  p  i.d
+    =*  w  i.d
     %+  roll  ignored-prefixes
     |:  [ignored-prefix=`path`/ timer=`(unit [@da duct])``[time d]]
-    ?:  =(ignored-prefix (scag (lent ignored-prefix) p))  ~
+    ?:  =(ignored-prefix (scag (lent ignored-prefix) w))  ~
     timer
   ::
   ++  get-virtualship-timers
@@ -367,8 +421,8 @@
     ?~  project-name  ~
     =+  .^  =update:zig
             %gx
-            :-  (scot %p our)
-            /ziggurat/(scot %da now)/sync-desk-to-vship/noun
+            :^  (scot %p our)  %ziggurat  (scot %da now)
+            /sync-desk-to-vship/[u.project-name]/noun
         ==
     ?~  update                            ~
     ?.  ?=(%sync-desk-to-vship -.update)  ~  ::  TODO: throw error?
@@ -395,7 +449,6 @@
     %^  filter-timers  now  ignored-virtualship-timer-prefixes
     (get-virtualship-timers project-name our now)
   --
-::
 ::
 ++  fetch-desk-from-remote-ship
   |=  [who=@p desk-name=@tas followup-action=(unit vase)]
@@ -466,16 +519,6 @@
     %^  send-clay-card  /delete  %info
     [desk-name %& (clean-desk:zig-lib desk-name)]
   ::
-  ++  make-configuration-file
-    =/  m  (strand ,~)
-    ^-  form:m
-    ;<  ~  bind:m
-    %-  send-raw-card
-    %^  make-save-file:zig-lib  update-info
-      /ted/ziggurat/configuration/[desk-name]/hoon
-    make-configuration-template:zig-lib
-    (pure:m ~)
-  ::
   ++  send-clay-card
     |=  [w=wire =task:clay]
     =/  m  (strand ,~)
@@ -497,16 +540,10 @@
     p.payload.update
   ?:  =('' focused-project)  (pure:m !>(~))
   ;<  ~  bind:m
-    :: ?:  =('' focused-project)  (pure:m ~)
     %+  poke-our  %ziggurat
     :-  %ziggurat-action
     !>  ^-  action:zig
     [focused-project %$ request-id %take-snapshot ~]
-  ;<  ~  bind:m
-    %+  poke-our  %pyro
-    :-  %pyro-action
-    !>  ^-  action:pyro
-    [%restore-snap default-snap-path:zig-lib]
   (pure:m !>(~))
 ::
 ++  get-state
@@ -520,82 +557,287 @@
   ?>  ?=(%& -.payload.update)
   (pure:m p.payload.update)
 ::
-++  setup-desk
-  |=  $:  project-name=@t
-          desk-name=@tas
-          request-id=(unit @t)
-          special-configuration-args=vase
-          =config:zig
-          =state-views:zig
-          whos=(list @p)
-          install=?
-          start-apps=(list @tas)
+++  iterate-over-desks
+  =/  m  (strand ,~)
+  |=  [desk-names=(list @tas) gate=$-(@tas form:m)]
+  ^-  form:m
+  |-
+  ?~  desk-names  (pure:m ~)
+  =*  desk-name  i.desk-names
+  ;<  ~  bind:m  (gate desk-name)
+  $(desk-names t.desk-names)
+::
+++  commit-install-start
+  |=  $:  whos=(list @p)
+          desk-names=(list @tas)
+          install=(map @tas (list @p))
+          start-apps=(map @tas (list @tas))
       ==
-  =/  commit-poll-duration=@dr   ~s1
-  =/  install-poll-duration=@dr  ~s1
-  =/  start-poll-duration=@dr    (div ~s1 10)
+  =/  commit-poll-duration=@dr  ~s1
+  =/  start-poll-duration=@dr   (div ~s1 10)
+  |^
   =/  m  (strand ,vase)
   ^-  form:m
-  ~&  %sd^%0
+  ;<  =bowl:strand  bind:m  get-bowl
+  ;<  ~  bind:m
+    %+  iterate-over-desks  desk-names
+    |=  desk-name=@tas
+    (commit:pyro-lib whos our.bowl desk-name %da now.bowl)
+  ~&  %cis^%0
+  ;<  ~  bind:m
+    (iterate-over-whos whos (block-on-commit desk-names))
+  ?:  ?|  =(0 ~(wyt by install))
+          (~(all by install) |=(a=(list @) ?=(~ a)))
+      ==
+    (pure:m !>(~))
+  ~&  %cis^%1
+  ;<  ~  bind:m  install-and-start-apps
+  ~&  %cis^%2
+  (pure:m !>(~))
+  ::
+  ++  scry-virtualship-desks
+    |=  who=@p
+    =/  m  (strand ,(set @tas))
+    ^-  form:m
+    =/  w=@ta  (scot %p who)
+    (scry (set @tas) /gx/pyro/i/[w]/cd/[w]//0/noun)
+  ::
+  ++  virtualship-desks-exist
+    |=  [who=@p desired-desk-names=(set @tas)]
+    =/  m  (strand ,?)
+    ^-  form:m
+    ;<  existing-desk-names=(set @tas)  bind:m
+      (scry-virtualship-desks who)
+    %-  pure:m
+    .=  desired-desk-names
+    (~(int in existing-desk-names) desired-desk-names)
+  ::
+  ++  block-on-commit
+    |=  desk-names=(list @tas)
+    |=  who=@p
+    =/  m  (strand ,~)
+    ^-  form:m
+    |-
+    ;<  ~  bind:m  (sleep commit-poll-duration)
+    ;<  does-exist=?  bind:m
+      %+  virtualship-desks-exist  who
+      (~(gas in *(set @tas)) desk-names)
+    ?.  does-exist  $
+    (pure:m ~)
+  ::
+  ++  virtualship-is-running-app
+    |=  [who=@p app=@tas]
+    =/  m  (strand ,?)
+    ^-  form:m
+    =/  w=@ta    (scot %p who)
+    (scry ? /gx/pyro/i/[w]/gu/[w]/[app]/0/noun)
+  ::
+  ++  iterate-over-whos
+    =/  m  (strand ,~)
+    |=  [whos=(list @p) gate=$-(@p form:m)]
+    ^-  form:m
+    |-
+    ?~  whos  (pure:m ~)
+    =*  who  i.whos
+    ;<  ~  bind:m  (gate who)
+    $(whos t.whos)
+  ::
+  ++  do-install-desk
+    |=  desk-name=@tas
+    |=  who=@p
+    =/  m  (strand ,~)
+    ^-  form:m
+    ;<  empty-vase=vase  bind:m
+      %+  send-pyro-dojo  who
+      (crip "|install our {<desk-name>}")
+    (pure:m ~)
+  ::
+  ++  block-on-start
+    |=  [who=@p next-app=@tas]
+    =/  m  (strand ,~)
+    ^-  form:m
+    |-
+    ;<  ~  bind:m  (sleep start-poll-duration)
+    ;<  is-running=?  bind:m
+      (virtualship-is-running-app who next-app)
+    ?.  is-running  $
+    (pure:m ~)
+  ::
+  ++  do-start-apps
+    |=  [desk-name=@tas start-apps=(list @tas)]
+    |=  who=@p
+    =/  m  (strand ,~)
+    ^-  form:m
+    |-
+    ?~  start-apps  (pure:m ~)
+    =*  next-app  i.start-apps
+    ;<  empty-vase=vase  bind:m
+      %+  send-pyro-dojo  who
+      (crip "|start {<`@tas`desk-name>} {<`@tas`next-app>}")
+    ;<  ~  bind:m  (block-on-start who next-app)
+    $(start-apps t.start-apps)
+  ::
+  ++  install-and-start-apps
+    =/  m  (strand ,~)
+    ^-  form:m
+    =/  installs  ~(tap by install)
+    |-
+    ?~  installs  (pure:m ~)
+    =*  desk-name        p.i.installs
+    =*  whos-to-install  q.i.installs
+    ;<  ~  bind:m
+      %+  iterate-over-whos  whos-to-install
+      (do-install-desk desk-name)
+    ?~  apps-to-start=(~(get by start-apps) desk-name)
+      $(installs t.installs)
+    ;<  ~  bind:m
+      %+  iterate-over-whos  whos-to-install
+      (do-start-apps desk-name u.apps-to-start)
+    $(installs t.installs)
+  --
+::
+++  setup-project
+  |=  $:  request-id=(unit @t)
+          =desk-dependencies:zig
+          =config:zig
+          whos=(list @p)
+          install=(map @tas (list @p))
+          start-apps=(map @tas (list @tas))
+      ==
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ~&  %sp^%0
   ;<  state=state-0:zig  bind:m  get-state
+  =/  desk-dependency-names=(list @tas)
+    %+  turn  desk-dependencies
+    |=([@ desk-name=@tas *] desk-name)
   |^
   ?:  =('global' project-name)
     ;<  ~  bind:m
       %-  send-error
       (crip "{<`@tas`project-name>} face reserved")
     return-failure
-  =/  p=(unit project:zig)
-    (~(get by projects.state) project-name)
-  ~&  %sd^p
-  ?:  ?&  ?=(^ p)
-          (has-desk:zig-lib u.p desk-name)
-          ?=(^ (~(int in (~(gas in *(set @p)) pyro-ships.u.p)) (~(gas in *(set @p)) whos)))
-      ==
-    ;<  ~  bind:m
-      %-  send-error
-      %-  crip
-      %+  weld  "project {<`@tas`project-name>} already has"
-      " desk {<`@tas`desk-name>}"
-    return-failure
-  ;<  new-state=state-0:zig  bind:m  update-project
-  =.  state  new-state
-  ~&  %sd^%1
-  :: ;<  ~  bind:m  start-new-ships
-  ~&  %sd^%2
-  ;<  ~  bind:m  make-dev-desk
-  ~&  %sd^%3
+  ;<  ~  bind:m  get-dependency-desks
+  ;<  ~  bind:m
+    %+  iterate-over-desks  desk-dependency-names
+    make-dev-desk
+  ~&  %sp^%1
   ;<  new-state=state-0:zig  bind:m  set-initial-state
   =.  state  new-state
-  ~&  %sd^%4
-  ;<  desk-names=(set desk)  bind:m  (scry (set desk) /cd/$)
-  ~&  %sd^%5
-  ;<  ~  bind:m  make-read-desk
-  :: ;<  ~  bind:m  make-snap
+  ~&  %sp^%2
+  ;<  ~  bind:m
+    %+  iterate-over-desks  desk-dependency-names
+    make-read-desk
   ;<  ~  bind:m  start-new-ships
-  ;<  ~  bind:m  (block-on-previous-operation ~)
-  :: ;<  ~  bind:m  (block-on-previous-operation `project-name)
-  ~&  %sd^%6
+  :: ;<  ~  bind:m  (block-on-previous-operation ~)  ::  TODO: blocks on iris connection for a long time; is this ever actually needed?
+  ~&  %sp^%3
   ;<  ~  bind:m  send-new-project-update
-  ~&  %sd^%7
+  ~&  %sp^%4
+  ;<  =state-views:zig  bind:m  make-state-views
   ;<  ~  bind:m
     %+  poke-our  %ziggurat
     :-  %ziggurat-action
     !>  ^-  action:zig
-    :^  project-name  desk-name  request-id
+    :^  project-name  %$  request-id
     [%send-state-views state-views]
-  ~&  %sd^%8
-  ;<  =bowl:strand  bind:m  get-bowl
-  ;<  ~  bind:m
-    (commit:pyro-lib whos our.bowl desk-name %da now.bowl)
-  ~&  %sd^%9
-  ;<  ~  bind:m  (iterate-over-whos block-on-commit)
-  ?.  install  return-success
-  ~&  %sd^%10
-  ;<  ~  bind:m  (iterate-over-whos install-desk)
-  ~&  %sd^%11
-  ;<  ~  bind:m  (iterate-over-whos do-start-apps)
-  ~&  %sd^%12
+  ~&  %sp^%5
+  ;<  empty-vase=vase  bind:m
+    %-  commit-install-start
+    [whos desk-dependency-names install start-apps]
   return-success
+  ::
+  ++  make-state-views
+    =/  m  (strand ,state-views:zig)
+    ^-  form:m
+    ;<  =bowl:strand  bind:m  get-bowl
+    %-  pure:m
+    %.  project-name
+    make-state-views:zig-lib(our.bowl our.bowl, now.bowl now.bowl)
+  ::
+  ++  get-dependency-desks
+    =/  m  (strand ,~)
+    ^-  form:m
+    ;<  =bowl:strand  bind:m  get-bowl
+    |-
+    ?~  desk-dependencies  (pure:m ~)
+    =*  dep  i.desk-dependencies
+    =*  who           who.dep
+    =*  desk-name     desk-name.dep
+    =*  c             case.dep
+    =*  desired-hash  commit-hash.dep
+    ::  TODO: be smarter, e.g.
+    ::   1. always check locally first
+    ::   2. if local and da+now, no-op
+    ?^  desired-hash
+      ;<  =dome:clay  bind:m  (get-dome who desk-name)
+      =/  revision-number=(unit @ud)
+        (get-revision-number-of-hash u.desired-hash dome)
+      ?~  revision-number  !!  ::  TODO
+      ;<  ~  bind:m
+        (fetch-desk who desk-name %ud u.revision-number)
+      $(desk-dependencies t.desk-dependencies)
+    ;<  ~  bind:m  (fetch-desk who desk-name c)
+    $(desk-dependencies t.desk-dependencies)
+  ::
+  ++  does-desk-exist
+    |=  desk-name=@tas
+    =/  m  (strand ,?)
+    ^-  form:m
+    ;<  a=arch  bind:m  (scry arch /cy/[desk-name])
+    (pure:m |(?=(^ fil.a) ?=(^ dir.a)))
+  ::
+  ++  get-cass
+    |=  [who=@p desk-name=@tas when=@da]
+    =/  m  (strand ,cass:clay)
+    ^-  form:m
+    ;<  =riot:clay  bind:m
+      (warp who desk-name ~ %sing %w da+when /)
+    ?~  riot  !!  :: TODO
+    (pure:m !<(cass:clay q.r.u.riot))
+  ::
+  ++  get-dome
+    |=  [who=@p desk-name=@tas]
+    =/  m  (strand ,dome:clay)
+    ^-  form:m
+    ;<  now=@da  bind:m  get-time
+    ;<  =riot:clay  bind:m
+      (warp who desk-name ~ %sing %v da+now /)
+    ?~  riot  !!  :: TODO
+    (pure:m !<(dome:clay q.r.u.riot))
+  ::
+  ++  get-revision-number-of-hash
+    |=  [desired-hash=@ux =dome:clay]
+    ^-  (unit @ud)
+    =/  commits=(list (pair @ud @uvi))  ~(tap by hit.dome)
+    |-
+    ?~  commits  ~
+    =*  revision-number  p.i.commits
+    =*  commit-hash      q.i.commits
+    ?.  =(desired-hash commit-hash)  $(commits t.commits)
+    `revision-number
+  ::
+  ++  fetch-desk
+    |=  [who=@p desk-name=@tas c=case:clay]
+    =/  m  (strand ,~)
+    ^-  form:m
+    ~&  %z^%fetch-desk^who^desk-name^c
+    ;<  exists=?  bind:m  (does-desk-exist desk-name)
+    ;<  ~  bind:m
+      %-  send-raw-card
+      :^  %pass  /merge-to-load-commit  %arvo
+      :^  %c  %merg  desk-name
+      :: [who desk-name c %only-this]
+      :^  who  desk-name  c
+      ?.(exists %init %only-that)
+    ~&  %z^%fetch-desk^%sent
+    ;<  [w=wire s=sign-arvo]  bind:m  take-sign-arvo
+    ?>  &(?=(%clay -.s) ?=(%mere -.+.s))
+    ?:  ?=(%| -.p.+.s)
+      ~&  %z^%fetch-desk^%merge-failed^who^desk-name^c^p.p.p.+.s^q.p.p.+.s
+      !!
+      ::  TODO: handle failed merge better
+    ~&  %z^%fetch-desk^%done^s
+    (pure:m ~)
   ::
   ++  send-error
     |=  message=@t
@@ -604,7 +846,7 @@
     =*  new-project-error
       %~  new-project  make-error-vase:zig-lib
       :_  %error
-      [project-name desk-name %setup-desk request-id]
+      [project-name desk-name %setup-project request-id]
     %+  poke-our  %ziggurat
     :-  %ziggurat-action
     !>  ^-  action:zig
@@ -623,7 +865,7 @@
     !<  update:zig
     %.  make-sync-desk-to-vship
     %~  new-project  make-update-vase:zig-lib
-    [project-name desk-name %setup-desk request-id]
+    [project-name %$ %setup-project request-id]
   ::
   ++  start-new-ships
     =/  m  (strand ,~)
@@ -633,10 +875,11 @@
       :-  %ziggurat-action
       !>  ^-  action:zig
       :-  project-name
-      [desk-name request-id %start-pyro-ships whos]
+      [%$ request-id %start-pyro-ships whos]
     (sleep ~s1)
   ::
   ++  make-dev-desk
+    |=  desk-name=@tas
     =/  m  (strand ,~)
     ^-  form:m
     ;<  apps-running=(set [@tas ?])  bind:m
@@ -658,33 +901,19 @@
   ::
   ++  make-sync-desk-to-vship
     ^-  sync-desk-to-vship:zig
-    %-  ~(gas ju sync-desk-to-vship.state)
+    %-  ~(gas ju *sync-desk-to-vship:zig)
     (turn whos |=(who=@p [desk-name who]))
-  ::
-  ++  update-project
-    =/  m  (strand ,state-0:zig)
-    ^-  form:m
-    =|  =desk:zig
-    =/  =project:zig
-      (~(gut by projects.state) project-name *project:zig)
-    =.  projects.state
-      %+  ~(put by projects.state)  project-name
-      %^  put-desk:zig-lib  project  desk-name
-      desk(special-configuration-args special-configuration-args)
-    ;<  ~  bind:m
-      %+  poke-our  %ziggurat
-      :-  %ziggurat-action
-      !>  ^-  action:zig
-      :-  project-name
-      [desk-name request-id %set-ziggurat-state state]
-    (pure:m state)
   ::
   ++  set-initial-state
     =/  m  (strand ,state-0:zig)
     ^-  form:m
+    =/  =project:zig
+      (~(gut by projects.state) project-name *project:zig)
     =.  state
       %=  state
-          sync-desk-to-vship  make-sync-desk-to-vship
+          projects
+        %+  ~(put by projects.state)  project-name
+        project(sync-desk-to-vship make-sync-desk-to-vship)
       ::
           configs
         %+  ~(put by configs.state)  project-name
@@ -700,85 +929,13 @@
     (pure:m state)
   ::
   ++  make-read-desk
+    |=  desk-name=@tas
     =/  m  (strand ,~)
     ^-  form:m
     %+  poke-our  %ziggurat
     :-  %ziggurat-action
     !>  ^-  action:zig
     [project-name desk-name request-id %read-desk ~]
-  ::
-  ++  iterate-over-whos
-    =/  m  (strand ,~)
-    |=  gate=$-(@p form:m)
-    ^-  form:m
-    |-
-    ?~  whos  (pure:m ~)
-    =*  who  i.whos
-    ;<  ~  bind:m  (gate who)
-    $(whos t.whos)
-  ::
-  ++  block-on-commit
-    |=  who=@p
-    =/  m  (strand ,~)
-    ^-  form:m
-    |-
-    ;<  ~  bind:m  (sleep commit-poll-duration)
-    :: ;<  now=@da  bind:m  get-time
-    :: ?.  (virtualship-desk-exists who now desk-name)  $
-    ;<  does-exist=?  bind:m
-      (virtualship-desk-exists who desk-name)
-    ?.  does-exist  $
-    (pure:m ~)
-  ::
-  ++  install-desk
-    |=  who=@p
-    =/  m  (strand ,~)
-    ^-  form:m
-    ;<  empty-vase=vase  bind:m
-      %+  send-pyro-dojo  who
-      (crip "|install our {<desk-name>}")
-    (pure:m ~)
-  ::
-  ++  block-on-install
-    |=  who=@p
-    =/  m  (strand ,~)
-    ^-  form:m
-    |-
-    ;<  ~  bind:m  (sleep install-poll-duration)
-    ;<  =bowl:strand  bind:m  get-bowl
-    =/  app=(unit @tas)
-      (get-final-app-to-install desk-name [our now]:bowl)
-    ::  if no desk.bill (i.e. get ~), -> install done
-    ?~  app  (pure:m)
-    ::  if the final app is installed -> install done
-    ;<  is-running=?  bind:m
-      (virtualship-is-running-app who u.app)
-    ?.  is-running  $
-    (pure:m ~)
-  ::
-  ++  do-start-apps
-    |=  who=@p
-    =/  m  (strand ,~)
-    ^-  form:m
-    |-
-    ?~  start-apps  (pure:m ~)
-    =*  next-app  i.start-apps
-    ;<  empty-vase=vase  bind:m
-      %+  send-pyro-dojo  who
-      (crip "|start {<`@tas`desk-name>} {<`@tas`next-app>}")
-    ;<  ~  bind:m  (block-on-start who next-app)
-    $(start-apps t.start-apps)
-  ::
-  ++  block-on-start
-    |=  [who=@p next-app=@tas]
-    =/  m  (strand ,~)
-    ^-  form:m
-    |-
-    ;<  ~  bind:m  (sleep start-poll-duration)
-    ;<  is-running=?  bind:m
-      (virtualship-is-running-app who next-app)
-    ?.  is-running  $
-    (pure:m ~)
   ::
   ++  return-failure
     =/  m  (strand ,vase)
@@ -798,36 +955,5 @@
       [desk-name request-id %set-ziggurat-state state]
     ;<  ~  bind:m  (block-on-previous-operation `project-name)
     (pure:m !>(`?`%.y))
-  ::
-  ++  scry-virtualship-desks
-    |=  who=@p
-    =/  m  (strand ,(set @tas))
-    ^-  form:m
-    =/  w=@ta  (scot %p who)
-    (scry (set @tas) /gx/pyro/i/[w]/cd/[w]//0/noun)
-  ::
-  ++  virtualship-desk-exists
-    :: |=  [who=@p now=@da desk=@tas]
-    |=  [who=@p desk-name=@tas]
-    =/  m  (strand ,?)
-    ^-  form:m
-    ;<  desk-names=(set @tas)  bind:m
-      (scry-virtualship-desks who)
-    (pure:m (~(has in desk-names) desk-name))
-  ::
-  ++  virtualship-is-running-app
-    |=  [who=@p app=@tas]
-    =/  m  (strand ,?)
-    ^-  form:m
-    =/  w=@ta    (scot %p who)
-    (scry ? /gx/pyro/i/[w]/gu/[w]/[app]/0/noun)
-  ::
-  ++  get-final-app-to-install
-    |=  [desk-name=@tas our=@p now=@da]
-    ^-  (unit @tas)
-    =/  bill-path=path
-      /(scot %p our)/[desk-name]/(scot %da now)/desk/bill
-    ?.  .^(? %cu bill-path)  ~
-    `(rear .^((list @tas) %cx bill-path))
   --
 --

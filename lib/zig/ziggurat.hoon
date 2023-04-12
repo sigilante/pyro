@@ -735,6 +735,17 @@
   %.  thread-queue
   ~(thread-queue make-update-vase update-info)
 ::
+++  make-state-views
+  |=  project-desk-name=@tas
+  ^-  state-views:zig
+  !<  state-views:zig
+  .^  vase
+      %ca
+      :^  (scot %p our.bowl)  project-desk-name
+        (scot %da now.bowl)
+      /zig/state-views/[project-desk-name]/hoon
+  ==
+::
 ++  convert-test-steps-to-thread
   |=  $:  project-name=@t
           desk-name=@tas
@@ -1252,88 +1263,117 @@
   --
 ::
 ++  make-configuration-template
+  |=  [desk-dependencies=(list @t) pyro-ships=(list @p)]
   ^-  @t
-  '''
-  /-  spider,
-      zig=zig-ziggurat
-  /+  ziggurat-threads=zig-ziggurat-threads
-  ::
-  =*  strand     strand:spider
-  ::
-  =/  m  (strand ,vase)
-  =|  project-name=@t
-  =|  desk-name=@tas
-  =|  ship-to-address=(map @p @ux)
-  =*  zig-threads
-    ~(. ziggurat-threads project-name desk-name ship-to-address)
-  |^  ted
-  ::
-  +$  arg-mold
-    $:  project-name=@t
-        desk-name=@tas
-        request-id=(unit @t)
-    ==
-  ::
-  ++  make-config
-    ^-  config:zig
-    ~
-  ::
-  ++  make-state-views
-    ^-  state-views:zig
-    ~
-  ::
-  ++  make-virtualships-to-sync
-    ^-  (list @p)
-    ~  ::  ~ -> default-ships:zig-lib
-  ::
-  ++  make-install
-    ^-  ?
-    %.n
-  ::
-  ++  make-start-apps
-    ^-  (list @tas)
-    ~
-  ::
-  ++  run-setup-desk
-    |=  request-id=(unit @t)
-    =/  m  (strand ,vase)
-    ^-  form:m
-    %:  setup-desk:zig-threads
-        project-name
-        desk-name
-        request-id
-        !>(~)
-        make-config
-        make-state-views
-        make-virtualships-to-sync
-        make-install
-        make-start-apps
-    ==
-  ::
-  ++  setup-virtualship-state
-    =/  m  (strand ,vase)
-    ^-  form:m
-    (pure:m !>(~))
-  ::
-  ++  ted
-    ^-  thread:spider
-    |=  args-vase=vase
-    ^-  form:m
-    =/  args  !<((unit arg-mold) args-vase)
-    ?~  args
-      ~&  >>>  "Usage:"
-      ~&  >>>  "-!ziggurat-configuration- project-name=@t desk-name=@tas request-id=(unit @t)"
-      (pure:m !>(~))
-    =.  project-name  project-name.u.args
-    =.  desk-name     desk-name.u.args
-    =*  request-id    request-id.u.args
+  %+  rap  3
+  %-  zing
+  :~
+    :_  ~
+    '''
+    /-  spider,
+        zig=zig-ziggurat
+    /+  ziggurat-threads=zig-ziggurat-threads
     ::
-    ;<  setup-desk-result=vase  bind:m
-      (run-setup-desk request-id)
-    ;<  setup-ships-result=vase  bind:m  setup-virtualship-state
-    (pure:m !>(`(each ~ @t)`[%.y ~]))
-  --
-  '''
+    =*  strand  strand:spider
+    ::
+    =/  m  (strand ,vase)
+    =|  project-name=@t
+    =|  desk-name=@tas
+    =|  ship-to-address=(map @p @ux)
+    =*  zig-threads
+      ~(. ziggurat-threads project-name desk-name ship-to-address)
+    |%
+    ::
+    +$  arg-mold
+      $:  project-name=@t
+          desk-name=@tas
+          request-id=(unit @t)
+      ==
+    ::
+    ++  make-desk-dependencies
+      |=  =bowl:strand
+      ^-  desk-dependencies:zig
+
+    '''
+  ::
+    ?~  desk-dependencies
+      ~['  ~\0a']
+    %-  snoc  :_  '\0a  ==\0a'
+    :-  '  :~\0a    '
+    (join '\0a    ' desk-dependencies)
+  ::
+    :_  ~
+    '''
+    ::
+    ++  make-config
+      ^-  config:zig
+      ~
+    ::
+    ++  make-virtualships-to-sync
+      ^-  (list @p)
+
+    '''
+  ::
+    :_  ~
+    %-  crip
+    """
+      {<pyro-ships>}
+
+    """
+  ::
+    :_  ~
+    '''
+    ::
+    ++  make-install
+      ^-  (map desk-name=@tas whos=(list @p))
+      ~
+    ::
+    ++  make-start-apps
+      ^-  (map desk-name=@tas (list @tas))
+      ~
+    ::
+    ++  run-setup-desk
+      |=  request-id=(unit @t)
+      =/  m  (strand ,vase)
+      ^-  form:m
+      ;<  =bowl:strand  bind:m  get-bowl
+      %:  setup-project:zig-threads
+          request-id
+          (make-desk-dependencies bowl)
+          make-config
+          make-virtualships-to-sync
+          make-install
+          make-start-apps
+      ==
+    ::
+    ++  setup-virtualship-state
+      =/  m  (strand ,vase)
+      ^-  form:m
+      ::  for examples, see
+      ::   https://github.com/uqbar-dao/zig-dev/blob/master/zig/configuration/zig-dev.hoon#L69-L180
+      ::   https://github.com/uqbar-dao/pokur-dev/blob/master/zig/configuration/pokur-dev.hoon#L75-L192
+      (pure:m !>(~))
+    ::
+    ++  $
+      ^-  thread:spider
+      |=  args-vase=vase
+      ^-  form:m
+      =/  args  !<((unit arg-mold) args-vase)
+      ?~  args
+        ~&  >>>  "Usage:"
+        ~&  >>>  "-!ziggurat-configuration- project-name=@t desk-name=@tas request-id=(unit @t)"
+        (pure:m !>(~))
+      =.  project-name  project-name.u.args
+      =.  desk-name     desk-name.u.args
+      =*  request-id    request-id.u.args
+      ::
+      ;<  setup-desk-result=vase  bind:m
+        (run-setup-desk request-id)
+      ;<  setup-ships-result=vase  bind:m  setup-virtualship-state
+      (pure:m !>(`(each ~ @t)`[%.y ~]))
+    --
+    '''
+  ==
 ::
 ++  make-template
   |=  file-path=path
@@ -2084,6 +2124,7 @@
     %-  pairs
     :~  ['desks' (desks desks.p)]
         ['pyro_ships' (list-ships pyro-ships.p)]
+        ['sync_desk_to_vship' (sync-desk-to-vship sync-desk-to-vship.p)]
         ['most_recent_snap' (path most-recent-snap.p)]
         ['saved_thread_queue' (thread-queue (show-thread-queue saved-thread-queue.p))]
     ==
@@ -2108,7 +2149,6 @@
         ['dir' (dir dir.d)]
         ['user_files' (dir ~(tap in user-files.d))]
         ['to_compile' (dir ~(tap in to-compile.d))]
-        ['threads' (threads threads.d)]
         ['saved_test_steps' (saved-test-steps saved-test-steps.d)]
         ['index' (numb i)]
     ==
@@ -2345,11 +2385,12 @@
         [%delete-sync-desk-vships (ot ~[[%ships (ar (se %p))]])]
     ::
         [%change-focus ul]
-        [%add-project-desk (ot ~[[%index ni:dejs-soft:format] [%fetch-desk-from-remote-ship (se-soft %p)] [%special-configuration-args special-configuration-args]])]
+        [%add-project-desk (ot ~[[%index ni:dejs-soft:format] [%fetch-desk-from-remote-ship (se-soft %p)]])]
         [%delete-project-desk ul]
     ::
         [%save-file (ot ~[[%file pa] [%text so]])]
         [%delete-file (ot ~[[%file pa]])]
+        [%make-configuration-file ul]
     ::
         [%add-config (ot ~[[%who (se %p)] [%what (se %tas)] [%item ni]])]
         [%delete-config (ot ~[[%who (se %p)] [%what (se %tas)]])]
@@ -2446,10 +2487,9 @@
     ==
   ::
   ++  new-project
-    ^-  $-(json [(list @p) (unit @p) vase])
+    ^-  $-(json [(unit @p) vase])
     %-  ot
-    :^    [%sync-ships (ar (se %p))]
-        [%fetch-desk-from-remote-ship (se-soft %p)]
+    :+  [%fetch-desk-from-remote-ship (se-soft %p)]
       :-  %special-configuration-args
       special-configuration-args
     ~
@@ -2495,10 +2535,10 @@
     ==
   ::
   ++  add-sync-desk-vships
-    ^-  $-(json [(list @p) ? (list @tas)])
+    ^-  $-(json [(list @p) (list @p) (list @tas)])
     %-  ot
     :^    [%ships (ar (se %p))]
-        [%install bo]
+        [%install (ar (se %p))]
       [%start-apps (ar (se %tas))]
     ~
   ::

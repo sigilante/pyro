@@ -11,7 +11,6 @@
   $:  %0
       =projects
       =configs
-      =sync-desk-to-vship
       focused-project=@t
       =thread-queue
       =status
@@ -44,7 +43,7 @@
   $:  project-name=@t
       desk-name=@tas
       thread-name=@tas
-      thread=$%([%fard args=@t] [%lard ~])
+      thread=shown-thread-queue-payload
   ==
 +$  shown-thread-queue-payload
   $%  [%fard args=@t]
@@ -68,8 +67,8 @@
 +$  project
   $:  desks=(list (pair @tas desk))
       pyro-ships=(list @p)
+      =sync-desk-to-vship
       most-recent-snap=path
-      :: saved-test-queue=(qeu [project-name=@t desk-name=@tas test-id=@ux])
       saved-thread-queue=thread-queue
   ==
 +$  desk
@@ -77,13 +76,14 @@
       dir=(list path)
       user-files=(set path)
       to-compile=(set path)
-      :: =tests
-      threads=(set @tas)
       saved-test-steps=(map thread-name=@tas [test-imports=imports =test-steps])
-      special-configuration-args=vase
   ==
 ::
 +$  build-result  (each [bat=* pay=*] @t)
+::
++$  desk-dependencies
+  %-  list
+  [who=@p desk-name=@tas =case commit-hash=(unit @ux)]
 ::
 +$  configs  (mip:mip project-name=@t [who=@p what=@tas] @)
 +$  config   (map [who=@p what=@tas] @)
@@ -103,27 +103,6 @@
   [who=@p mold-name=@t care=@tas app=@tas =path]
 +$  dojo-payload  [who=@p payload=@t]
 +$  poke-payload  [who=@p to=@p app=@tas mark=@tas payload=vase]
-:: ::
-:: +$  test-steps  (list test-step)
-:: +$  test-step  $%(test-read-step test-write-step)
-:: +$  test-read-step
-::   $%  [%scry =result-face payload=scry-payload expected=@t]
-::       [%read-subscription =result-face payload=read-sub-payload expected=@t]
-::       [%wait until=@dr]
-::       [%custom-read tag=@tas =result-face payload=@t expected=@t]
-::   ==
-:: +$  test-write-step
-::   $%  [%dojo =result-face payload=dojo-payload expected=(list test-read-step)]
-::       [%poke =result-face payload=poke-payload expected=(list test-read-step)]
-::       [%subscribe =result-face payload=sub-payload expected=(list test-read-step)]
-::       [%custom-write tag=@tas =result-face payload=@t expected=(list test-read-step)]
-::   ==
-:: +$  scry-payload
-::   [who=@p mold-name=@t care=@tas app=@tas path=@t]
-:: +$  read-sub-payload  [who=@p to=@p app=@tas =path]
-:: +$  dojo-payload  [who=@p payload=@t]
-:: +$  poke-payload  [who=@p to=@p app=@tas mark=@tas payload=@t]
-:: +$  sub-payload  [who=@p to=@p app=@tas =path]
 ::
 +$  template  ?(%fungible %nft %blank)
 ::
@@ -137,10 +116,10 @@
   $:  project-name=@t
       desk-name=@tas
       request-id=(unit @t)
-      $%  [%new-project sync-ships=(list @p) fetch-desk-from-remote-ship=(unit @p) special-configuration-args=vase]
+      $%  [%new-project fetch-desk-from-remote-ship=(unit @p) special-configuration-args=vase]
           [%delete-project ~]
       ::
-          [%add-sync-desk-vships ships=(list @p) install=? start-apps=(list @tas)]
+          [%add-sync-desk-vships ships=(list @p) install=(list @p) start-apps=(list @tas)]
           [%delete-sync-desk-vships ships=(list @p)]
       ::
           [%send-state-views =state-views]
@@ -148,11 +127,12 @@
           [%send-update =update]
       ::
           [%change-focus ~]
-          [%add-project-desk index=(unit @ud) fetch-desk-from-remote-ship=(unit @p) special-configuration-args=vase]  ::  index=~ -> add to end
+          [%add-project-desk index=(unit @ud) fetch-desk-from-remote-ship=(unit @p)]  ::  index=~ -> add to end
           [%delete-project-desk ~]
       ::
           [%save-file file=path text=@t]  ::  generates new file or overwrites existing
           [%delete-file file=path]
+          [%make-configuration-file ~]
       ::
           [%add-config who=@p what=@tas item=@]
           [%delete-config who=@p what=@tas]
