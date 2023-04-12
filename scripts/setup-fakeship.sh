@@ -1,28 +1,31 @@
 #!/bin/bash
 
 app_name="setup-fakeship"
-usage_string="Usage: ./${app_name}.sh path_to_vere path_to_pier path_to_repos"
+usage_string="Usage: ./${app_name}.sh path_to_pier path_to_repos"
 
-if [ $# -ne 3 ] ; then
+if [ $# -ne 2 ] ; then
   echo "Use this script with a new, running fakeship to setup and install %suite."
   echo "$usage_string"
-  echo "path_to_vere is the path to the vere binary"
   echo "path_to_pier is the path to the fakeship pier to setup and install %suite on"
   echo "path_to_repos is the path to the directory containing urbit and vere repositories (or where they should be cloned to)"
   exit 1
 fi
-path_to_vere=$(realpath $1)
-path_to_pier=$(realpath $2)
-path_to_repos=$(realpath $3)
+path_to_pier=$(realpath $1)
+path_to_repos=$(realpath $2)
 
 path_to_scripts=$(pwd)
+
+if [ ! -e "vere" ]; then
+  curl -L https://urbit.org/install/linux-x86_64/latest | tar xzk --transform='s/.*/vere/g'
+fi
+path_to_vere=$(realpath ./vere)
 
 if [ ! -e "${path_to_pier}/.run" ]; then
   $path_to_vere dock $path_to_pier
 fi
 
 cd $path_to_repos
-for repo in urbit vere; do
+for repo in urbit tools; do
   if [ ! -d "$repo" ]; then
     url="https://github.com/urbit/${repo}.git"
     echo "cloning ${url} into ${path_to_repos}/${repo} ..."
@@ -30,11 +33,12 @@ for repo in urbit vere; do
   else
     cd $repo
     git checkout master
+    git restore --staged .
     git pull
     cd ..
   fi
 done
-path_to_click=$(realpath vere/pkg/click/click)
+path_to_click=$(realpath tools/pkg/click/click)
 
 cd urbit/pkg
 
@@ -64,6 +68,18 @@ cd ..
 echo "creating desks ..."
 $path_to_click -k -i ${path_to_scripts}/create-desks.hoon ${path_to_pier}
 
+echo "copying base ..."
+for submodule in base-dev arvo; do
+  desk_name="base"
+  cp -RL ${path_to_repos}/urbit/pkg/${submodule}/* ${path_to_pier}/${desk_name}/
+done
+
+echo "committing base ..."
+$path_to_click -k -i ${path_to_scripts}/commit-base.hoon ${path_to_pier}
+
+$path_to_click -k -i ${path_to_scripts}/dummy.hoon ${path_to_pier}
+wait
+
 echo "copying files into desks..."
 for submodule in dev-suite uqbar-core zig-dev; do
   desk_name=""
@@ -74,7 +90,6 @@ for submodule in dev-suite uqbar-core zig-dev; do
   elif [ "zig-dev" = "$submodule" ]; then
     desk_name="zig-dev"
   fi
-
   rm -rf ${path_to_pier}/${desk_name}/*
   cp -RL ${path_to_repos}/urbit/pkg/${submodule}/* ${path_to_pier}/${desk_name}/
 done
