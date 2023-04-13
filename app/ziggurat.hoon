@@ -242,6 +242,7 @@
         %change-focus
       =/  old=@t  focused-project
       =*  new=@t  project-name.act
+      ?:  =(old new)  `state
       =/  old-project=project:zig  (~(got by projects) old)
       =/  new-project=project:zig  (~(got by projects) new)
       =/  old-snap-path=path
@@ -592,11 +593,21 @@
         ?.  =(!>(~) args.payload.act)  payload.act
         :-  %fard
         !>(`[project-name desk-name request-id]:act)
-      =/  thread-path=(unit path)
-        %^  get-fit:clay
-          [our.bowl desk-name.act %da now.bowl]
-        %ted  thread-name.act
-      ?~  thread-path  !!  ::  TODO
+      =^  thread-path=(unit path)  thread-name.act
+        =/  thread-path=(unit path)
+          %^  get-fit:clay
+            [our.bowl desk-name.act %da now.bowl]
+          %ted  thread-name.act
+        ?^  thread-path  [thread-path thread-name.act]
+        =*  thread-name-with-prefix=@tas
+          (cat 3 'ziggurat-' thread-name.act)
+        =/  thread-path-with-prefix=(unit path)
+          %^  get-fit:clay
+            [our.bowl desk-name.act %da now.bowl]
+          %ted  thread-name-with-prefix
+        ?~  thread-path-with-prefix  [~ thread-name.act]
+        [thread-path-with-prefix thread-name-with-prefix]
+      ?~  thread-path  ~&  %z^%qt^act  !!  ::  TODO
       :_  state
       :_  ~
       %-  %~  arvo  pass:io
@@ -908,10 +919,10 @@
         %-  state-error
         %^  cat  3  'compilation of imports failed:\0a'
         p.subject
-      =.  p.subject  (slop agent-state p.subject)
+      =.  p.subject
+        ;:(slop agent-state !>(who=(slav %p who)) p.subject)
       =/  modified-state=vase
-        %+  slap  (slop !>(who=who) p.subject)
-        (loud-ream:zig-lib grab.act /)
+        (slap p.subject (loud-ream:zig-lib grab.act /))
       ::  %shown-pyro-agent-state over %pyro-agent-state
       ::   because there are casts deep in vanes that don't
       ::   take too kindly to vases within vases
