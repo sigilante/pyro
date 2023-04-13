@@ -243,11 +243,24 @@
       =/  old=@t  focused-project
       =*  new=@t  project-name.act
       ?:  =(old new)  `state
-      =/  old-project=project:zig  (~(got by projects) old)
       =/  new-project=project:zig  (~(got by projects) new)
+      =*  new-snap-path  most-recent-snap.new-project
+      ?.  (~(has by projects) old)
+        :_  %=  state
+                focused-project  new
+                thread-queue     saved-thread-queue.new-project
+                projects
+              %+  ~(put by projects)  new
+              new-project(saved-thread-queue ~)
+            ==
+        :_  ~
+        %+  ~(poke-our pass:io /pyro-wire)  %pyro
+        :-  %pyro-action
+        !>  ^-  action:pyro
+        [%restore-snap new-snap-path]
+      =/  old-project=project:zig  (~(got by projects) old)
       =/  old-snap-path=path
         /[new]/(scot %da now.bowl)
-      =*  new-snap-path  most-recent-snap.new-project
       =.  most-recent-snap.old-project  old-snap-path
       :_  %=  state
               focused-project  new
