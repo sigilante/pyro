@@ -730,8 +730,10 @@
   ^-  [vase thread-queue:zig]
   =*  project-name  project-name.update-info
   =*  desk-name     desk-name.update-info
-  :_  %-  ~(put to thread-queue)
-      [project-name desk-name thread-name payload]
+  =.  thread-queue
+    %-  ~(put to thread-queue)
+    [project-name desk-name thread-name payload]
+  :_  thread-queue
   %.  thread-queue
   ~(thread-queue make-update-vase update-info)
 ::

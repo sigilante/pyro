@@ -209,7 +209,7 @@
         ::
             sync-desk-to-vship.project
           %-  ~(del ju sync-desk-to-vship.project)
-          [project-name i.ships]:act
+          [desk-name i.ships]:act
         ==
       :-  ~
       %=  state
@@ -681,7 +681,6 @@
       ==
     ::
         %run-queue
-      ~&  %z^%run-queue^%update-info^update-info^(show-thread-queue:zig-lib thread-queue)
       =/  run-queue-error
         %~  run-queue  make-error-vase:zig-lib
         [update-info %error]
@@ -959,7 +958,8 @@
         %-  state-error
         %^  cat  3  'compilation of imports failed:\0a'
         p.subject
-      =.  p.subject  (slop !>(p.chain-state) p.subject)
+      =.  p.subject
+        ;:(slop !>(p.chain-state) !>(who=~nec) p.subject)
       =/  modified-state=vase
         (slap p.subject (loud-ream:zig-lib grab.act /))
       :_  state

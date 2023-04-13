@@ -85,6 +85,23 @@
 ::   ;<  ~  bind:m  (subscribe:pyro-lib payload)
 ::   (pure:m ~)
 ::
+++  send-discrete-pyro-poke-then-sleep
+  |=  $:  sleep-time=@dr
+          project-name=@t
+          who=@p
+          to=@p
+          app=@tas
+          mark=@tas
+          payload=vase
+      ==
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ;<  return=vase  bind:m
+    %-  send-discrete-pyro-poke
+    [project-name who to app mark payload]
+  ;<  ~  bind:m  (sleep sleep-time)
+  (pure:m return)
+::
 ++  send-discrete-pyro-poke
   |=  $:  project-name=@t
           who=@p
@@ -236,13 +253,13 @@
   --
 ::
 ++  send-wallet-transaction
-  =/  m  (strand ,vase)
   |=  $:  project-name=@t
           who=@p
           sequencer-host=@p
           gate=vase
           gate-args=*
       ==
+  =/  m  (strand ,vase)
   ^-  form:m
   ~&  ship-to-address
   =/  address=@ux  (~(got by ship-to-address) who)
