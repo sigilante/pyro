@@ -1576,83 +1576,21 @@
     '''
   ::
   ++  zig
-    |^  ^-  @t
-    ?~  file-path               ''
-    ?~  t.file-path             ''
-    ?+  `@tas`i.t.file-path     ''
-      %configs                  configs
-      %custom-step-definitions  custom-step-definitions
-      %test-steps               test-steps
-    ==
-    ::
-    ++  configs
-      ^-  @t
-      '''
-      /=  zig  /sur/zig/ziggurat
-      ::
-      /=  mip  /lib/mip
-      ::
-      |%
-      ++  make-config
-        ^-  config:zig
-        *config:zig
-      ::
-      ++  make-virtualships-to-sync
-        ^-  (list @p)
-        ~[~nec ~bud ~wes]
-      ::
-      ++  make-install
-        ^-  ?
-        ^.y
-      ::
-      ++  make-start-apps
-        ^-  (list @tas)
-        ~
-      ::
-      ++  make-setup
-        |^  ^-  (map @p test-steps:zig)
-        %-  ~(gas by *(map @p test-steps:zig))
-        :^    [~nec make-setup-nec]
-            [~bud make-setup-bud]
-          [~wes make-setup-wes]
-        ~
-        ::
-        ++  make-setup-nec
-          ^-  test-steps:zig
-          =/  who=@p  ~nec
-          ~
-        ::
-        ++  make-setup-bud
-          ^-  test-steps:zig
-          =/  who=@p  ~bud
-          ~
-        ::
-        ++  make-setup-wes
-          ^-  test-steps:zig
-          =/  who=@p  ~wes
-          ~
-        --
-      --
-      '''
-    ::
-    ++  custom-step-definitions
-      ^-  @t
-      .^  @t
-          %cx
-          :-  (scot %p our.bowl)
-          %+  weld  /[q.byk.bowl]/(scot %da now.bowl)/zig
-          /custom-step-definitions/deploy-contract/hoon
-      ==
-    ::
-    ++  test-steps
-      ^-  @t
-      .^  @t
-          %cx
-          %+  weld  /(scot %p our.bowl)/[q.byk.bowl]
-          /(scot %da now.bowl)/zig/test-steps/send-nec/hoon
-      ==
-    --
+    ^-  @t
+    ''
   --
+::
+++  find-file-in-desks
+  |=  [file-path=path desk-names=(list @tas)]
+  ^-  (unit @tas)
+  ?~  desk-names  ~
+  =*  desk-name  i.desk-names
+  =*  file-scry-path=path
+    %-  weld  :_  file-path
+    /(scot %p our.bowl)/[desk-name]/(scot %da now.bowl)
+  ?:  .^(? %cu file-scry-path)
+    `desk-name
+  $(desk-names t.desk-names)
 ::
 ++  update-vase-to-card
   |=  v=vase

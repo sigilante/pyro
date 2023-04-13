@@ -74,8 +74,7 @@
         ''
         ~
         [%uninitialized ~]
-        [1.000.000.024 10.000.000.000 1.000.000 2.000.000]
-        :: [1.024 10.000 10 200]
+        [1.024 10.000 10 200]
     ==
   ==
 ::
@@ -980,16 +979,22 @@
     ++  compile-imports
       |=  imports=(list [face=@tas =path])
       ^-  [(each vase @t) _state]
+      =/  =project:zig  (~(got by projects) project-name.act)
       =/  compilation-result
         %-  mule
         |.
         =/  [subject=vase c=ca-scry-cache:zig]
           %+  roll  imports
           |:  [[face=`@tas`%$ sur=`path`/] [subject=`vase`!>(..zuse) ca-scry-cache=ca-scry-cache:state]]
+          =*  sur-path  (snoc sur %hoon)
+          =/  import-desk=(unit @tas)
+            %+  find-file-in-desks:zig-lib  sur-path
+            [desk-name.act (turn desks.project head)]
+          ?~  import-desk  !!  ::  TODO: handle error
           =^  sur-hoon=vase  ca-scry-cache
             %-  need  ::  TODO: handle error
-            %^  scry-or-cache-ca:zig-lib  desk-name.act
-            (snoc sur %hoon)  ca-scry-cache
+            %^  scry-or-cache-ca:zig-lib  u.import-desk
+            sur-path  ca-scry-cache
           :_  ca-scry-cache
           %-  slop  :_  subject
           sur-hoon(p [%face face p.sur-hoon])
@@ -1319,10 +1324,20 @@
     %~  state-views  make-update-vase:zig-lib  update-info
   ::
       [%file-exists @ ^]
-    =/  des=@ta    i.t.t.p
-    =/  pat=path  `path`t.t.t.p
-    =/  pre=path  /(scot %p our.bowl)/(scot %tas des)/(scot %da now.bowl)
-    ``json+!>(`json`[%b .^(? %cu (weld pre pat))])
+    =*  desk-name=@tas   i.t.t.p
+    =*  scry-path=path
+      :^  (scot %p our.bowl)  desk-name  (scot %da now.bowl)
+      t.t.t.p
+    ``json+!>(`json`[%b .^(? %cu scry-path)])
+  ::
+      [%file-exists-in-project @ ^]
+    =*  project-name=@tas  i.t.t.p
+    =*  file-path=path     t.t.t.p
+    =/  =project:zig  (~(got by projects) project-name)
+    =/  import-desk=(unit @tas)
+      %+  find-file-in-desks:zig-lib  file-path
+      (turn desks.project head)
+    ``json+!>(`json`[%b ?=(^ import-desk)])
   ::
   ::  APP-PROJECT JSON
   ::
@@ -1336,14 +1351,24 @@
     ^-  json
     :-  %s
     ?+    mark  =-  q.q.-
-        !<(mime (.^(tube:clay %cc (weld pre /[mark]/mime)) .^(vase %cr padh)))
-      %hoon    .^(@t %cx padh)
-      %kelvin  (crip ~(ram re (cain !>(.^(waft:clay %cx padh)))))
-      %ship    (crip ~(ram re (cain !>(.^(@p %cx padh)))))
-      %bill    (crip ~(ram re (cain !>(.^((list @tas) %cx padh)))))
+                !<  mime
+                %.  .^(vase %cr padh)
+                .^(tube:clay %cc (weld pre /[mark]/mime))
+        %hoon    .^(@t %cx padh)
+        %ship    (crip (noah !>(.^(@p %cx padh))))
+        %bill    (crip (noah !>(.^((list @tas) %cx padh))))
         %docket-0
       =-  (crip (spit-docket:mime:dock -))
       .^(docket:dock %cx padh)
+    ::
+        %kelvin
+      =+  .^(=waft:clay %cx padh)
+      ?>  ?=([%1 ~] -.waft)
+      %-  of-wain:format
+      %+  turn
+        `(list [@tas @ud])`~(tap by p.waft)
+      |=  [item=@tas kelvin-number=@ud]
+      (crip "[{<`@tas`item>} {<kelvin-number>}]")
     ==
   ::
       [%read-desks ~]
