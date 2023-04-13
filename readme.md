@@ -124,6 +124,15 @@ As such, `%ziggurat` is the premier development environment for integrated on- a
    git submodule add git@github.com:uqbar-dao/uqbar-core.git
    git submodule add git@github.com:uqbar-dao/zig-dev.git
    ```
+3.5. Set submodules to proper branches -- only required while WIP.
+     ```bash
+     cd uqbar-core
+     git checkout hf/ziggurat-cleanup
+     cd ..
+     cd dev-suite
+     git checkout next/suite
+     cd ..
+     ```
 4. On the fake `~zod`, create and mount appropriate desks.
    ```hoon
    |new-desk %suite
@@ -135,9 +144,9 @@ As such, `%ziggurat` is the premier development environment for integrated on- a
    ```
 5. Copy submodule contents into the appropriate desks.
    ```bash
-   rm -rf ${SHIP_DIR}/nec/suite && cp -RL ${REPO_DIR}/urbit/pkg/dev-suite
-   rm -rf ${SHIP_DIR}/nec/zig && cp -RL ${REPO_DIR}/urbit/pkg/uqbar-core
-   rm -rf ${SHIP_DIR}/nec/zig-dev && cp -RL ${REPO_DIR}/urbit/pkg/zig-dev
+   rm -rf ${SHIP_DIR}/nec/suite/* && cp -RL ${REPO_DIR}/urbit/pkg/dev-suite ${SHIP_DIR}/nec/suite
+   rm -rf ${SHIP_DIR}/nec/zig/* && cp -RL ${REPO_DIR}/urbit/pkg/uqbar-core ${SHIP_DIR}/nec/zig
+   rm -rf ${SHIP_DIR}/nec/zig-dev/* && cp -RL ${REPO_DIR}/urbit/pkg/zig-dev ${SHIP_DIR}/nec/zig-dev
    ```
 6. On the fake `~zod`, commit the files.
    ```hoon
