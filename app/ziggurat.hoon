@@ -498,12 +498,16 @@
         %compile-contract
       ::  for internal use
       =/  =project:zig  (~(got by projects) project-name.act)
+      =/  cards=(list card)
+        :_  ~
+        %-  make-read-desk:zig-lib
+        [project-name desk-name request-id]:act
       =/  compile-contract-error
         %~  compile-contract  make-error-vase:zig-lib
         [update-info %error]
       ?~  path.act
         :_  state
-        :_  ~
+        :_  cards
         %-  update-vase-to-card:zig-lib
         %-  compile-contract-error
         'contract path must not be empty'
@@ -514,7 +518,7 @@
         path.act
       ?:  ?=(%| -.build-result)
         :_  state
-        :_  ~
+        :_  cards
         %-  update-vase-to-card:zig-lib
         %-  compile-contract-error
         %-  crip
@@ -529,7 +533,7 @@
         path.act  build-result
       ?:  ?=(%| -.save-result)
         :_  state
-        :_  ~
+        :_  cards
         %-  update-vase-to-card:zig-lib
         %-  compile-contract-error
         %-  crip
@@ -539,23 +543,21 @@
             (trip q.p.save-result)
         ==
       ::
-      :_  state
-      :+  p.save-result
-        %-  make-read-desk:zig-lib
-        [project-name desk-name request-id]:act
-      ~
+      [[p.save-result cards] state]
     ::
         %compile-non-contract
       :_  state
-      :_  ~
-      %-  %~  arvo  pass:io
-          ^-  path
-          :^  %build-result  project-name.act  desk-name.act
-          path.act
-      :^  %k  %fard  %suite
-      :-  %ziggurat-build
-      :-  %noun
-      !>(`[project-name desk-name request-id path]:act)
+      :+  %-  make-read-desk:zig-lib
+          [project-name desk-name request-id]:act
+        %-  %~  arvo  pass:io
+            ^-  path
+            :^  %build-result  project-name.act  desk-name.act
+            path.act
+        :^  %k  %fard  %suite
+        :-  %ziggurat-build
+        :-  %noun
+        !>(`[project-name desk-name request-id path]:act)
+      ~
     ::
         %read-desk
       ::  for internal use -- app calls itself to scry clay
@@ -1211,9 +1213,9 @@
       :_  ~
       %+  make-watch-for-file-changes:zig-lib  project-name
       desk-name
+    =+  !<(=domo:clay q.r.u.p.sign-arvo)
     =/  updated-files=(set path)
-      =+  !<(=dome:clay q.r.u.p.sign-arvo)
-      =/  =tako:clay  (~(got by hit.dome) let.dome)
+      =/  =tako:clay  (~(got by hit.domo) let.domo)
       =+  .^  =yaki:clay
 
               %cs
@@ -1358,8 +1360,11 @@
     =/  pre  /(scot %p our.bowl)/(scot %tas des)/(scot %da now.bowl)
     =/  padh  (weld pre pat)
     =/  =mark  (rear pat)
-    :^  ~  ~  %json  !>
-    ^-  json
+    ?.  .^(? %cu padh)
+      ~&  %z^%read-file^%file-not-found^des^padh
+      ``json+!>(~)
+    :^  ~  ~  %json
+    !>  ^-  json
     :-  %s
     ?+    mark  =-  q.q.-
                 !<  mime

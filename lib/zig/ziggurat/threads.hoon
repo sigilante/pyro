@@ -902,8 +902,10 @@
   ::
   ++  make-sync-desk-to-vship
     ^-  sync-desk-to-vship:zig
-    %-  ~(gas ju *sync-desk-to-vship:zig)
-    (turn whos |=(who=@p [desk-name who]))
+    %-  ~(gas by *sync-desk-to-vship:zig)
+    %+  turn  desk-dependency-names
+    |=  desk-name=@tas
+    [desk-name (~(gas in *(set @p)) whos)]
   ::
   ++  set-initial-state
     =/  m  (strand ,state-0:zig)
