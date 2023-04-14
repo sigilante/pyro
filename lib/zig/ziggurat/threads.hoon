@@ -467,24 +467,42 @@
     (get-virtualship-timers project-name our now)
   --
 ::
-++  fetch-desk-from-remote-ship
-  |=  [who=@p desk-name=@tas followup-action=(unit vase)]
+++  fetch-desk
+  |=  $:  who=@p
+          desk-name=@tas
+          c=case:clay
+          followup-action=(unit vase)
+      ==
   =/  m  (strand ,vase)
   ^-  form:m
+  ~&  %z^%fetch-desk^who^desk-name^c
+  ;<  exists=?  bind:m  (does-desk-exist desk-name)
   ;<  ~  bind:m
-    %+  poke-our  %ziggurat
-    :-  %ziggurat-action
-    !>  ^-  action:zig
-    ['' desk-name ~ [%get-dev-desk who]]
-  ::  if no sleep, get crash;
-  ::   TODO: replace sleep with non-hacky solution
-  ::   TODO: test on live network
-  ;<  ~  bind:m  (sleep:strandio ~s1)
+    %^  send-clay-card  /merge/[desk-name]  %merg
+    [desk-name who desk-name c ?.(exists %init %only-that)]
+  ~&  %z^%fetch-desk^%sent
+  ;<  [w=wire s=sign-arvo]  bind:m  take-sign-arvo
+  ?.  ?=([%clay %mere %.y ~] s)
+    ~&  %z^%fetch-desk^%failed^s
+    ;<  ~  bind:m
+      %^  poke-our  %ziggurat  %ziggurat-action
+      %.  (crip "merge fail: {<sign-arvo>}")
+      %~  get-dev-desk  make-error-vase:zig-lib
+      [['' desk-name %get-dev-desk ~] %error]
+    (pure:m !>(~))
+  ~&  %z^%fetch-desk^%success
   ?~  followup-action  (pure:m !>(~))
   ;<  ~  bind:m
     %+  poke-our  %ziggurat
     [%ziggurat-action u.followup-action]
   (pure:m !>(~))
+::
+++  does-desk-exist
+  |=  desk-name=@tas
+  =/  m  (strand ,?)
+  ^-  form:m
+  ;<  a=arch  bind:m  (scry arch /cy/[desk-name])
+  (pure:m |(?=(^ fil.a) ?=(^ dir.a)))
 ::
 ++  build
   |=  [request-id=(unit @t) file-path=path]
@@ -535,13 +553,13 @@
     ^-  form:m
     %^  send-clay-card  /delete  %info
     [desk-name %& (clean-desk:zig-lib desk-name)]
-  ::
-  ++  send-clay-card
-    |=  [w=wire =task:clay]
-    =/  m  (strand ,~)
-    ^-  form:m
-    (send-raw-card %pass w %arvo %c task)
   --
+::
+++  send-clay-card
+  |=  [w=wire =task:clay]
+  =/  m  (strand ,~)
+  ^-  form:m
+  (send-raw-card %pass w %arvo %c task)
 ::
 ++  make-snap
   |=  [project-name=@t request-id=(unit @t)]
@@ -791,18 +809,12 @@
       =/  revision-number=(unit @ud)
         (get-revision-number-of-hash u.desired-hash dome)
       ?~  revision-number  !!  ::  TODO
-      ;<  ~  bind:m
-        (fetch-desk who desk-name %ud u.revision-number)
+      ;<  empty-vase=vase  bind:m
+        (fetch-desk who desk-name ud+u.revision-number ~)
       $(desk-dependencies t.desk-dependencies)
-    ;<  ~  bind:m  (fetch-desk who desk-name c)
+    ;<  empty-vase=vase  bind:m
+      (fetch-desk who desk-name c ~)
     $(desk-dependencies t.desk-dependencies)
-  ::
-  ++  does-desk-exist
-    |=  desk-name=@tas
-    =/  m  (strand ,?)
-    ^-  form:m
-    ;<  a=arch  bind:m  (scry arch /cy/[desk-name])
-    (pure:m |(?=(^ fil.a) ?=(^ dir.a)))
   ::
   ++  get-cass
     |=  [who=@p desk-name=@tas when=@da]
@@ -833,29 +845,6 @@
     =*  commit-hash      q.i.commits
     ?.  =(desired-hash commit-hash)  $(commits t.commits)
     `revision-number
-  ::
-  ++  fetch-desk
-    |=  [who=@p desk-name=@tas c=case:clay]
-    =/  m  (strand ,~)
-    ^-  form:m
-    ~&  %z^%fetch-desk^who^desk-name^c
-    ;<  exists=?  bind:m  (does-desk-exist desk-name)
-    ;<  ~  bind:m
-      %-  send-raw-card
-      :^  %pass  /merge-to-load-commit  %arvo
-      :^  %c  %merg  desk-name
-      :: [who desk-name c %only-this]
-      :^  who  desk-name  c
-      ?.(exists %init %only-that)
-    ~&  %z^%fetch-desk^%sent
-    ;<  [w=wire s=sign-arvo]  bind:m  take-sign-arvo
-    ?>  &(?=(%clay -.s) ?=(%mere -.+.s))
-    ?:  ?=(%| -.p.+.s)
-      ~&  %z^%fetch-desk^%merge-failed^who^desk-name^c^p.p.p.+.s^q.p.p.+.s
-      !!
-      ::  TODO: handle failed merge better
-    ~&  %z^%fetch-desk^%done^s
-    (pure:m ~)
   ::
   ++  send-error
     |=  message=@t

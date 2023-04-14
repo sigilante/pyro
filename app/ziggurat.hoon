@@ -136,8 +136,9 @@
         %-  %~  arvo  pass:io
             /new-project-from-remote/[desk-name.act]
         :^  %k  %lard  q.byk.bowl
-        %^  fetch-desk-from-remote-ship:zig-threads
-          u.fetch-desk-from-remote-ship.act  desk-name.act
+        %-  fetch-desk:zig-threads
+        :^  u.fetch-desk-from-remote-ship.act  desk-name.act
+          da+now.bowl
         :-  ~
         !>  ^-  action:zig
         :^  project-name.act  desk-name.act  request-id.act
@@ -302,8 +303,9 @@
         %-  %~  arvo  pass:io
             /new-project-from-remote/[desk-name.act]
         :^  %k  %lard  q.byk.bowl
-        %^  fetch-desk-from-remote-ship:zig-threads
-          u.fetch-desk-from-remote-ship.act  desk-name.act
+        %-  fetch-desk:zig-threads
+        :^  u.fetch-desk-from-remote-ship.act  desk-name.act
+          da+now.bowl
         :-  ~
         !>  ^-  action:zig
         :^  project-name.act  desk-name.act  request-id.act
