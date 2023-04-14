@@ -24,6 +24,11 @@
 ::
 ::  utilities
 ::
+++  make-canonical-distribution-ship
+  ^-  @p
+  ::  REPLACE THIS ON DEPLOYMENT
+  ~zod
+::
 ++  default-ships
   ^-  (list @p)
   ~[~nec ~wes ~bud]

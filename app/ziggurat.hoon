@@ -1126,7 +1126,12 @@
     :_  ~
     %-  ~(poke-self pass:io /self-wire)
     :-  %ziggurat-action
-    !>(`action:zig`['zig-dev' %zig-dev ~ %new-project ~ !>(~)])
+    !>  ^-  action:zig
+    :^  'zig-dev'  %zig-dev  ~
+    :+  %new-project
+      ?:  .^(? %j /[our]/fake/[now])  ~
+      `make-canonical-distribution-ship:zig-lib
+    !>(~)
   ::
       [%build-result @ @ *]
     =*  project-name  i.t.w
