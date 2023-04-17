@@ -252,6 +252,6 @@
       [%ziggurat-state update-info payload=(data state-0) ~]
       [%configs update-info payload=(data configs) ~]
       [%ship-to-address-map update-info payload=(data (map @p @ux)) ~]
-      [%build-result update-info payload=(data path) ~]
+      [%build-result update-info payload=(data ~) =path]
   ==
 --

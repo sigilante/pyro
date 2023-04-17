@@ -1701,7 +1701,7 @@
     |=  p=path
     ^-  vase
     !>  ^-  update:zig
-    [%build-result update-info [%& p] ~]
+    [%build-result update-info [%& ~] p]
   --
 ::
 ++  make-error-vase
