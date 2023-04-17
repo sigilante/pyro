@@ -141,9 +141,7 @@
           [%unregister-for-compilation file=path]
           [%deploy-contract who=(unit @p) town-id=@ux contract-jam-path=path]
       ::
-          [%compile-contracts ~]
-          [%compile-contract =path]  ::  path of form /con/foo/hoon within given desk
-          [%compile-non-contract =path]
+          [%build-file =path]
           [%read-desk ~]
       ::
           [%queue-thread thread-name=@tas payload=thread-queue-payload]
@@ -185,7 +183,6 @@
       %add-config
       %delete-config
       %queue-thread
-      %compile-contract
       %run-queue
       %add-user-file
       %delete-user-file
@@ -232,7 +229,6 @@
       [%add-config update-info payload=(data [who=@p what=@tas item=@]) ~]
       [%delete-config update-info payload=(data [who=@p what=@tas]) ~]
       [%queue-thread update-info payload=(data @tas) ~]
-      [%compile-contract update-info payload=(data ~) ~]
       [%run-queue update-info payload=(data ~) ~]
       [%add-user-file update-info payload=(data ~) file=path]
       [%delete-user-file update-info payload=(data ~) file=path]
@@ -256,6 +252,6 @@
       [%ziggurat-state update-info payload=(data state-0) ~]
       [%configs update-info payload=(data configs) ~]
       [%ship-to-address-map update-info payload=(data (map @p @ux)) ~]
-      [%build-result update-info payload=(data ~) ~]
+      [%build-result update-info payload=(data path) ~]
   ==
 --

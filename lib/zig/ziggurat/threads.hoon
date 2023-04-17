@@ -511,8 +511,6 @@
   ;<  =bowl:strand  bind:m  get-bowl
   ;<  build-result=(unit vase)  bind:m
     (build-file [our.bowl desk-name %da now.bowl] file-path)
-  ;<  now=@da  bind:m  get-time
-  ~&  %ziggurat-build^%time-elapsed^`@dr`(sub now now.bowl)
   (pure:m ?~(build-result !>(~) u.build-result))
 ::
 ++  create-desk
