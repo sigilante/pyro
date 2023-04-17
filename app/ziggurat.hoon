@@ -1326,8 +1326,10 @@
     =/  p=(unit project:zig)
       (~(get by projects) project-name)
     ?~  p  ``ziggurat-update+!>(~)
+    =/  pyro-ships-app-states=(map @p (map @tas (set [@tas ?])))
+      (get-pyro-ships-app-states:zig-lib pyro-ships.u.p)
     :^  ~  ~  %ziggurat-update
-    %.  sync-desk-to-vship.u.p
+    %.  [sync-desk-to-vship.u.p pyro-ships-app-states]
     %~  sync-desk-to-vship  make-update-vase:zig-lib
     [project-name %$ %sync-desk-to-vship ~]
   ::

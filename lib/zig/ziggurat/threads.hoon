@@ -444,7 +444,8 @@
     ?~  update                            ~
     ?.  ?=(%sync-desk-to-vship -.update)  ~  ::  TODO: throw error?
     ?:  ?=(%| -.payload.update)           ~  ::  "
-    =*  sync-desk-to-vship  p.payload.update
+    =*  sync-desk-to-vship
+      sync-desk-to-vship.p.payload.update
     ~(tap in (~(get ju sync-desk-to-vship) u.project-name))
   ::
   ++  get-realship-timers

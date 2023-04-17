@@ -947,6 +947,42 @@
     ==
   --
 ::
+++  get-pyro-ships-app-states
+  |=  whos=(list @p)
+  ^-  (map @p (map @tas (set [@tas ?])))
+  %-  ~(gas by *(map @p (map @tas (set [@tas ?]))))
+  %+  turn  whos
+  |=  who=@p
+  [who (get-pyro-ship-app-states who)]
+::
+++  get-pyro-ship-app-states
+  |=  who=@p
+  ^-  (map @tas (set [@tas ?]))
+  =*  our  (scot %p our.bowl)
+  =*  now  (scot %da now.bowl)
+  =*  w    (scot %p who)
+  |^
+  %-  ~(gas by *(map @tas (set [@tas ?])))
+  %+  turn  ~(tap in get-desk-names)
+  |=  desk-name=@tas
+  [desk-name (get-app-states desk-name)]
+  ::
+  ++  get-desk-names
+    ^-  (set @tas)
+    .^  (set @tas)
+        %gx
+        /[our]/pyro/[now]/i/[w]/cd/[w]//0/noun
+    ==
+  ::
+  ++  get-app-states
+    |=  desk-name=@tas
+    ^-  (set [@tas ?])
+    .^  (set [@tas ?])
+        %gx
+        /[our]/pyro/[now]/i/[w]/ge/[w]/[desk-name]/0/apps
+    ==
+  --
+::
 ::  files we delete from zig desk to make new gall desk
 ::
 ++  clean-desk
@@ -1721,11 +1757,13 @@
     !>(`update:zig`[%save-file update-info [%& p] ~])
   ::
   ++  sync-desk-to-vship
-    |=  =sync-desk-to-vship:zig
+    |=  $:  =sync-desk-to-vship:zig
+            pyro-ships-app-states=(map @p (map @tas (set [@tas ?])))
+        ==
     ^-  vase
     !>  ^-  update:zig
     :^  %sync-desk-to-vship  update-info
-    [%& sync-desk-to-vship]  ~
+    [%& [sync-desk-to-vship pyro-ships-app-states]]  ~
   ::
   ++  cis-setup-done
     ^-  vase
@@ -1975,8 +2013,14 @@
         %sync-desk-to-vship
       :_  ~
       :-  'data'
-      %+  frond  %sync-desk-to-vship
-      (sync-desk-to-vship p.payload.update)
+      %-  pairs
+      :+  :-  %sync-desk-to-vship
+          %-  sync-desk-to-vship
+          sync-desk-to-vship.p.payload.update
+        :-  %pyro-ships-app-states
+        %-  pyro-ships-app-states
+        pyro-ships-app-states.p.payload.update
+      ~
     ::
         %cis-setup-done
       ['data' ~]~
@@ -2022,6 +2066,30 @@
         %build-result
       ['data' ~]~
     ==
+  ::
+  ++  pyro-ships-app-states
+    |=  pyro-ships-app-states=(map @p (map @tas (set [@tas ?])))
+    ^-  json
+    %-  pairs
+    %+  turn  ~(tap by pyro-ships-app-states)
+    |=  [who=@p psas=(map @tas (set [@tas ?]))]
+    [(scot %p who) (pyro-ship-app-states psas)]
+  ::
+  ++  pyro-ship-app-states
+    |=  pyro-ship-app-states=(map @tas (set [@tas ?]))
+    ^-  json
+    %-  pairs
+    %+  turn  ~(tap by pyro-ship-app-states)
+    |=  [desk-name=@tas as=(set [@tas ?])]
+    [desk-name (app-states as)]
+  ::
+  ++  app-states
+    |=  app-states=(set [@tas ?])
+    ^-  json
+    %-  pairs
+    %+  turn  ~(tap in app-states)
+    |=  [app-name=@tas is-installed=?]
+    [app-name %b is-installed]
   ::
   ++  settings
     |=  s=settings:zig
