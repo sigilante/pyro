@@ -62,6 +62,12 @@
     %-  return-error
     %+  weld  "{<file-path>} build failed,"
     " please see dojo for compilation errors"
+  ;<  have-jam-mar=?  bind:m
+    (scry ? /cu/[desk-name]/mar/jam/hoon)
+  ?.  have-jam-mar
+    %-  return-error
+    %+  weld  "/mar/jam/hoon does not exist in "
+    " {<desk-name>}; please add and try again"
   ;<  smart-lib-vase=vase  bind:m
     (scry vase /gx/ziggurat/get-smart-lib-vase/noun)
   ;<  =bowl:strand  bind:m  get-bowl
