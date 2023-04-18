@@ -619,6 +619,21 @@
     %+  iterate-over-desks  desk-names
     |=  desk-name=@tas
     (commit:pyro-lib whos our.bowl desk-name %da now.bowl)
+  ;<  state=state-0:zig  bind:m  get-state
+  =/  =project:zig  (~(got by projects.state) project-name)
+  =.  sync-desk-to-vship.project
+    %-  ~(gas ju sync-desk-to-vship.project)
+    (turn whos |=(who=@p [desk-name who]))
+  ;<  ~  bind:m
+    %+  poke-our  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:zig
+    :-  project-name
+    :^  desk-name  ~  %set-ziggurat-state
+    %=  state
+        projects
+      (~(put by projects.state) project-name project)
+    ==
   ~&  %cis^%0
   ;<  ~  bind:m
     (iterate-over-whos whos (block-on-commit desk-names))
