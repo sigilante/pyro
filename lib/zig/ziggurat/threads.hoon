@@ -25,7 +25,7 @@
         ship-to-address=(map @p @ux)
     ==
 ++  send-discrete-pyro-dojo
-  |=  [project-name=@t who=@p payload=@t]
+  |=  [who=@p payload=@t]
   =/  m  (strand ,vase)
   ^-  form:m
   ;<  empty-vase=vase  bind:m  (send-pyro-dojo who payload)
@@ -87,7 +87,6 @@
 ::
 ++  send-discrete-pyro-poke-then-sleep
   |=  $:  sleep-time=@dr
-          project-name=@t
           who=@p
           to=@p
           app=@tas
@@ -98,13 +97,12 @@
   ^-  form:m
   ;<  return=vase  bind:m
     %-  send-discrete-pyro-poke
-    [project-name who to app mark payload]
+    [who to app mark payload]
   ;<  ~  bind:m  (sleep sleep-time)
   (pure:m return)
 ::
 ++  send-discrete-pyro-poke
-  |=  $:  project-name=@t
-          who=@p
+  |=  $:  who=@p
           to=@p
           app=@tas
           mark=@tas
@@ -253,8 +251,7 @@
   --
 ::
 ++  send-wallet-transaction
-  |=  $:  project-name=@t
-          who=@p
+  |=  $:  who=@p
           sequencer-host=@p
           gate=vase
           gate-args=*
@@ -286,7 +283,6 @@
     !!
   ;<  empty-vase=vase  bind:m
     %-  send-discrete-pyro-poke
-    :-  project-name
     :^  who  who  %uqbar
     :-  %wallet-poke
     !>  ^-  wallet-poke:wallet
@@ -294,8 +290,8 @@
     gas=[rate=1 bud=1.000.000]
   ;<  ~  bind:m  (sleep ~s3)  ::  TODO: tune time
   ;<  empty-vase=vase  bind:m
-    %^  send-discrete-pyro-dojo  project-name
-    sequencer-host  ':sequencer|batch'
+    %+  send-discrete-pyro-dojo  sequencer-host
+    ':sequencer|batch'
   (pure:m gate-output)
 ::
 ++  block-on-previous-operation
@@ -438,8 +434,8 @@
     ?~  project-name  ~
     =+  .^  =update:zig
             %gx
-            :^  (scot %p our)  %ziggurat  (scot %da now)
-            /sync-desk-to-vship/[u.project-name]/noun
+            :-  (scot %p our)
+            /ziggurat/(scot %da now)/sync-desk-to-vship/noun
         ==
     ?~  update                            ~
     ?.  ?=(%sync-desk-to-vship -.update)  ~  ::  TODO: throw error?
@@ -619,6 +615,21 @@
     %+  iterate-over-desks  desk-names
     |=  desk-name=@tas
     (commit:pyro-lib whos our.bowl desk-name %da now.bowl)
+  ;<  state=state-0:zig  bind:m  get-state
+  =/  =project:zig  (~(got by projects.state) project-name)
+  =.  sync-desk-to-vship.project
+    %-  ~(gas ju sync-desk-to-vship.project)
+    (turn whos |=(who=@p [desk-name who]))
+  ;<  ~  bind:m
+    %+  poke-our  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:zig
+    :-  project-name
+    :^  desk-name  ~  %set-ziggurat-state
+    %=  state
+        projects
+      (~(put by projects.state) project-name project)
+    ==
   ~&  %cis^%0
   ;<  ~  bind:m
     (iterate-over-whos whos (block-on-commit desk-names))
@@ -744,6 +755,7 @@
   ^-  form:m
   ~&  %sp^%0
   ;<  state=state-0:zig  bind:m  get-state
+  =/  old-focused-project=@tas  focused-project.state
   =/  desk-dependency-names=(list @tas)
     %+  turn  desk-dependencies
     |=([@ desk-name=@tas *] desk-name)
@@ -766,7 +778,6 @@
       [project-name desk-dependency-names]
     make-read-desk
   ;<  ~  bind:m  start-new-ships
-  :: ;<  ~  bind:m  (block-on-previous-operation ~)  ::  TODO: blocks on iris connection for a long time; is this ever actually needed?
   ~&  %sp^%3
   ;<  ~  bind:m  send-new-project-update
   ~&  %sp^%4
@@ -921,6 +932,8 @@
       (~(gut by projects.state) project-name *project:zig)
     =.  state
       %=  state
+          focused-project  project-name
+      ::
           projects
         %+  ~(put by projects.state)  project-name
         project(sync-desk-to-vship make-sync-desk-to-vship)
@@ -950,19 +963,19 @@
   ++  return-failure
     =/  m  (strand ,vase)
     ^-  form:m
-    (pure:m !>(`?`%.n))
-  ::
-  ++  return-success
-    =/  m  (strand ,vase)
-    ^-  form:m
     ;<  state=state-0:zig  bind:m  get-state
-    =.  state  state(focused-project project-name)
+    =.  state  state(focused-project old-focused-project)
     ;<  ~  bind:m
       %+  poke-our  %ziggurat
       :-  %ziggurat-action
       !>  ^-  action:zig
       :-  project-name
       [desk-name request-id %set-ziggurat-state state]
+    (pure:m !>(`?`%.n))
+  ::
+  ++  return-success
+    =/  m  (strand ,vase)
+    ^-  form:m
     ;<  ~  bind:m  (block-on-previous-operation `project-name)
     (pure:m !>(`?`%.y))
   --

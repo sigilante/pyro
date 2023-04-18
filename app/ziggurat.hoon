@@ -468,7 +468,6 @@
               (spat contract-jam-path.act)
             %lard
           %-  send-wallet-transaction:zig-threads
-          :-  project-name.act
           :^  who  u.host  !>(deploy-contract:zig-threads)
           [who contract-jam-path.act %.n ~]
         %-  ~(poke-self pass:io /self-wire)
@@ -1321,17 +1320,16 @@
     %~  thread-queue  make-update-vase:zig-lib
     ['' %$ %thread-queue ~]
   ::
-      [%sync-desk-to-vship @ ~]
-    =*  project-name  i.t.t.p
+      [%sync-desk-to-vship ~]
     =/  p=(unit project:zig)
-      (~(get by projects) project-name)
+      (~(get by projects) focused-project)
     ?~  p  ``ziggurat-update+!>(~)
     =/  pyro-ships-app-states=(map @p (map @tas (set [@tas ?])))
       (get-pyro-ships-app-states:zig-lib pyro-ships.u.p)
     :^  ~  ~  %ziggurat-update
     %.  [sync-desk-to-vship.u.p pyro-ships-app-states]
     %~  sync-desk-to-vship  make-update-vase:zig-lib
-    [project-name %$ %sync-desk-to-vship ~]
+    [focused-project %$ %sync-desk-to-vship ~]
   ::
       [%status ~]
     :^  ~  ~  %ziggurat-update

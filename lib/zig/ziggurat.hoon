@@ -890,9 +890,8 @@
         %-  crip
         """
           ;<  empty-vase=vase  bind:m
-            %^  send-discrete-pyro-dojo:zig-threads
-              {<project-name>}  {<who.p>}
-            {<payload.p>}
+            %+  send-discrete-pyro-dojo:zig-threads
+            {<who.p>}  {<payload.p>}
 
         """
       ::
@@ -934,7 +933,7 @@
         :~  %-  crip
             """
               ;<  empty-vase=vase  bind:m
-                %+  send-discrete-pyro-poke:zig-threads  {<project-name>}
+                %-  send-discrete-pyro-poke:zig-threads
                 :^  {<who.p>}  {<to.p>}  {<app.p>}
                 :-  {<mark.p>}
 
