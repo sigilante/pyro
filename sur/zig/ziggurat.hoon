@@ -243,7 +243,7 @@
       [%shown-pyro-agent-state update-info payload=(data [agent-state=@t wex=boat:gall sup=bitt:gall]) ~]
       [%pyro-chain-state update-info payload=(data (map @ux batch:ui)) ~]
       [%shown-pyro-chain-state update-info payload=(data @t) ~]
-      [%sync-desk-to-vship update-info payload=(data sync-desk-to-vship) ~]
+      [%sync-desk-to-vship update-info payload=(data [=sync-desk-to-vship pyro-ships-app-states=(map @p (map @tas (set [@tas ?])))]) ~]
       [%cis-setup-done update-info payload=(data ~) ~]
       [%status update-info payload=(data status) ~]
       [%save-file update-info payload=(data path) ~]
