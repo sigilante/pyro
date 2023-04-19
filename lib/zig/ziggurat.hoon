@@ -678,14 +678,13 @@
 ::
 ++  make-state-views
   |=  project-desk-name=@tas
-  ^-  state-views:zig
-  !<  state-views:zig
-  .^  vase
-      %ca
-      :^  (scot %p our.bowl)  project-desk-name
-        (scot %da now.bowl)
-      /zig/state-views/[project-desk-name]/hoon
-  ==
+  ^-  (unit state-views:zig)
+  =*  p
+    :^  (scot %p our.bowl)  project-desk-name
+      (scot %da now.bowl)
+    /zig/state-views/[project-desk-name]/hoon
+  ?.  .^(? %cu p)  ~
+  `!<(state-views:zig .^(vase %ca p))
 ::
 ++  convert-test-steps-to-thread
   |=  $:  project-name=@t
