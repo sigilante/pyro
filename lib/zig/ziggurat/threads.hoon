@@ -779,26 +779,28 @@
   ~&  %sp^%3
   ;<  ~  bind:m  send-new-project-update
   ~&  %sp^%4
-  ;<  =state-views:zig  bind:m  make-state-views
-  ;<  ~  bind:m
-    %+  poke-our  %ziggurat
-    :-  %ziggurat-action
-    !>  ^-  action:zig
-    :^  project-name  %$  request-id
-    [%send-state-views state-views]
+  ;<  ~  bind:m  send-state-views
   ~&  %sp^%5
   ;<  empty-vase=vase  bind:m
     %-  commit-install-start
     [whos desk-dependency-names install start-apps]
   return-success
   ::
-  ++  make-state-views
-    =/  m  (strand ,state-views:zig)
+  ++  send-state-views
+    =/  m  (strand ,~)
     ^-  form:m
     ;<  =bowl:strand  bind:m  get-bowl
-    %-  pure:m
-    %.  project-name
-    make-state-views:zig-lib(our.bowl our.bowl, now.bowl now.bowl)
+    =/  state-views=(unit state-views:zig)
+      %.  project-name
+      make-state-views:zig-lib(our.bowl our.bowl, now.bowl now.bowl)
+    ?~  state-views  (pure:m ~)
+    ;<  ~  bind:m
+      %+  poke-our  %ziggurat
+      :-  %ziggurat-action
+      !>  ^-  action:zig
+      :^  project-name  %$  request-id
+      [%send-state-views u.state-views]
+    (pure:m ~)
   ::
   ++  get-dependency-desks
     =/  m  (strand ,~)

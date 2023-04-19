@@ -1233,13 +1233,14 @@
     =*  project-desk-name  i.t.t.p
     =*  update-info
       [project-desk-name project-desk-name %state-views ~]
-    =/  =state-views:zig
+    =/  state-views=(unit state-views:zig)
       (make-state-views:zig-lib project-desk-name)
+    ?~  state-views  ``json+!>(~)
     :^  ~  ~  %json
     !>  ^-  json
     %-  update:enjs:zig-lib
     !<  update:zig
-    %.  state-views
+    %.  u.state-views
     %~  state-views  make-update-vase:zig-lib  update-info
   ::
       [%get-smart-lib-vase ~]
