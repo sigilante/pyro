@@ -81,7 +81,7 @@
       %-  ~(gas of *(axal (cask)))
       %+  user-files:pill
         /(scot %p p.byk.bowl)/base/(scot %da now.bowl)
-      ~
+      ~[/scripts]
     =.  park  (park:pyro our.bowl %base %da now.bowl)
     :_  this
     :: poke-our to add base
