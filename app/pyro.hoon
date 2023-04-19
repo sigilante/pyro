@@ -91,17 +91,20 @@
   ++  on-load
     |=  old-vase=vase
     ^-  (quip card _this)
-    =+  !<(old=versioned-state old-vase)
-    ::  TODO uncomment for release
-    :: =.  files
-    ::   %-  ~(gas of *(axal (cask)))
-    ::   %-  user-files:pill
-    ::   /(scot %p p.byk.bowl)/base/(scot %da now.bowl)
-    :: =.  park  (park:pyro our.bowl %base %da now.bowl)
-    :: =.  fad.raft
-    ::   .^(flow:clay %cx /(scot %p our.bowl)//(scot %da now.bowl)/flow)
-    ?-  -.old
-      %0  `this(state old)
+    ::  quick-boot caching
+    =.  files
+      %-  ~(gas of *(axal (cask)))
+      %+  user-files:pill
+        /(scot %p p.byk.bowl)/base/(scot %da now.bowl)
+      ~
+    =.  park  (park:pyro our.bowl %base %da now.bowl)
+    =.  fad.raft
+      .^(flow:clay %cx /(scot %p our.bowl)//(scot %da now.bowl)/flow)
+    ::  state management
+    =+  (mule |.(!<(versioned-state old-vase)))
+    ?-  -.-
+      %&  `this(state +.-)
+      %|  `this
     ==
   ::
   ++  on-poke
