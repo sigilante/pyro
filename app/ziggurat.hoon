@@ -173,8 +173,15 @@
       request-id.act
     ::
         %delete-project
-      ::  should show a warning on frontend before performing this one ;)
-      `state(projects (~(del by projects) project-name.act))
+      =/  =project:zig  (~(got by projects) project-name.act)
+      :_  %=  state
+              projects
+            (~(del by projects) project-name.act)
+          ==
+      %+  turn  desks.project
+      |=  [desk-name=@tas ^]
+      %+  make-cancel-watch-for-file-changes:zig-lib
+      project-name.act  desk-name
     ::
         %add-sync-desk-vships
       :_  state
