@@ -13,7 +13,6 @@
     mip,
     strandio,
     verb,
-    conq=zink-conq,
     dock=docket,
     engine=zig-sys-engine,
     pyro-lib=pyro-pyro,
@@ -424,8 +423,10 @@
             to-compile  (~(put in to-compile.desk) file.act)
         ==
       :-  :_  ~
-          %-  make-compile-contracts:zig-lib
-          [project-name desk-name request-id]:act
+          %+  make-build-file:zig-lib
+            :^  project-name.act  desk-name.act
+            %register-for-compilation  request-id.act
+          file.act
       state(projects (~(put by projects) project-name.act project))
     ::
         %unregister-for-compilation
@@ -477,89 +478,7 @@
         [%run-queue ~]
       ~
     ::
-        %compile-contracts
-      ::  for internal use
-      =/  =project:zig  (~(got by projects) project-name.act)
-      =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
-      =/  compile-contract-error
-        %~  compile-contract  make-error-vase:zig-lib
-        [update-info %error]
-      =/  build-results=(list (pair path build-result:zig))
-        %^  build-contracts:zig-lib  smart-lib-vase
-          /(scot %p our.bowl)/[project-name.act]/(scot %da now.bowl)
-        to-compile.desk
-      =/  error-cards=(list card)
-        %+  murn  build-results
-        |=  [p=path =build-result:zig]
-        ?:  ?=(%& -.build-result)  ~
-        :-  ~
-        %-  update-vase-to-card:zig-lib
-        %-  compile-contract-error
-        %-  crip
-        ;:  weld
-            "contract compilation failed at"
-            "{<`path`p>} with error:\0a"
-            (trip p.build-result)
-        ==
-      =/  [cards=(list card) errors=(list [path @t])]
-        %+  save-compiled-contracts:zig-lib  desk-name.act
-        build-results
-      :_  state
-      :_  (weld cards error-cards)
-      %-  make-read-desk:zig-lib
-      [project-name desk-name request-id]:act
-    ::
-        %compile-contract
-      ::  for internal use
-      =/  =project:zig  (~(got by projects) project-name.act)
-      =/  cards=(list card)
-        :_  ~
-        %-  make-read-desk:zig-lib
-        [project-name desk-name request-id]:act
-      =/  compile-contract-error
-        %~  compile-contract  make-error-vase:zig-lib
-        [update-info %error]
-      ?~  path.act
-        :_  state
-        :_  cards
-        %-  update-vase-to-card:zig-lib
-        %-  compile-contract-error
-        'contract path must not be empty'
-      ::
-      =/  =build-result:zig
-        %^  build-contract:zig-lib  smart-lib-vase
-          /(scot %p our.bowl)/[project-name.act]/(scot %da now.bowl)
-        path.act
-      ?:  ?=(%| -.build-result)
-        :_  state
-        :_  cards
-        %-  update-vase-to-card:zig-lib
-        %-  compile-contract-error
-        %-  crip
-        ;:  weld
-            "contract compilation failed at"
-            "{<`path`path.act>} with error:\0a"
-            (trip p.build-result)
-        ==
-      ::
-      =/  save-result=(each card (pair path @t))
-        %^  save-compiled-contract:zig-lib  desk-name.act
-        path.act  build-result
-      ?:  ?=(%| -.save-result)
-        :_  state
-        :_  cards
-        %-  update-vase-to-card:zig-lib
-        %-  compile-contract-error
-        %-  crip
-        ;:  weld
-            "failed to save newly compiled contract"
-            " {<`path`p.p.save-result>} with error:\0a"
-            (trip q.p.save-result)
-        ==
-      ::
-      [[p.save-result cards] state]
-    ::
-        %compile-non-contract
+        %build-file
       :_  state
       :+  %-  make-read-desk:zig-lib
           [project-name desk-name request-id]:act
@@ -821,36 +740,6 @@
     ::
         %publish-app
       !!  :: TODO
-      :: ::  [%publish-app title=@t info=@t color=@ux image=@t version=[@ud @ud @ud] website=@t license=@t]
-      :: ::  should assert that desk.bill contains only our agent name,
-      :: ::  and that clause has been filled out at least partially,
-      :: ::  then poke treaty agent with publish
-      :: =/  =project:zig  (~(got by projects) project-name.act)
-      :: =/  bill
-      ::   ;;  (list @tas)
-      ::   .^(* %cx /(scot %p our.bowl)/(scot %tas desk-name.act)/(scot %da now.bowl)/desk/bill)
-      :: ~|  "desk.bill should only contain our agent"
-      :: ?>  =(bill ~[project-name.act])
-      :: =/  docket-0
-      ::   :*  %1
-      ::       'Foo'
-      ::       'An app that does a thing.'
-      ::       0xf9.8e40
-      ::       [%glob `@tas`project-name.act [0v0 [%ames our.bowl]]]
-      ::       `'https://example.com/tile.svg'
-      ::       [0 0 1]
-      ::       'https://example.com'
-      ::       'MIT'
-      ::   ==
-      :: =/  docket-task
-      ::   [%info `@tas`project-name.act %& [/desk/docket-0 %ins %docket-0 !>(docket-0)]~]
-      :: :_  state
-      :: :^    (~(arvo pass:io /save-wire) %c [docket-task])
-      ::     %-  make-compile-contracts:zig-lib
-      ::     [project-name desk-name request-id]:act
-      ::   %+  ~(poke-our pass:io /treaty-wire)  %treaty
-      ::   [%alliance-update-0 !>([%add our.bowl `@tas`project-name.act])]
-      :: ~
     ::
         %add-user-file
       =/  =project:zig  (~(got by projects) project-name.act)
@@ -1134,7 +1023,7 @@
       `make-canonical-distribution-ship:zig-lib
     !>(~)
   ::
-      [%build-result @ @ *]
+      [%build-result @ @ ^]
     =*  project-name  i.t.w
     =*  desk-name     i.t.t.w
     =*  file-path     t.t.t.w
@@ -1142,22 +1031,22 @@
             ?=(%arow -.+.sign-arvo)
         ==
       (on-arvo:def w sign-arvo)
+    =*  update-info  [project-name desk-name %build-result ~]
     =/  build-error
       %~  build-result  make-error-vase:zig-lib
-      [[project-name desk-name %build-result ~] %error]
+      [update-info %error]
     :_  this
     ?:  ?=(%| -.p.+.sign-arvo)
       :_  ~
       %-  update-vase-to-card:zig-lib
       %-  build-error
       (reformat-compiler-error:zig-lib p.p.+.sign-arvo)
-    ?^  q.q.p.p.+.sign-arvo  ~
+    =+  !<(error-text=(unit @t) q.p.p.+.sign-arvo)
     :_  ~
     %-  update-vase-to-card:zig-lib
-    %-  build-error
-    %-  crip
-    %+  weld  "{<file-path>} build failed,"
-    " please see dojo for compilation errors"
+    ?^  error-text  (build-error u.error-text)
+    %.  file-path
+    ~(build-result make-update-vase:zig-lib update-info)
   ::
       [%thread-result @ @ @ ~]
     =*  project-name  i.t.w
@@ -1236,7 +1125,6 @@
     =/  updated-files=(set path)
       =/  =tako:clay  (~(got by hit.domo) let.domo)
       =+  .^  =yaki:clay
-
               %cs
               %+  weld  /(scot %p our.bowl)/[desk-name]
               /(scot %da now.bowl)/yaki/(scot %uv tako)
@@ -1254,9 +1142,7 @@
       ?~  file-path  ~
       :-  ~
       %.  [[project-name desk-name %$ ~] file-path]
-      ?:  =(%con i.file-path)
-        make-compile-contract:zig-lib
-      make-compile-non-contract:zig-lib
+      make-build-file:zig-lib
     %+  turn
       %~  tap  in
       (~(get ju sync-desk-to-vship) desk-name)
@@ -1356,6 +1242,9 @@
     %.  state-views
     %~  state-views  make-update-vase:zig-lib  update-info
   ::
+      [%get-smart-lib-vase ~]
+    ``noun+!>(`vase`smart-lib-vase)
+  ::
       [%file-exists @ ^]
     =*  desk-name=@tas   i.t.t.p
     =*  scry-path=path
@@ -1371,8 +1260,6 @@
       %+  find-file-in-desks:zig-lib  file-path
       (turn desks.project head)
     ``json+!>(`json`[%b ?=(^ import-desk)])
-  ::
-  ::  APP-PROJECT JSON
   ::
       [%read-file @ ^]
     =/  des=@ta    i.t.t.p
@@ -1408,10 +1295,10 @@
     ==
   ::
       [%read-desks ~]
-    =/  pat  /(scot %p our.bowl)//(scot %da now.bowl)
-    :^  ~  ~  %json  !>
-    ^-  json
-    =/  desks  .^((set @t) %cd pat)
+    =*  p  /(scot %p our.bowl)//(scot %da now.bowl)
+    :^  ~  ~  %json
+    !>  ^-  json
+    =/  desks  .^((set @t) %cd p)
     (set-cords:enjs:zig-lib desks)
   ==
 ::
