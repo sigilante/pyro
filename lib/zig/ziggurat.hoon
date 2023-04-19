@@ -153,29 +153,7 @@
   %+  ~(poke-our pass:io /uninstall-desk/[desk-name])  %hood
   [%kiln-uninstall !>(`@tas`desk-name)]
 ::
-++  make-compile-contracts
-  |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
-  ^-  card
-  %-  ~(poke-self pass:io /self-wire)
-  :-  %ziggurat-action
-  !>  ^-  action:zig
-  :^  project-name  desk-name  request-id
-  [%compile-contracts ~]
-::
-++  make-compile-contract
-  |=  [=update-info:zig file-path=path]
-  ^-  card
-  =*  project-name  project-name.update-info
-  =*  desk-name     desk-name.update-info
-  =*  request-id    request-id.update-info
-  ?>  ?=(%con -.file-path)
-  %-  ~(poke-self pass:io /self-wire)
-  :-  %ziggurat-action
-  !>  ^-  action:zig
-  :^  project-name  desk-name  request-id
-  [%compile-contract file-path]
-::
-++  make-compile-non-contract
+++  make-build-file
   |=  [=update-info:zig file-path=path]
   ^-  card
   =*  project-name  project-name.update-info
@@ -186,12 +164,17 @@
   :-  %ziggurat-action
   !>  ^-  action:zig
   :^  project-name  desk-name  request-id
-  [%compile-non-contract file-path]
+  [%build-file file-path]
 ::
 ++  make-read-desk
   |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
   ^-  card
   %-  ~(poke-self pass:io /self-wire)
+  (make-read-desk-cage project-name desk-name request-id)
+::
+++  make-read-desk-cage
+  |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
+  ^-  cage
   :-  %ziggurat-action
   !>  ^-  action:zig
   :^  project-name  desk-name  request-id
@@ -288,55 +271,6 @@
   :_  %jam
   %-  snip
   `path`(welp /con/compiled +.contract-hoon-path)
-::
-++  save-compiled-contracts
-  |=  $:  desk-name=@t
-          build-results=(list [p=path q=build-result:zig])
-      ==
-  ^-  [(list card) (list [path @t])]
-  =|  cards=(list card)
-  =|  errors=(list [path @t])
-  |-
-  ?~  build-results      [cards errors]
-  =*  contract-path       p.i.build-results
-  =/  =build-result:zig   q.i.build-results
-  =/  save-result=(each card [path @t])
-    %^  save-compiled-contract  desk-name  contract-path
-    build-result
-  ?:  ?=(%| -.save-result)
-    %=  $
-        build-results  t.build-results
-        errors         [p.save-result errors]
-    ==
-  %=  $
-      build-results  t.build-results
-      cards          [p.save-result cards]
-  ==
-::
-++  save-compiled-contract
-  |=  $:  desk-name=@tas
-          contract-path=path
-          =build-result:zig
-      ==
-  ^-  (each card [path @t])
-  ?:  ?=(%| -.build-result)
-    [%| [contract-path p.build-result]]
-  =/  contract-jam-path=path
-    (need (convert-contract-hoon-to-jam contract-path))
-  :-  %&
-  %^  make-save-jam  desk-name  contract-jam-path
-  p.build-result
-::
-++  build-contracts
-  |=  $:  smart-lib=vase
-          desk=path
-          to-compile=(set path)
-      ==
-  ^-  (list [path build-result:zig])
-  %+  turn  ~(tap in to-compile)
-  |=  p=path
-  ~&  "building {<p>}..."
-  [p (build-contract smart-lib desk p)]
 ::
 ++  build-contract
   !.
@@ -890,9 +824,8 @@
         %-  crip
         """
           ;<  empty-vase=vase  bind:m
-            %^  send-discrete-pyro-dojo:zig-threads
-              {<project-name>}  {<who.p>}
-            {<payload.p>}
+            %+  send-discrete-pyro-dojo:zig-threads
+            {<who.p>}  {<payload.p>}
 
         """
       ::
@@ -934,7 +867,7 @@
         :~  %-  crip
             """
               ;<  empty-vase=vase  bind:m
-                %+  send-discrete-pyro-poke:zig-threads  {<project-name>}
+                %-  send-discrete-pyro-poke:zig-threads
                 :^  {<who.p>}  {<to.p>}  {<app.p>}
                 :-  {<mark.p>}
 
@@ -944,6 +877,42 @@
             ')\0a'
         ==
       ==
+    ==
+  --
+::
+++  get-pyro-ships-app-states
+  |=  whos=(list @p)
+  ^-  (map @p (map @tas (set [@tas ?])))
+  %-  ~(gas by *(map @p (map @tas (set [@tas ?]))))
+  %+  turn  whos
+  |=  who=@p
+  [who (get-pyro-ship-app-states who)]
+::
+++  get-pyro-ship-app-states
+  |=  who=@p
+  ^-  (map @tas (set [@tas ?]))
+  =*  our  (scot %p our.bowl)
+  =*  now  (scot %da now.bowl)
+  =*  w    (scot %p who)
+  |^
+  %-  ~(gas by *(map @tas (set [@tas ?])))
+  %+  turn  ~(tap in get-desk-names)
+  |=  desk-name=@tas
+  [desk-name (get-app-states desk-name)]
+  ::
+  ++  get-desk-names
+    ^-  (set @tas)
+    .^  (set @tas)
+        %gx
+        /[our]/pyro/[now]/i/[w]/cd/[w]//0/noun
+    ==
+  ::
+  ++  get-app-states
+    |=  desk-name=@tas
+    ^-  (set [@tas ?])
+    .^  (set [@tas ?])
+        %gx
+        /[our]/pyro/[now]/i/[w]/ge/[w]/[desk-name]/0/apps
     ==
   --
 ::
@@ -1648,11 +1617,6 @@
     !>  ^-  update:zig
     [%delete-config update-info [%& who what] ~]
   ::
-  ++  compile-contract
-    ^-  vase
-    !>  ^-  update:zig
-    [%compile-contract update-info [%& ~] ~]
-  ::
   ++  run-queue
     ^-  vase
     !>  ^-  update:zig
@@ -1721,11 +1685,13 @@
     !>(`update:zig`[%save-file update-info [%& p] ~])
   ::
   ++  sync-desk-to-vship
-    |=  =sync-desk-to-vship:zig
+    |=  $:  =sync-desk-to-vship:zig
+            pyro-ships-app-states=(map @p (map @tas (set [@tas ?])))
+        ==
     ^-  vase
     !>  ^-  update:zig
     :^  %sync-desk-to-vship  update-info
-    [%& sync-desk-to-vship]  ~
+    [%& [sync-desk-to-vship pyro-ships-app-states]]  ~
   ::
   ++  cis-setup-done
     ^-  vase
@@ -1767,6 +1733,12 @@
     ^-  vase
     !>  ^-  update:zig
     [%ship-to-address-map update-info [%& ship-to-address-map] ~]
+  ::
+  ++  build-result
+    |=  p=path
+    ^-  vase
+    !>  ^-  update:zig
+    [%build-result update-info [%& ~] p]
   --
 ::
 ++  make-error-vase
@@ -1786,12 +1758,6 @@
     ^-  vase
     !>  ^-  update:zig
     [%queue-thread update-info [%| level message] ~]
-  ::
-  ++  compile-contract
-    |=  message=@t
-    ^-  vase
-    !>  ^-  update:zig
-    [%compile-contract update-info [%| level message] ~]
   ::
   ++  run-queue
     |=  message=@t
@@ -1906,7 +1872,7 @@
       %-  sync-desk-to-vship
       sync-desk-to-vship.p.payload.update
     ::
-        ?(%compile-contract %run-queue)
+        %run-queue
       ['data' ~]~
     ::
         %add-config
@@ -1975,8 +1941,14 @@
         %sync-desk-to-vship
       :_  ~
       :-  'data'
-      %+  frond  %sync-desk-to-vship
-      (sync-desk-to-vship p.payload.update)
+      %-  pairs
+      :+  :-  %sync-desk-to-vship
+          %-  sync-desk-to-vship
+          sync-desk-to-vship.p.payload.update
+        :-  %pyro-ships-app-states
+        %-  pyro-ships-app-states
+        pyro-ships-app-states.p.payload.update
+      ~
     ::
         %cis-setup-done
       ['data' ~]~
@@ -2022,6 +1994,30 @@
         %build-result
       ['data' ~]~
     ==
+  ::
+  ++  pyro-ships-app-states
+    |=  pyro-ships-app-states=(map @p (map @tas (set [@tas ?])))
+    ^-  json
+    %-  pairs
+    %+  turn  ~(tap by pyro-ships-app-states)
+    |=  [who=@p psas=(map @tas (set [@tas ?]))]
+    [(scot %p who) (pyro-ship-app-states psas)]
+  ::
+  ++  pyro-ship-app-states
+    |=  pyro-ship-app-states=(map @tas (set [@tas ?]))
+    ^-  json
+    %-  pairs
+    %+  turn  ~(tap by pyro-ship-app-states)
+    |=  [desk-name=@tas as=(set [@tas ?])]
+    [desk-name (app-states as)]
+  ::
+  ++  app-states
+    |=  app-states=(set [@tas ?])
+    ^-  json
+    %-  pairs
+    %+  turn  ~(tap in app-states)
+    |=  [app-name=@tas is-installed=?]
+    [app-name %b is-installed]
   ::
   ++  settings
     |=  s=settings:zig
@@ -2344,8 +2340,7 @@
         [%unregister-for-compilation (ot ~[[%file pa]])]
         [%deploy-contract deploy]
     ::
-        [%compile-contracts ul]
-        [%compile-contract (ot ~[[%path pa]])]
+        [%build-file (ot ~[[%path pa]])]
         [%read-desk ul]
     ::
         [%queue-thread queue-thread]
