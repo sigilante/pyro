@@ -177,6 +177,11 @@
       :_  %=  state
               projects
             (~(del by projects) project-name.act)
+          ::
+              focused-project
+            ?.  =(focused-project project-name.act)
+              focused-project
+            ?.  (~(has by projects) %zig-dev)  ''  %zig-dev
           ==
       %+  turn  desks.project
       |=  [desk-name=@tas ^]
@@ -728,7 +733,10 @@
       [%pyro-action !>([%init-ship who])]
     ::
         %take-snapshot
-      =/  =project:zig  (~(got by projects) project-name.act)
+      =/  maybe-project=(unit project:zig)
+        (~(get by projects) project-name.act)
+      ?~  maybe-project  `state  ::  TODO
+      =*  project  u.maybe-project
       =/  snap-path=path
         ?^  update-project-snaps.act
           u.update-project-snaps.act
