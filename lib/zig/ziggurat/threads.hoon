@@ -464,6 +464,25 @@
     (get-virtualship-timers project-name our now)
   --
 ::
+++  fetch-repo
+  |=  $:  repo-host=@p
+          repo-name=@tas
+          branch-name=@tas
+          followup-action=(unit vase)
+      ==
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ;<  ~  bind:m
+    %+  poke-our  %linedb
+    :-  %linedb-action
+    !>  [%fetch repo-host repo-name branch-name]
+  ;<  ~  bind:m  (sleep ~s10)  ::  TODO: add %linedb update on action complete and wait for that rather than doing this hacky sleep
+  ?~  followup-action  (pure:m !>(~))
+  ;<  ~  bind:m
+    %+  poke-our  %ziggurat
+    [%ziggurat-action u.followup-action]
+  (pure:m !>(~))
+::
 ++  fetch-desk
   |=  $:  who=@p
           desk-name=@tas
@@ -587,6 +606,17 @@
   ?>  ?=(%& -.payload.update)
   (pure:m p.payload.update)
 ::
+++  iterate-over-repo-dependencies
+  =/  m  (strand ,~)
+  |=  $:  =repo-dependencies:zig
+          gate=$-(repo-dependency:zig form:m)
+      ==
+  ^-  form:m
+  |-
+  ?~  repo-dependencies  (pure:m ~)
+  ;<  ~  bind:m  (gate i.repo-dependencies)
+  $(repo-dependencies t.repo-dependencies)
+::
 ++  iterate-over-desks
   =/  m  (strand ,~)
   |=  [desk-names=(list @tas) gate=$-(@tas form:m)]
@@ -609,10 +639,11 @@
   =/  m  (strand ,vase)
   ^-  form:m
   ;<  =bowl:strand  bind:m  get-bowl
-  ;<  ~  bind:m
-    %+  iterate-over-desks  desk-names
-    |=  desk-name=@tas
-    (commit:pyro-lib whos our.bowl desk-name %da now.bowl)
+  ::  TODO: need commit-from-linedb
+  :: ;<  ~  bind:m
+  ::   %+  iterate-over-desks  desk-names
+  ::   |=  desk-name=@tas
+  ::   (commit:pyro-lib whos our.bowl desk-name %da now.bowl)
   ;<  state=state-0:zig  bind:m  get-state
   =/  =project:zig  (~(got by projects.state) project-name)
   =.  sync-desk-to-vship.project
@@ -742,8 +773,9 @@
   --
 ::
 ++  setup-project
-  |=  $:  request-id=(unit @t)
-          =desk-dependencies:zig
+  |=  $:  repo-host=@p
+          request-id=(unit @t)
+          =repo-dependencies:zig
           =config:zig
           whos=(list @p)
           install=(map @tas (list @p))
@@ -754,8 +786,8 @@
   ~&  %sp^%0
   ;<  state=state-0:zig  bind:m  get-state
   =/  old-focused-project=@tas  focused-project.state
-  =/  desk-dependency-names=(list @tas)
-    %+  turn  desk-dependencies
+  =/  repo-dependency-names=(list @tas)
+    %+  turn  repo-dependencies
     |=([@ desk-name=@tas *] desk-name)
   |^
   ?:  =('global' project-name)
@@ -763,18 +795,17 @@
       %-  send-error
       (crip "{<`@tas`project-name>} face reserved")
     return-failure
-  ;<  ~  bind:m  get-dependency-desks
-  ;<  ~  bind:m
-    %+  iterate-over-desks  desk-dependency-names
-    make-dev-desk
+  ;<  ~  bind:m  get-dependency-repos
   ~&  %sp^%1
   ;<  new-state=state-0:zig  bind:m  set-initial-state
   =.  state  new-state
   ~&  %sp^%2
+  ;<  =bowl:strand  bind:m  get-bowl
   ;<  ~  bind:m
-    %+  iterate-over-desks
-      [project-name desk-dependency-names]
-    make-read-desk
+    %+  iterate-over-repo-dependencies
+      :_  repo-dependencies
+      [our.bowl project-name %master ~]
+    make-read-repo
   ;<  ~  bind:m  start-new-ships
   ~&  %sp^%3
   ;<  ~  bind:m  send-new-project-update
@@ -783,7 +814,7 @@
   ~&  %sp^%5
   ;<  empty-vase=vase  bind:m
     %-  commit-install-start
-    [whos desk-dependency-names install start-apps]
+    [whos repo-dependency-names install start-apps]
   return-success
   ::
   ++  send-state-views
@@ -791,7 +822,7 @@
     ^-  form:m
     ;<  =bowl:strand  bind:m  get-bowl
     =/  state-views=(unit state-views:zig)
-      %.  project-name
+      %.  [repo-host project-name %master ~]  ::  TODO: generalize from [%master ~]
       make-state-views:zig-lib(our.bowl our.bowl, now.bowl now.bowl)
     ?~  state-views  (pure:m ~)
     ;<  ~  bind:m
@@ -802,31 +833,21 @@
       [%send-state-views u.state-views]
     (pure:m ~)
   ::
-  ++  get-dependency-desks
+  ++  get-dependency-repos
     =/  m  (strand ,~)
     ^-  form:m
-    ;<  =bowl:strand  bind:m  get-bowl
     |-
-    ?~  desk-dependencies  (pure:m ~)
-    =*  dep  i.desk-dependencies
+    ?~  repo-dependencies  (pure:m ~)
+    =*  dep           i.repo-dependencies
     =*  who           who.dep
-    =*  desk-name     desk-name.dep
-    =*  c             case.dep
-    =*  desired-hash  commit-hash.dep
-    ::  TODO: be smarter, e.g.
-    ::   1. always check locally first
-    ::   2. if local and da+now, no-op
-    ?^  desired-hash
-      ;<  =dome:clay  bind:m  (get-dome who desk-name)
-      =/  revision-number=(unit @ud)
-        (get-revision-number-of-hash u.desired-hash dome)
-      ?~  revision-number  !!  ::  TODO
-      ;<  empty-vase=vase  bind:m
-        (fetch-desk who desk-name ud+u.revision-number ~)
-      $(desk-dependencies t.desk-dependencies)
-    ;<  empty-vase=vase  bind:m
-      (fetch-desk who desk-name c ~)
-    $(desk-dependencies t.desk-dependencies)
+    =*  repo-name     repo-name.dep
+    =*  branch-name   branch-name.dep
+    :: =*  desired-hash  desired-hash.dep
+    ;<  ~  bind:m
+      %+  poke-our  %linedb
+      :-  %linedb-action
+      !>([%fetch who repo-name branch-name])
+    $(repo-dependencies t.repo-dependencies)
   ::
   ++  get-cass
     |=  [who=@p desk-name=@tas when=@da]
@@ -897,31 +918,10 @@
       [%$ request-id %start-pyro-ships whos]
     (sleep ~s1)
   ::
-  ++  make-dev-desk
-    |=  desk-name=@tas
-    =/  m  (strand ,~)
-    ^-  form:m
-    ;<  apps-running=(set [@tas ?])  bind:m
-      (scry ,(set [@tas ?]) /ge/desk-name)
-    ?.  ?&  !=(0 ~(wyt in apps-running))
-            (~(any in apps-running) |=([@tas r=?] r))
-        ==
-      (pure:m ~)
-    ::  TODO: should this be interactive?
-    ;<  ~  bind:m
-      %+  poke-our  %ziggurat
-      :-  %ziggurat-action
-      !>  ^-  action:zig
-      :^  project-name  desk-name  request-id
-      [%suspend-uninstall-to-make-dev-desk ~]
-    ::  if no sleep, get crash;
-    ::   TODO: replace sleep with non-hacky solution
-    (sleep ~s1)
-  ::
   ++  make-sync-desk-to-vship
     ^-  sync-desk-to-vship:zig
     %-  ~(gas by *sync-desk-to-vship:zig)
-    %+  turn  desk-dependency-names
+    %+  turn  repo-dependency-names
     |=  desk-name=@tas
     [desk-name (~(gas in *(set @p)) whos)]
   ::
@@ -950,6 +950,20 @@
       :-  project-name
       [desk-name request-id %set-ziggurat-state state]
     (pure:m state)
+  ::
+  ++  make-read-repo
+    |=  $:  who=@p
+            repo-name=@tas
+            branch-name=@tas
+            commit-hash=(unit @ux)
+        ==
+    =/  m  (strand ,~)
+    ^-  form:m
+    %+  poke-our  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:zig
+    :^  project-name  repo-name  request-id
+    [%read-repo who branch-name commit-hash]
   ::
   ++  make-read-desk
     |=  desk-name=@tas

@@ -81,9 +81,15 @@
 ::
 +$  build-result  (each [bat=* pay=*] @t)
 ::
-+$  desk-dependencies
-  %-  list
-  [who=@p desk-name=@tas =case commit-hash=(unit @ux)]
++$  repo-dependencies
+  (list repo-dependency)
++$  repo-dependency
+  ::  commit-hash=~ -> get most recent commit
+  $:  who=@p
+      repo-name=@tas
+      branch-name=@tas
+      commit-hash=(unit @ux)
+  ==
 ::
 +$  configs  (mip:mip project-name=@t [who=@p what=@tas] @)
 +$  config   (map [who=@p what=@tas] @)
@@ -116,7 +122,7 @@
   $:  project-name=@t
       desk-name=@tas
       request-id=(unit @t)
-      $%  [%new-project fetch-desk-from-remote-ship=(unit @p) special-configuration-args=vase]
+      $%  [%new-project repo-host=@p branch-name=@tas commit-hash=(unit @ux) special-configuration-args=vase]
           [%delete-project ~]
       ::
           [%add-sync-desk-vships ships=(list @p) install=(list @p) start-apps=(list @tas)]
@@ -142,6 +148,7 @@
           [%deploy-contract who=(unit @p) town-id=@ux contract-jam-path=path]
       ::
           [%build-file =path]
+          [%read-repo who=@p branch-name=@tas commit-hash=(unit @ux)]
           [%read-desk ~]
       ::
           [%queue-thread thread-name=@tas payload=thread-queue-payload]

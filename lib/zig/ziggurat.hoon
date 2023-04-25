@@ -11,10 +11,7 @@
     engine=zig-sys-engine,
     pyro-lib=pyro-pyro,
     smart=zig-sys-smart,
-    ui-lib=zig-indexer,
-    zink=zink-zink
-/*  smart-lib-noun  %noun  /lib/zig/sys/smart-lib/noun
-/*  triv-txt        %hoon  /con/trivial/hoon
+    ui-lib=zig-indexer
 |_  [=bowl:gall =settings:zig]
 +*  this    .
     io      ~(. agentio bowl)
@@ -676,15 +673,54 @@
   %.  thread-queue
   ~(thread-queue make-update-vase update-info)
 ::
+++  does-linedb-have-file
+  |=  [repo-path=path file-path=path]
+  ^-  ?
+  ::  host, repo, branch, commit
+  ?>  ?=([@ @ @ @ ~] repo-path)
+  %.  file-path
+  %~  has  in
+  %-  ~(gas in *(set path))
+  .^  (list path)
+      %gx
+      ;:  weld
+          /(scot %p our.bowl)/linedb/(scot %da now.bowl)
+          repo-path
+          /noun
+      ==
+  ==
+::
+++  is-linedb-path-populated
+  |=  query-path=path
+  ^-  ?
+  ::  NOTE: `query-path` should NOT have the scry /noun.
+  =*  query-result
+    .^  *
+        %gx
+        %-  weld  :_  (snoc query-path %noun)
+        /(scot %p our.bowl)/linedb/(scot %da now.bowl)
+    ==
+  !?=(~ query-result)
+::
 ++  make-state-views
-  |=  project-desk-name=@tas
+  |=  $:  who=@p
+          project-repo-name=@tas
+          branch-name=@tas
+          commit-hash=(unit @ux)
+      ==
   ^-  (unit state-views:zig)
-  =*  p
-    :^  (scot %p our.bowl)  project-desk-name
-      (scot %da now.bowl)
-    /zig/state-views/[project-desk-name]/hoon
-  ?.  .^(? %cu p)  ~
-  `!<(state-views:zig .^(vase %ca p))
+  =*  p=path
+    :^  (scot %p our.bowl)  %linedb  (scot %da now.bowl)
+    :^  (scot %p who)  project-repo-name  branch-name
+    :-  ?~  commit-hash  %head  (scot %ux u.commit-hash)
+    /zig/state-views/[project-repo-name]/hoon
+  =+  .^(state-views-text=@t %gx p)
+  =/  build-result
+    %-  mule
+    |.
+    (slap !>(..zuse) (ream state-views-text))
+  ?:  ?=(%| -.build-result)  ~  :: TODO
+  `!<(state-views:zig p.build-result)
 ::
 ++  convert-test-steps-to-thread
   |=  $:  project-name=@t
@@ -778,19 +814,7 @@
     ++  alphabetize-face-comparator
       |=  [a=(pair @tas *) b=(pair @tas *)]
       ^-  ?
-      (alphabetize-comparator p.a p.b)
-    ::
-    ++  alphabetize-comparator
-      |=  [a=@tas b=@tas]
-      ^-  ?
-      =|  index=@ud
-      |-
-      =/  a=@tas  (cut 3 [index 1] a)
-      =/  b=@tas  (cut 3 [index 1] b)
-      ?~  a  %.y
-      ?~  b  %.n
-      ?:  =(a b)  $(index +(index))
-      (lth a b)
+      (aor p.a p.b)
     --
   ::
   ++  make-test-steps-lines
@@ -946,201 +970,12 @@
       [/app/[name]/hoon %ins hoon+!>((make-template /app/[name]/hoon))]
   ==
 ::
-::  uqbar-core:lib/zink/conq/hoon duplicated here with changes
-::   that allow for more verbose compilation error output
+::  uqbar-core:lib/zink/conq/hoon duplicated here in part
+::   with changes that allow for more verbose compilation
+::   error output
 ::
 ++  conq
   |%
-  ::
-  ++  hash
-    |=  [n=* cax=cache:zink]
-    ^-  phash:zink
-    ?@  n
-      ?:  (lte n 12)
-        =/  ch  (~(get by cax) n)
-        ?^  ch  u.ch
-        (hash:pedersen:zink n 0)
-      (hash:pedersen:zink n 0)
-    ?^  ch=(~(get by cax) n)
-      u.ch
-    =/  hh  $(n -.n)
-    =/  ht  $(n +.n)
-    (hash:pedersen:zink hh ht)
-  ::
-  ++  compile-path
-    !.
-    |=  pax=path
-    ^-  [bat=* pay=*]
-    =/  desk=path  (swag [0 3] pax)
-    (compile-contract pax desk .^(@t %cx pax))
-  ::
-  ++  compile-contract
-    !.
-    |=  [pax=path desk=path txt=@t]
-    ^-  [bat=* pay=*]
-    ::
-    ::  goal flow:
-    ::  - take main file, parse to find libs
-    ::  - for each lib, parse to find any libs there
-    ::  - if an import is already present in that stack
-    ::    (circular), crash
-    ::  - once a file with no imports is reached, (rain ) it
-    ::  - compose against this back up the stack
-    ::
-    ::  old stuff:
-    ::
-    ::  parse contract code
-    =/  [raw=(list [face=term =path]) contract-hoon=hoon]
-      (parse-pile pax (trip txt))
-    ::  generate initial subject containing uHoon
-    =/  smart-lib=vase  ;;(vase (cue +.+:;;([* * @] smart-lib-noun)))
-    ::  compose libraries against uHoon subject
-    =/  libraries=hoon
-      :-  %clsg
-      %+  turn  raw
-      |=  [face=term =path]
-      =/  pax  (weld desk path)
-      ^-  hoon
-      :+  %ktts  face
-      =/  lib-txt  .^(@t %cx (welp pax /hoon))
-      ::  CURRENTLY IGNORING IMPORTS INSIDE LIBRARIES
-      +:(parse-pile pax (trip lib-txt))
-    =/  pay=*  q:(~(mint ut p.smart-lib) %noun libraries)
-    =/  payload=vase  (slap smart-lib libraries)
-    =/  cont
-      %+  ~(mint ut p:(slop smart-lib payload))
-      %noun  contract-hoon
-    ::
-    [bat=q.cont pay]
-  ::
-  ++  compile-trivial
-    |=  [pax=path hoonlib-txt=@t smartlib-txt=@t]
-    ^-  vase
-    =/  [raw=(list [face=term =path]) contract-hoon=hoon]
-      (parse-pile /con/trivial/hoon (trip triv-txt))
-    =/  smart-lib=vase
-      ;;(vase (cue +.+:;;([* * @] smart-lib-noun)))
-    =/  libraries=hoon  [%clsg ~]
-    =/  full-nock=*     q:(~(mint ut p.smart-lib) %noun libraries)
-    =/  payload=vase    (slap smart-lib libraries)
-    ::
-    (slap (slop smart-lib payload) contract-hoon)
-  ::
-  ++  conq
-    |=  [pax=path hoonlib-txt=@t smartlib-txt=@t cax=cache:zink bud=@ud]
-    ^-  (map * phash:zink)
-    |^
-    =.  cax
-      %-  ~(gas by cax)
-      %+  turn  (gulf 0 12)
-      |=  n=@
-      ^-  [* phash:zink]
-      [n (hash n ~)]
-    ~&  >>  %compiling
-    =/  built-contract  (compile-trivial pax hoonlib-txt smartlib-txt)
-    ~&  >>  %hashing-arms
-    =.  cax
-      %^  cache-file  built-contract
-        cax
-      :~  ::  hoon
-          ::  four layers
-          'add'
-          'biff'
-          'egcd'
-          'po'
-          ::  inner layers
-          'dif:fe'
-          'all:in'
-          'all:by'
-          'get:ja'
-          'del:ju'
-          'apt:to'
-          'le:nl'
-          'abs:si'
-          'sb:ff'
-          ::  smart
-          ::  five layers
-          'pedersen'
-          'hash'
-          'ship'
-          'id'
-          'big'
-          ::  inner layers (reverse order)
-          'as-octs:secp:crypto'
-          'hmac-sha1:hmac:crypto'
-          'keccak-224:keccak:crypto'
-          'as:crub:crypto'
-          'sal:scr:crypto'
-          'ahem:aes:crypto'
-          'aes:crypto'
-          'as-octs:mimes:html'
-          'mimes:html'
-          'fu:number'
-          'pass:ames'
-          'hash:pedersen'
-          't:pedersen'
-          ::  'bif:bi'
-          'frond:enjs:format'
-      ==
-    ~&  >>  %hashing-trivial-core
-    ::
-    ::  =/  [raw=(list [face=term =path]) contract-hoon=hoon]  (parse-pile /con/trivial/hoon (trip triv-txt))
-    ::  =/  smart-lib=vase  ;;(vase (cue +.+:;;([* * @] smart-lib-noun)))
-    ::  =/  libraries=hoon  [%clsg ~]
-    ::  =/  full-nock=*  q:(~(mint ut p.smart-lib) %noun libraries)
-    ::  =/  payload=vase  (slap smart-lib libraries)
-    ::  =/  cont  (~(mint ut p:(slop smart-lib payload)) %noun contract-hoon)
-    ::  ::
-    ::  =/  gun  (~(mint ut p.cont) %noun (ream '~'))
-    ::  =/  =book  (zebra bud cax *chain-state-scry [q.cont q.gun] %.n)
-    ::  ~&  p.book
-    ::  cax.q.book
-    ::
-    =/  smart-lib=vase  ;;(vase (cue +.+:;;([* * @] smart-lib-noun)))
-    =/  code=[bat=* pay=*]  (compile-contract /con/trivial/hoon /zig triv-txt)
-    =/  cor  .*([q.smart-lib pay.code] bat.code)
-    =/  dor  [-:!>(*contract:smart) cor]
-    =/  gun  (ajar:engine dor %write !>(*context:smart) !>(*calldata:smart) %$)
-    =/  =book:zink  (zebra:zink bud cax jets:zink *chain-state-scry:zink gun %.n)
-    ~&  p.book
-    cax.q.book
-    ::
-    ++  cache-file
-      |=  [vax=vase cax=cache:zink layers=(list @t)]
-      ^-  cache:zink
-      |-
-      ?~  layers
-        cax
-      =/  cor  (slap vax (ream (cat 3 '..' i.layers)))
-      =/  min  (~(mint ut p.vax) %noun (ream (cat 3 '..' i.layers)))
-      $(layers t.layers, cax (hash-arms cor cax))
-    ::
-    ++  hash-arms
-      |=  [vax=vase cax=(map * phash:zink)]
-      ^-  (map * phash:zink)
-      =/  lis  (sloe p.vax)
-      =/  len  (lent lis)
-      =/  i  1
-      |-
-      ?~  lis  cax
-      =*  t  i.lis
-      ~&  >  %-  crip
-             %-  zing
-             :~  (trip t)
-                 (reap (sub 20 (met 3 t)) ' ')
-                 (trip (rap 3 (scot %ud i) '/' (scot %ud len) ~))
-             ==
-      =/  n  q:(slot (arm-axis vax t) vax)
-      $(lis t.lis, cax (~(put by cax) n (hash n cax)), i +(i))
-    --
-  ::  conq helpers
-  ++  arm-axis
-    |=  [vax=vase arm=term]
-    ^-  @
-    =/  r  (~(find ut p.vax) %read ~[arm])
-    ?>  ?=(%& -.r)
-    ?>  ?=(%| -.q.p.r)
-    p.q.p.r
   ::
   ::  parser helpers
   ::
@@ -1238,7 +1073,7 @@
   --
 ::
 ++  make-configuration-template
-  |=  [desk-dependencies=(list @t) pyro-ships=(list @p)]
+  |=  [repo-dependencies=(list @t) pyro-ships=(list @p)]
   ^-  @t
   %+  rap  3
   %-  zing
@@ -1265,17 +1100,17 @@
           request-id=(unit @t)
       ==
     ::
-    ++  make-desk-dependencies
+    ++  make-repo-dependencies
       |=  =bowl:strand
-      ^-  desk-dependencies:zig
+      ^-  repo-dependencies:zig
 
     '''
   ::
-    ?~  desk-dependencies
+    ?~  repo-dependencies
       ~['  ~\0a']
     %-  snoc  :_  '\0a  ==\0a'
     :-  '  :~\0a    '
-    (join '\0a    ' desk-dependencies)
+    (join '\0a    ' repo-dependencies)
   ::
     :_  ~
     '''
@@ -1314,7 +1149,7 @@
       ;<  =bowl:strand  bind:m  get-bowl
       %:  setup-project:zig-threads
           request-id
-          (make-desk-dependencies bowl)
+          (make-repo-dependencies bowl)
           make-config
           make-virtualships-to-sync
           make-install
@@ -2340,6 +2175,7 @@
         [%deploy-contract deploy]
     ::
         [%build-file (ot ~[[%path pa]])]
+        [%read-repo (ot ~[[%who (se %p)] [%branch-name (se %tas)] [%commit-hash (se-soft %ux)]])]
         [%read-desk ul]
     ::
         [%queue-thread queue-thread]
@@ -2428,12 +2264,15 @@
     ==
   ::
   ++  new-project
-    ^-  $-(json [(unit @p) vase])
+    ^-  $-(json [@p @tas (unit @ux) vase])
     %-  ot
-    :+  [%fetch-desk-from-remote-ship (se-soft %p)]
-      :-  %special-configuration-args
-      special-configuration-args
-    ~
+    :~  [%repo-host (se %p)]
+        [%branch-name (se %tas)]
+        [%commit-hash (se-soft %ux)]
+    ::
+        :-  %special-configuration-args
+        special-configuration-args
+    ==
   ::
   ++  special-configuration-args
     ^-  $-(json vase)

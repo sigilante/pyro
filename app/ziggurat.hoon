@@ -20,8 +20,6 @@
     smart=zig-sys-smart,
     ziggurat-threads=zig-ziggurat-threads,
     ziggurat-lib=zig-ziggurat
-/*  smart-lib-noun  %noun  /lib/zig/sys/smart-lib/noun
-/*  zink-cax-noun   %noun  /lib/zig/sys/hash-cache/noun
 ::
 |%
 +$  card  card:agent:gall
@@ -29,6 +27,8 @@
 ::
 =|  inflated-state-0:zig
 =*  state  -
+=|  smart-lib-noun=*
+=|  zink-cax-noun=*
 ::
 %-  agent:dbug
 %+  verb  |
@@ -41,6 +41,19 @@
     zig-lib  ~(. ziggurat-lib bowl settings)
 ::
 ++  on-init
+  =*  scry-prefix=path
+    :^  (scot %p our.bowl)  q.byk.bowl  (scot %da now.bowl)
+    /lib/zig/sys
+  =.  smart-lib-noun
+    .^  *
+        %cx
+        (weld scry-prefix /smart-lib/noun)
+    ==
+  =.  zink-cax-noun
+    .^  *
+        %cx
+        (weld scry-prefix /hash-cache/noun)
+    ==
   =/  smart-lib=vase  ;;(vase (cue +.+:;;([* * @] smart-lib-noun)))
   =/  =eng:zig
     %~  engine  engine
@@ -101,7 +114,6 @@
   |=  [m=mark v=vase]
   ^-  (quip card _this)
   |^
-  ::  TODO handle app project pokes in their own arm
   =^  cards  state
     ?+  m  (on-poke:def m v)
       %ziggurat-action  (handle-poke !<(action:zig v))
@@ -123,35 +135,34 @@
     |^
     ?-    tag
         %new-project
-      ::  TODO: add to queue and run queue
       ~&  %z^%np^%0
       =/  new-project-error
         %~  new-project  make-error-vase:zig-lib
         [update-info %error]
-      ::  is requested desk remote?
-      ?^  fetch-desk-from-remote-ship.act
+      ::  do we have requested commit locally?
+      =*  commit=@ta
+        ?~  commit-hash.act  %head
+        (scot %ux u.commit-hash.act)
+      =*  repo-path-prefix=path
+        :-  (scot %p repo-host.act)
+        /[desk-name.act]/[branch-name.act]/[commit]
+      =*  have-commit-locally
+        (is-linedb-path-populated:zig-lib repo-path-prefix)
+      ?.  have-commit-locally
         :_  state
         :_  ~
         %-  %~  arvo  pass:io
             /new-project-from-remote/[desk-name.act]
         :^  %k  %lard  q.byk.bowl
-        %-  fetch-desk:zig-threads
-        :^  u.fetch-desk-from-remote-ship.act  desk-name.act
-          da+now.bowl
-        :-  ~
-        !>  ^-  action:zig
-        :^  project-name.act  desk-name.act  request-id.act
-        [%new-project ~ special-configuration-args.act]
+        %-  fetch-repo:zig-threads
+        :^  repo-host.act  desk-name.act  branch-name.act
+        `!>(`action:zig`act)
       ::
       ~&  %z^%np^%1
       =/  cards=(list card)
-        %+  snoc  %+  setup-project-desk  update-info
-                  special-configuration-args.act
-        %-  ~(poke-self pass:io /self-wire)
-        :-  %ziggurat-action
-        !>  ^-  action:zig
-        :^  project-name.act  desk-name.act  request-id.act
-        [%run-queue ~]
+        %+  setup-project-desk  repo-host.act
+        :^  branch-name.act  commit-hash.act  update-info
+        special-configuration-args.act
       :_  %=  state
               projects
             ?:  =('' focused-project)  projects
@@ -387,13 +398,13 @@
     ::
         %make-configuration-file
       =/  =project:zig  (~(got by projects) project-name.act)
-      =/  desk-dependencies=(list @t)
+      =/  repo-dependencies=(list @t)
         %+  turn  desks.project
         |=  [n=@tas *]
-        (crip "[our.bowl {<n>} da+now.bowl ~]")
+        (crip "[our.bowl {<n>} %master ~]")
       =*  configuration-file-text
         %+  make-configuration-template:zig-lib
-        desk-dependencies  pyro-ships.project
+        repo-dependencies  pyro-ships.project
       =*  configuration-file-path
         /zig/configuration/[desk-name.act]/hoon
       =^  cards=(list card)  state
@@ -502,6 +513,41 @@
         :-  %ziggurat-build
         :-  %noun
         !>(`[project-name desk-name request-id path]:act)
+      ~
+    ::
+        %read-repo
+      ::  for internal use -- app calls itself to scry clay
+      =/  =project:zig
+        (~(gut by projects) project-name.act *project:zig)
+      =/  =desk:zig
+        (gut-desk:zig-lib project desk-name.act *desk:zig)
+      =?  name.desk  =(desk *desk:zig)  desk-name.act
+      =*  commit=@ta
+        ?~  commit-hash.act  %head
+        (scot %ux u.commit-hash.act)
+      =.  dir.desk
+        %-  sort  :_  aor
+        .^  (list path)
+            %gx
+            :-  (scot %p our.bowl)
+            :^  %linedb  (scot %da now.bowl)
+              (scot %p who.act)
+            /[desk-name.act]/[branch-name.act]/[commit]/noun
+        ==
+        :: =-  .^((list path) %ct -)
+        :: /(scot %p our.bowl)/(scot %tas desk-name.act)/(scot %da now.bowl)
+      :_  %=  state
+              projects
+            %+  ~(put by projects)  project-name.act
+            (put-desk:zig-lib project desk-name.act desk)
+          ==
+      :: :+  %-  make-watch-for-file-changes:zig-lib  ::  TODO: watch and linedb for change
+      ::     [project-name desk-name]:act
+      :-
+        %-  update-vase-to-card:zig-lib
+        %.  dir.desk
+        %~  dir  make-update-vase:zig-lib
+        update-info
       ~
     ::
         %read-desk
@@ -626,6 +672,7 @@
       ==
     ::
         %run-queue
+      ~&  %z^%run-queue
       =/  run-queue-error
         %~  run-queue  make-error-vase:zig-lib
         [update-info %error]
@@ -942,57 +989,65 @@
       :(weld ~(ram re in) "\0a" out)
     ::
     ++  setup-project-desk
-      |=  $:  =update-info:zig
+      |=  $:  repo-host=@p
+              branch-name=@tas
+              commit-hash=(unit @ux)
+              =update-info:zig
               special-configuration-args=vase
           ==
       ^-  (list card)
       =*  project-name  project-name.update-info
       =*  desk-name     desk-name.update-info
       =*  request-id    request-id.update-info
+      =*  commit=@ta
+        ?~  commit-hash  %head  (scot %ux u.commit-hash)
+      =*  repo-path-prefix=path
+        :-  (scot %p repo-host)
+        /[desk-name]/[branch-name]/[commit]
       =/  config-file-path=path
-        :-  (scot %p our.bowl)
-        %+  weld  /[desk-name]/(scot %da now.bowl)
         /zig/configuration/[desk-name]/hoon
-        :: /ted/ziggurat/configuration/[desk-name]/hoon
-      =/  does-config-exist=?  .^(? %cu config-file-path)
+      :: =/  does-config-exist=?
+      ::   (~(has in commit-contents) config-file-path)
+      =*  does-config-exist=?
+        %+  does-linedb-have-file:zig-lib  repo-path-prefix
+        config-file-path
       ~&  %z^%np^%does-config-exist^does-config-exist
       ?:  does-config-exist
-        =+  .^(configuration-thread=vase %ca config-file-path)
+        =*  ted-name=@tas
+          %ziggurat-setup-project-from-configuration
+        =/  tid=@tatid  (cat 3 ted-name (scot %uv eny.bowl))
         :_  ~
-        %-  ~(poke-self pass:io /self-wire)
-        :-  %ziggurat-action
-        !>  ^-  action:zig
-        :^  project-name  desk-name  request-id
-        :^  %queue-thread
-          (cat 3 'zig-configuration-' desk-name)  %lard
-        !<  shed:khan
-          %+  slam  (slap configuration-thread (ream '$'))
-          !>  ^-  vase
-          ?:  =(!>(~) special-configuration-args)
-            !>(`[project-name desk-name request-id])
-          ;:  slop
-              !>(~)
-              !>(project-name)
-              !>(desk-name)
-              !>(request-id)
-              special-configuration-args
-          ==
+        %+  ~(poke-our pass:io /spider-wire)  %spider
+        :-  %spider-start
+        !>
+        :-  ~
+        :^  `tid  byk.bowl(r da+now.bowl)  ted-name
+        !>  :^  ~  tid  project-name
+            :^  repo-host  desk-name  request-id
+            :^  branch-name  commit-hash
+            config-file-path  special-configuration-args
       =/  cards=(list card)
-        :_  ~
-        %-  ~(poke-self pass:io /self-wire)
-        :-  %ziggurat-action
-        !>  ^-  action:zig
-        :^  project-name  desk-name  request-id
-        :^  %queue-thread
-          (cat 3 'zig-configuration-' desk-name)  %lard
-        %:  setup-project:zig-threads
-            request-id
-            [our.bowl desk-name [%da now.bowl] ~]~
-            ~
-            default-ships:zig-lib
-            ~
-            ~
-        ==
+        :+  %-  ~(poke-self pass:io /self-wire)
+            :-  %ziggurat-action
+            !>  ^-  action:zig
+            :^  project-name  desk-name  request-id
+            :^  %queue-thread
+              (cat 3 'zig-configuration-' desk-name)  %lard
+            %:  setup-project:zig-threads
+                repo-host
+                request-id
+                [our.bowl desk-name %master ~]~
+                ~
+                default-ships:zig-lib
+                ~
+                ~
+            ==
+          %-  ~(poke-self pass:io /self-wire)
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  project-name.act  desk-name.act  request-id.act
+          [%run-queue ~]
+        ~
       ?:  %.  desk-name
           %~  has  in
           .^  (set @tas)
@@ -1033,10 +1088,11 @@
     :-  %ziggurat-action
     !>  ^-  action:zig
     :^  'zig-dev'  %zig-dev  ~
-    :+  %new-project
-      ?:  .^(? %j /[our]/fake/[now])  ~
-      `make-canonical-distribution-ship:zig-lib
-    !>(~)
+    :^    %new-project
+        ?:  .^(? %j /[our]/fake/[now])  our.bowl
+        make-canonical-distribution-ship:zig-lib
+      %master
+    :-  ~  !>(~)
   ::
       [%build-result @ @ ^]
     =*  project-name  i.t.w
@@ -1244,12 +1300,14 @@
     %~  settings  make-update-vase:zig-lib
     ['' %$ %settings ~]
   ::
-      [%state-views @ ~]
-    =*  project-desk-name  i.t.t.p
+      [%state-views @ @ ~]  ::  TODO: generalize from [%master ~]
+    =*  repo-host          (slav %p i.t.t.p)
+    =*  project-desk-name  i.t.t.t.p
     =*  update-info
       [project-desk-name project-desk-name %state-views ~]
     =/  state-views=(unit state-views:zig)
-      (make-state-views:zig-lib project-desk-name)
+      %-  make-state-views:zig-lib
+      [repo-host project-desk-name %master ~]
     ?~  state-views  ``json+!>(~)
     :^  ~  ~  %json
     !>  ^-  json
