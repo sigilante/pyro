@@ -271,7 +271,7 @@
 ::
 ++  build-contract
   !.
-  |=  [smart-lib=vase desk=path to-compile=path]
+  |=  [smart-lib=vase repo-path=path to-compile=path]
   ^-  build-result:zig
   ::
   ::  adapted from compile-contract:conq
@@ -306,13 +306,21 @@
   ::
   ++  parse-main  ::  first
     ^-  (each [raw=(list [face=term =path]) contract-hoon=hoon] @t)
-    =/  p=path  (welp desk to-compile)
-    ?.  .^(? %cu p)
+    =*  have-file
+      (does-linedb-have-file repo-path to-compile)
+    ?.  have-file
       :-  %|
       %-  crip
-      %+  weld  "did not find contract at {<to-compile>}"
-      " in desk {<`@tas`(snag 1 desk)>}"
-    [%& (parse-pile:conq p (trip .^(@t %cx p)))]
+      %+  weld  "did not find contract at"
+      " {<`path`to-compile>} in repo {<`path`repo-path>}"
+    =*  p=path
+      ;:  welp
+          /(scot %p our.bowl)/linedb/(scot %da now.bowl)
+          repo-path
+          to-compile
+          /noun
+      ==
+    [%& (parse-pile:conq p (trip .^(@t %gx p)))]
   ::
   ++  parse-imports  ::  second
     |=  raw=(list [face=term p=path])
@@ -320,18 +328,25 @@
     =/  non-existent-libs=(list path)
       %+  murn  raw
       |=  [face=term p=path]
-      =/  hp=path  (welp p /hoon)
-      =/  tp=path  (welp desk hp)
-      ?:  .^(? %cu tp)  ~  `hp
+      =*  import-hoon-file-path=path  (welp p /hoon)
+      =*  have-file
+        %+  does-linedb-have-file  repo-path
+        import-hoon-file-path
+      ?:  have-file  ~  `import-hoon-file-path
     ?^  non-existent-libs
       :-  %|
       %-  crip
       %+  weld  "did not find imports for {<to-compile>} at"
-      " {<`(list path)`non-existent-libs>} in desk {<`@tas`(snag 1 desk)>}"
+      " {<`(list path)`non-existent-libs>}>}"
     :-  %&
     %+  turn  raw
     |=  [face=term p=path]
-    =/  tp=path  (welp desk (welp p /hoon))
+    =*  tp=path
+      ;:  welp
+         /(scot %p our.bowl)/linedb/(scot %da now.bowl)
+         p
+         /hoon
+      ==
     ^-  hoon
     :+  %ktts  face
     +:(parse-pile:conq tp (trip .^(@t %cx tp)))
