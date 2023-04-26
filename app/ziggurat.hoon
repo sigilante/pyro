@@ -527,7 +527,8 @@
         (scot %ux u.commit-hash.act)
       =.  dir.desk
         %-  sort  :_  aor
-        .^  (list path)
+        %-  need  ::  TODO
+        .^  (unit (list path))
             %gx
             :-  (scot %p our.bowl)
             :^  %linedb  (scot %da now.bowl)
@@ -541,7 +542,7 @@
             %+  ~(put by projects)  project-name.act
             (put-desk:zig-lib project desk-name.act desk)
           ==
-      :: :+  %-  make-watch-for-file-changes:zig-lib  ::  TODO: watch and linedb for change
+      :: :+  %-  make-watch-for-file-changes:zig-lib  ::  TODO: watch linedb for change
       ::     [project-name desk-name]:act
       :-
         %-  update-vase-to-card:zig-lib

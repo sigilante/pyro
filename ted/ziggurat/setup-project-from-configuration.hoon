@@ -1,5 +1,5 @@
 /-  spider,
-    ub=uqbuild,
+    ldb=linedb,
     zig=zig-ziggurat
 /+  strandio
 ::
@@ -60,13 +60,13 @@
     special-configuration-args.u.args
   ~&  %zspfc^%0
   ;<  ~  bind:m
-    %+  poke-our  %uqbuild
-    :-  %uqbuild-action
-    !>  ^-  action:ub
+    %+  poke-our  %linedb
+    :-  %linedb-action
+    !>  ^-  action:ldb
     :^  %build  [%ted tid]  repo-host
     [repo-name branch-name commit-hash file-path]
   ~&  %zspfc^%1
-  ;<  build-result=vase  bind:m  (take-poke %uqbuild-update)
+  ;<  build-result=vase  bind:m  (take-poke %linedb-update)
   ~&  %zspfc^%2
   =+  !<(=update:ub build-result)
   ?.  ?=(%build -.update)     !!  :: TODO

@@ -320,7 +320,7 @@
           to-compile
           /noun
       ==
-    [%& (parse-pile:conq p (trip .^(@t %gx p)))]
+    [%& (parse-pile:conq p (trip (need .^((unit @t) %gx p))))]  ::  TODO: handle need better
   ::
   ++  parse-imports  ::  second
     |=  raw=(list [face=term p=path])
@@ -349,7 +349,7 @@
       ==
     ^-  hoon
     :+  %ktts  face
-    +:(parse-pile:conq tp (trip .^(@t %cx tp)))
+    +:(parse-pile:conq tp (trip (need .^((unit @t) %cx tp))))  ::  TODO: handle need better
   ::
   ++  build-imports  ::  third
     |=  braw=(list hoon)
@@ -693,29 +693,19 @@
   ^-  ?
   ::  host, repo, branch, commit
   ?>  ?=([@ @ @ @ ~] repo-path)
-  %.  file-path
-  %~  has  in
-  %-  ~(gas in *(set path))
-  .^  (list path)
-      %gx
-      ;:  weld
-          /(scot %p our.bowl)/linedb/(scot %da now.bowl)
-          repo-path
-          /noun
-      ==
-  ==
+  (is-linedb-path-populated (welp repo-path file-path))
 ::
 ++  is-linedb-path-populated
   |=  query-path=path
   ^-  ?
   ::  NOTE: `query-path` should NOT have the scry /noun.
   =*  query-result
-    .^  *
+    .^  (unit *)
         %gx
         %-  weld  :_  (snoc query-path %noun)
         /(scot %p our.bowl)/linedb/(scot %da now.bowl)
     ==
-  !?=(~ query-result)
+  ?=(^ query-result)
 ::
 ++  make-state-views
   |=  $:  who=@p
@@ -729,11 +719,12 @@
     :^  (scot %p who)  project-repo-name  branch-name
     :-  ?~  commit-hash  %head  (scot %ux u.commit-hash)
     /zig/state-views/[project-repo-name]/hoon
-  =+  .^(state-views-text=@t %gx p)
+  =+  .^(state-views-text=(unit @t) %gx p)
+  ?~  state-views-text  ~  ::  TODO
   =/  build-result
     %-  mule
     |.
-    (slap !>(..zuse) (ream state-views-text))
+    (slap !>(..zuse) (ream u.state-views-text))
   ?:  ?=(%| -.build-result)  ~  :: TODO
   `!<(state-views:zig p.build-result)
 ::
