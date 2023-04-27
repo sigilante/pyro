@@ -806,6 +806,11 @@
       :_  repo-dependencies
       [our.bowl project-name %master ~]
     make-read-repo
+  ;<  ~  bind:m
+    %+  iterate-over-repo-dependencies
+      :_  repo-dependencies
+      [our.bowl project-name %master ~]
+    make-watch-repo
   ;<  ~  bind:m  start-new-ships
   ~&  %sp^%3
   ;<  ~  bind:m  send-new-project-update
@@ -950,6 +955,20 @@
       :-  project-name
       [desk-name request-id %set-ziggurat-state state]
     (pure:m state)
+  ::
+  ++  make-watch-repo
+    |=  $:  who=@p
+            repo-name=@tas
+            branch-name=@tas
+            commit-hash=(unit @ux)
+        ==
+    =/  m  (strand ,~)
+    ^-  form:m
+    %+  poke-our  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:zig
+    :^  project-name  repo-name  request-id
+    [%watch-repo-for-changes who branch-name]
   ::
   ++  make-read-repo
     |=  $:  who=@p

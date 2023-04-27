@@ -73,10 +73,17 @@
   ==
 +$  desk
   $:  name=@tas
+      =repo-info
       dir=(list path)
       user-files=(set path)
       to-compile=(set path)
       saved-test-steps=(map thread-name=@tas [test-imports=imports =test-steps])
+  ==
++$  repo-info
+  $:  repo-host=@p
+      repo-name=@tas
+      branch-name=@tas
+      commit-hash=(unit @ux)
   ==
 ::
 +$  build-result  (each [bat=* pay=*] @t)
@@ -148,6 +155,7 @@
           [%deploy-contract who=(unit @p) town-id=@ux contract-jam-path=path]
       ::
           [%build-file =path]
+          [%watch-repo-for-changes who=@p branch-name=@tas]
           [%read-repo who=@p branch-name=@tas commit-hash=(unit @ux)]
           [%read-desk ~]
       ::

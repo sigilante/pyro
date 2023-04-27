@@ -187,16 +187,33 @@
   [%run-queue ~]
 ::
 ++  make-watch-for-file-changes
-  |=  [project-name=@t desk-name=@tas]
+  |=  [who=@p repo-name=@tas branch-name=@tas]
   ^-  card
-  %-  ~(warp-our pass:io /clay/[project-name]/[desk-name])
-  [desk-name ~ %next %v da+now.bowl /]
+  =*  path-suffix=path
+    /(scot %p ~nec)/[repo-name]/[branch-name]
+  %+  ~(watch-our pass:io [%linedb path-suffix])  %linedb
+  [%branch-updates path-suffix]
 ::
 ++  make-cancel-watch-for-file-changes
-  |=  [project-name=@t desk-name=@tas]
+  |=  [who=@p repo-name=@tas branch-name=@tas]
   ^-  card
-  %-  ~(warp-our pass:io /clay/[project-name]/[desk-name])
-  [desk-name ~]
+  =*  path-suffix=path
+    /(scot %p ~nec)/[repo-name]/[branch-name]
+  ^-  card
+  %-  ~(leave-our pass:io [%linedb path-suffix])
+  [%branch-updates path-suffix]
+:: ::
+:: ++  make-watch-for-file-changes
+::   |=  [project-name=@t desk-name=@tas]
+::   ^-  card
+::   %-  ~(warp-our pass:io /clay/[project-name]/[desk-name])
+::   [desk-name ~ %next %v da+now.bowl /]
+:: ::
+:: ++  make-cancel-watch-for-file-changes
+::   |=  [project-name=@t desk-name=@tas]
+::   ^-  card
+::   %-  ~(warp-our pass:io /clay/[project-name]/[desk-name])
+::   [desk-name ~]
 ::
 ++  make-save-jam
   |=  [desk-name=@tas file=path non=*]

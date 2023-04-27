@@ -195,9 +195,9 @@
             ?.  (~(has by projects) %zig-dev)  ''  %zig-dev
           ==
       %+  turn  desks.project
-      |=  [desk-name=@tas ^]
-      %+  make-cancel-watch-for-file-changes:zig-lib
-      project-name.act  desk-name
+      |=  [desk-name=@tas @ =repo-info:zig ^]
+      %-  make-cancel-watch-for-file-changes:zig-lib
+      [repo-host repo-name branch-name]:repo-info
     ::
         %add-sync-desk-vships
       :_  state
@@ -515,6 +515,13 @@
         !>(`[project-name desk-name request-id path]:act)
       ~
     ::
+        %watch-repo-for-changes
+      ?>  (~(has by projects) project-name.act)
+      :_  state
+      :_  ~
+      %-  make-watch-for-file-changes:zig-lib
+      [repo-host desk-name branch-name]:act
+    ::
         %read-repo
       ::  for internal use -- app calls itself to scry clay
       =/  =project:zig
@@ -535,44 +542,40 @@
               (scot %p who.act)
             /[desk-name.act]/[branch-name.act]/[commit]/noun
         ==
-        :: =-  .^((list path) %ct -)
-        :: /(scot %p our.bowl)/(scot %tas desk-name.act)/(scot %da now.bowl)
       :_  %=  state
               projects
             %+  ~(put by projects)  project-name.act
             (put-desk:zig-lib project desk-name.act desk)
           ==
-      :: :+  %-  make-watch-for-file-changes:zig-lib  ::  TODO: watch linedb for change
-      ::     [project-name desk-name]:act
       :-
         %-  update-vase-to-card:zig-lib
         %.  dir.desk
         %~  dir  make-update-vase:zig-lib
         update-info
       ~
-    ::
-        %read-desk
-      ::  for internal use -- app calls itself to scry clay
-      =/  =project:zig
-        (~(gut by projects) project-name.act *project:zig)
-      =/  =desk:zig
-        (gut-desk:zig-lib project desk-name.act *desk:zig)
-      =?  name.desk  =(desk *desk:zig)  desk-name.act
-      =.  dir.desk
-        =-  .^((list path) %ct -)
-        /(scot %p our.bowl)/(scot %tas desk-name.act)/(scot %da now.bowl)
-      :_  %=  state
-              projects
-            %+  ~(put by projects)  project-name.act
-            (put-desk:zig-lib project desk-name.act desk)
-          ==
-      :+  %-  make-watch-for-file-changes:zig-lib
-          [project-name desk-name]:act
-        %-  update-vase-to-card:zig-lib
-        %.  dir.desk
-        %~  dir  make-update-vase:zig-lib
-        update-info
-      ~
+    :: ::
+    ::     %read-desk
+    ::   ::  for internal use -- app calls itself to scry clay
+    ::   =/  =project:zig
+    ::     (~(gut by projects) project-name.act *project:zig)
+    ::   =/  =desk:zig
+    ::     (gut-desk:zig-lib project desk-name.act *desk:zig)
+    ::   =?  name.desk  =(desk *desk:zig)  desk-name.act
+    ::   =.  dir.desk
+    ::     =-  .^((list path) %ct -)
+    ::     /(scot %p our.bowl)/(scot %tas desk-name.act)/(scot %da now.bowl)
+    ::   :_  %=  state
+    ::           projects
+    ::         %+  ~(put by projects)  project-name.act
+    ::         (put-desk:zig-lib project desk-name.act desk)
+    ::       ==
+    ::   :+  %-  make-watch-for-file-changes:zig-lib
+    ::       [project-name desk-name]:act
+    ::     %-  update-vase-to-card:zig-lib
+    ::     %.  dir.desk
+    ::     %~  dir  make-update-vase:zig-lib
+    ::     update-info
+    ::   ~
     ::
         %queue-thread
       ?:  ?=(%lard -.payload.act)
@@ -1070,7 +1073,48 @@
 ++  on-agent
   |=  [w=wire =sign:agent:gall]
   ^-  (quip card _this)
-  (on-agent:def w sign)
+  ?+    w  (on-agent:def w sign)
+      [%linedb @ @ @ ~]
+    ?>  ?=([%clay %writ *] sign-arvo)
+    =*  project-name  i.t.w
+    =*  desk-name     i.t.t.w
+    =/  =project:zig  (~(got by projects) project-name)
+    =*  sync-desk-to-vship  sync-desk-to-vship.project
+    =/  =desk:zig  (got-desk:zig-lib project desk-name)
+    ?~  p.sign-arvo
+      `this
+      :: :_  this
+      :: :_  ~
+      :: %+  make-watch-for-file-changes:zig-lib  project-name
+      :: desk-name
+    =+  !<(=domo:clay q.r.u.p.sign-arvo)
+    =/  updated-files=(set path)
+      =/  =tako:clay  (~(got by hit.domo) let.domo)
+      =+  .^  =yaki:clay
+              %cs
+              %+  weld  /(scot %p our.bowl)/[desk-name]
+              /(scot %da now.bowl)/yaki/(scot %uv tako)
+          ==
+      ~(key by q.yaki)
+    =/  files-to-compile=(list path)
+      ~(tap in (~(int in updated-files) to-compile.desk))
+    :_  this
+    %+  weld
+      ?:  =(0 (lent files-to-compile))
+        :_  ~
+        (make-read-desk:zig-lib project-name desk-name ~)
+      %+  murn  files-to-compile
+      |=  file-path=path
+      ?~  file-path  ~
+      :-  ~
+      %.  [[project-name desk-name %$ ~] file-path]
+      make-build-file:zig-lib
+    %+  turn
+      %~  tap  in
+      (~(get ju sync-desk-to-vship) desk-name)
+    |=  who=@p
+    (sync-desk-to-virtualship-card:zig-lib who desk-name)
+  ==
 ::
 ++  on-arvo
   |=  [w=wire =sign-arvo:agent:gall]
@@ -1180,46 +1224,47 @@
     %.  (crip "merge fail: {<sign-arvo>}")
     %~  get-dev-desk  make-error-vase:zig-lib
     [['' i.t.w %get-dev-desk ~] %error]
-  ::
-      [%clay @ @ ~]
-    ?>  ?=([%clay %writ *] sign-arvo)
-    =*  project-name  i.t.w
-    =*  desk-name     i.t.t.w
-    =/  =project:zig  (~(got by projects) project-name)
-    =*  sync-desk-to-vship  sync-desk-to-vship.project
-    =/  =desk:zig  (got-desk:zig-lib project desk-name)
-    ?~  p.sign-arvo
-      :_  this
-      :_  ~
-      %+  make-watch-for-file-changes:zig-lib  project-name
-      desk-name
-    =+  !<(=domo:clay q.r.u.p.sign-arvo)
-    =/  updated-files=(set path)
-      =/  =tako:clay  (~(got by hit.domo) let.domo)
-      =+  .^  =yaki:clay
-              %cs
-              %+  weld  /(scot %p our.bowl)/[desk-name]
-              /(scot %da now.bowl)/yaki/(scot %uv tako)
-          ==
-      ~(key by q.yaki)
-    =/  files-to-compile=(list path)
-      ~(tap in (~(int in updated-files) to-compile.desk))
-    :_  this
-    %+  weld
-      ?:  =(0 (lent files-to-compile))
-        :_  ~
-        (make-read-desk:zig-lib project-name desk-name ~)
-      %+  murn  files-to-compile
-      |=  file-path=path
-      ?~  file-path  ~
-      :-  ~
-      %.  [[project-name desk-name %$ ~] file-path]
-      make-build-file:zig-lib
-    %+  turn
-      %~  tap  in
-      (~(get ju sync-desk-to-vship) desk-name)
-    |=  who=@p
-    (sync-desk-to-virtualship-card:zig-lib who desk-name)
+  :: ::
+  ::     [%clay @ @ ~]
+  ::   ?>  ?=([%clay %writ *] sign-arvo)
+  ::   =*  project-name  i.t.w
+  ::   =*  desk-name     i.t.t.w
+  ::   =/  =project:zig  (~(got by projects) project-name)
+  ::   =*  sync-desk-to-vship  sync-desk-to-vship.project
+  ::   =/  =desk:zig  (got-desk:zig-lib project desk-name)
+  ::   ?~  p.sign-arvo
+  ::     `this
+  ::     :: :_  this
+  ::     :: :_  ~
+  ::     :: %+  make-watch-for-file-changes:zig-lib  project-name
+  ::     :: desk-name
+  ::   =+  !<(=domo:clay q.r.u.p.sign-arvo)
+  ::   =/  updated-files=(set path)
+  ::     =/  =tako:clay  (~(got by hit.domo) let.domo)
+  ::     =+  .^  =yaki:clay
+  ::             %cs
+  ::             %+  weld  /(scot %p our.bowl)/[desk-name]
+  ::             /(scot %da now.bowl)/yaki/(scot %uv tako)
+  ::         ==
+  ::     ~(key by q.yaki)
+  ::   =/  files-to-compile=(list path)
+  ::     ~(tap in (~(int in updated-files) to-compile.desk))
+  ::   :_  this
+  ::   %+  weld
+  ::     ?:  =(0 (lent files-to-compile))
+  ::       :_  ~
+  ::       (make-read-desk:zig-lib project-name desk-name ~)
+  ::     %+  murn  files-to-compile
+  ::     |=  file-path=path
+  ::     ?~  file-path  ~
+  ::     :-  ~
+  ::     %.  [[project-name desk-name %$ ~] file-path]
+  ::     make-build-file:zig-lib
+  ::   %+  turn
+  ::     %~  tap  in
+  ::     (~(get ju sync-desk-to-vship) desk-name)
+  ::   |=  who=@p
+  ::   (sync-desk-to-virtualship-card:zig-lib who desk-name)
   ==
 ::
 ++  on-peek
