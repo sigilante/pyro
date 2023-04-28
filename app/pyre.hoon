@@ -12,7 +12,7 @@
 +*  this  .
     def   ~(. (default-agent this %.n) bowl)
     hc    ~(. +> bowl)
-    card  card:agent:gall
+    card  $+(card card:agent:gall)
 ++  on-init
   ^-  (quip card _this)
   :_  this
@@ -46,8 +46,8 @@
     ::  dill
         %blit
       =+  out=(blit:dill:hc ef)
-      ~?  !=(~ out)  out  
-      `this
+      ~?  !=(~ out)  out
+      [%give %fact [/blit]~ pyro-effect+!>(ef)]~^this
     ::  eyre
         %thus  `this
         %response
@@ -72,8 +72,10 @@
 ++  on-watch
   |=  =path
   ^-  (quip card _this)
-  ?>  ?=([%http-response *] path)
-  `this
+  ?+  path  (on-watch:def path)
+    [%http-response *]  `this
+    [%blit ~]           `this
+  ==
 ::
 ++  on-arvo
   |=  [=wire =sign-arvo]
