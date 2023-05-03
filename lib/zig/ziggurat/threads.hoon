@@ -499,34 +499,64 @@
     [%ziggurat-action u.followup-action]
   (pure:m !>(~))
 ::
-++  fetch-desk
-  |=  $:  who=@p
+++  branch-if-remote
+  |=  [project-name=@tas desk-name=@tas]
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ;<  state=state-0:zig  bind:m  get-state
+  ;<  =bowl:strand  bind:m  get-bowl
+  =/  =project:zig  (~(got by projects.state) project-name)
+  =/  =desk:zig  (got-desk:zig-lib project desk-name)
+  =*  repo-host    repo-host.repo-info.desk
+  =*  repo-name    repo-name.repo-info.desk
+  =*  branch-name  branch-name.repo-info.desk
+  ?:  =(our.bowl repo-host)  (pure:m !>(repo-info.desk))
+  ;<  ~  bind:m
+    %+  poke-our  %linedb
+    :-  %linedb-action
+    !>
+    [%branch repo-host repo-name branch-name branch-name]
+  =.  repo-host.repo-info.desk  our.bowl
+  ;<  ~  bind:m
+    %+  poke-our  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:zig
+    :^  project-name  desk-name  ~
+    :-  %set-ziggurat-state
+    %=  state
+        projects
+      %+  ~(put by projects.state)  project-name
+      (put-desk:zig-lib project desk-name desk)
+    ==
+  (pure:m !>(repo-info.desk))
+::
+++  save-file
+  |=  $:  project-name=@tas
           desk-name=@tas
-          c=case:clay
-          followup-action=(unit vase)
+          file-path=path
+          text=@t
       ==
   =/  m  (strand ,vase)
   ^-  form:m
-  ~&  %z^%fetch-desk^who^desk-name^c
-  ;<  exists=?  bind:m  (does-desk-exist desk-name)
+  ;<  repo-info-vase=vase  bind:m
+    (branch-if-remote project-name desk-name)
+  =+  !<(=repo-info:zig repo-info-vase)
+  =*  repo-host    (scot %p repo-host.repo-info)
+  =*  repo-name    repo-name.repo-info
+  =*  branch-name  branch-name.repo-info
+  =*  commit-hash  commit-hash.repo-info
+  =*  commit=@ta
+    ?~  commit-hash  %head  (scot %uv u.commit-hash)
+  ;<  snap=(map path wain)  bind:m
+    %+  scry  (map path wain)
+    :^  %gx  %linedb  %snap
+    /[repo-host]/[repo-name]/[branch-name]/[commit]/noun
   ;<  ~  bind:m
-    %^  send-clay-card  /merge/[desk-name]  %merg
-    [desk-name who desk-name c ?.(exists %init %only-that)]
-  ~&  %z^%fetch-desk^%sent
-  ;<  [w=wire s=sign-arvo]  bind:m  take-sign-arvo
-  ?.  ?=([%clay %mere %.y ~] s)
-    ~&  %z^%fetch-desk^%failed^s
-    ;<  ~  bind:m
-      %^  poke-our  %ziggurat  %ziggurat-action
-      %.  (crip "merge fail: {<sign-arvo>}")
-      %~  get-dev-desk  make-error-vase:zig-lib
-      [['' desk-name %get-dev-desk ~] %error]
-    (pure:m !>(~))
-  ~&  %z^%fetch-desk^%success
-  ?~  followup-action  (pure:m !>(~))
-  ;<  ~  bind:m
-    %+  poke-our  %ziggurat
-    [%ziggurat-action u.followup-action]
+    %+  poke-our  %linedb
+    :-  %linedb-action
+    !>
+    :^  %commit  repo-name  branch-name
+    (~(put by snap) file-path (to-wain:format text))
   (pure:m !>(~))
 ::
 ++  does-desk-exist

@@ -391,15 +391,21 @@
       ==
     ::
         %save-file
-      !!
-      :: =/  =project:zig  (~(got by projects) project-name.act)
-      :: =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
-      :: =.  project
-      ::   %^  put-desk:zig-lib  project  desk-name.act
-      ::   desk(user-files (~(put in user-files.desk) file.act))
-      :: :-  :_  ~
-      ::     (make-save-file:zig-lib update-info [file text]:act)
-      :: state(projects (~(put by projects) project-name.act project))
+      =/  =project:zig  (~(got by projects) project-name.act)
+      =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
+      =.  project
+        %^  put-desk:zig-lib  project  desk-name.act
+        desk(user-files (~(put in user-files.desk) file.act))
+      :_  %=  state
+              projects
+            (~(put by projects) project-name.act project)
+          ==
+      :_  ~
+      %-  %~  arvo  pass:io
+          [%save [project-name desk-name file]:act]
+      :^  %k  %lard  q.byk.bowl
+      %-  save-file:zig-threads
+      [project-name desk-name file text]:act
     ::
         %delete-file
       ::  should show warning
@@ -1424,39 +1430,25 @@
       (turn desks.project head)
     ``json+!>(`json`[%b ?=(^ import-desk)])
   ::
-      [%read-file @ ^]
-    !!
-    :: =/  des=@ta    i.t.t.p
-    :: =/  pat=path  `path`t.t.t.p
-    :: =/  pre  /(scot %p our.bowl)/(scot %tas des)/(scot %da now.bowl)
-    :: =/  padh  (weld pre pat)
-    :: =/  =mark  (rear pat)
-    :: ?.  .^(? %cu padh)
-    ::   ~&  %z^%read-file^%file-not-found^des^padh
-    ::   ``json+!>(~)
-    :: :^  ~  ~  %json
-    :: !>  ^-  json
-    :: :-  %s
-    :: ?+    mark  =-  q.q.-
-    ::             !<  mime
-    ::             %.  .^(vase %cr padh)
-    ::             .^(tube:clay %cc (weld pre /[mark]/mime))
-    ::     %hoon    .^(@t %cx padh)
-    ::     %ship    (crip (noah !>(.^(@p %cx padh))))
-    ::     %bill    (crip (noah !>(.^((list @tas) %cx padh))))
-    ::     %docket-0
-    ::   =-  (crip (spit-docket:mime:dock -))
-    ::   .^(docket:dock %cx padh)
-    :: ::
-    ::     %kelvin
-    ::   =+  .^(=waft:clay %cx padh)
-    ::   ?>  ?=([%1 ~] -.waft)
-    ::   %-  of-wain:format
-    ::   %+  turn
-    ::     `(list [@tas @ud])`~(tap by p.waft)
-    ::   |=  [item=@tas kelvin-number=@ud]
-    ::   (crip "[{<`@tas`item>} {<kelvin-number>}]")
-    :: ==
+      [%read-file @ @ ^]
+    =*  project-name    i.t.t.p
+    =*  desk-name       i.t.t.t.p
+    =*  file-path=path  t.t.t.t.p
+    =/  =project:zig  (~(got by projects) project-name)
+    =/  =desk:zig  (got-desk:zig-lib project desk-name)
+    =*  repo-host    (scot %p repo-host.repo-info.desk)
+    =*  repo-name    repo-name.repo-info.desk
+    =*  branch-name  branch-name.repo-info.desk
+    =*  commit-hash  commit-hash.repo-info.desk
+    =*  commit
+      ?~  commit-hash  %head  (scot %ux u.commit-hash)
+    =*  scry-path=path
+      %-  weld  :_  (snoc file-path %noun)
+      :^  (scot %p our.bowl)  %linedb  (scot %da now.bowl)
+      /[repo-host]/[repo-name]/[branch-name]/[commit]
+    =+  .^(file-contents=(unit @t) %gx scry-path)
+    ?~  file-contents  ``json+!>(~)
+    ``json+!>(s+u.file-contents)
   ::
       [%read-desks ~]
     =*  p  /(scot %p our.bowl)//(scot %da now.bowl)
