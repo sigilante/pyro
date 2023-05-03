@@ -404,8 +404,7 @@
       %-  %~  arvo  pass:io
           [%save [project-name desk-name file]:act]
       :^  %k  %lard  q.byk.bowl
-      %-  save-file:zig-threads
-      [project-name desk-name file text]:act
+      (save-file:zig-threads [file contents]:act)
     ::
         %delete-file
       ::  should show warning
@@ -650,27 +649,28 @@
       (pure:m result)
     ::
         %save-thread
-      =/  =project:zig  (~(got by projects) project-name.act)
-      =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
-      =.  saved-test-steps.desk
-        %-  ~(put by saved-test-steps.desk)
-        [thread-name test-imports test-steps]:act
-      =/  thread-text=@t
-        %-  convert-test-steps-to-thread:zig-lib
-        [project-name desk-name test-imports test-steps]:act
-      =/  thread-path=path
-        (thread-name-to-path:zig-lib thread-name.act)
-      :_  %=  state
-              projects
-            %+  ~(put by projects)  project-name.act
-            (put-desk:zig-lib project desk-name.act desk)
-          ==
-      :+  %^  make-save-file:zig-lib  update-info  thread-path
-          thread-text
-        %-  update-vase-to-card:zig-lib
-        %.  thread-path
-        ~(save-file make-update-vase:zig-lib update-info)
-      ~
+      !!
+      :: =/  =project:zig  (~(got by projects) project-name.act)
+      :: =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
+      :: =.  saved-test-steps.desk
+      ::   %-  ~(put by saved-test-steps.desk)
+      ::   [thread-name test-imports test-steps]:act
+      :: =/  thread-text=@t
+      ::   %-  convert-test-steps-to-thread:zig-lib
+      ::   [project-name desk-name test-imports test-steps]:act
+      :: =/  thread-path=path
+      ::   (thread-name-to-path:zig-lib thread-name.act)
+      :: :_  %=  state
+      ::         projects
+      ::       %+  ~(put by projects)  project-name.act
+      ::       (put-desk:zig-lib project desk-name.act desk)
+      ::     ==
+      :: :+  %^  make-save-file:zig-lib  update-info  thread-path
+      ::     thread-text
+      ::   %-  update-vase-to-card:zig-lib
+      ::   %.  thread-path
+      ::   ~(save-file make-update-vase:zig-lib update-info)
+      :: ~
     ::
         %delete-thread
       =/  =project:zig  (~(got by projects) project-name.act)

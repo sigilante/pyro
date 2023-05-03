@@ -138,7 +138,7 @@
           [%add-project-desk index=(unit @ud) repo-host=@p repo-name=@tas branch-name=@tas commit-hash=(unit @ux)]  ::  index=~ -> add to end
           [%delete-project-desk ~]
       ::
-          [%save-file file=path text=@t]  ::  generates new file or overwrites existing
+          [%save-file file=path contents=@]  ::  generates new file or overwrites existing
           [%delete-file file=path]
           [%make-configuration-file ~]
       ::

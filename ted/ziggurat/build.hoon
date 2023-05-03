@@ -1,4 +1,5 @@
-/-  spider,
+/-  linedb,
+    spider,
     zig=zig-ziggurat
 /+  strandio,
     zig-lib=zig-ziggurat,
@@ -7,10 +8,14 @@
 =*  strand         strand:spider
 =*  get-bowl       get-bowl:strandio
 =*  get-time       get-time:strandio
+=*  leave-our      leave-our:strandio
 =*  poke-our       poke-our:strandio
 =*  scry           scry:strandio
 =*  send-raw-card  send-raw-card:strandio
 =*  sleep          sleep:strandio
+=*  take-fact      take-fact:strandio
+=*  take-poke      take-poke:strandio
+=*  watch-our      watch-our:strandio
 ::
 =/  m  (strand ,vase)
 =|  project-name=@t
@@ -49,10 +54,12 @@
   =/  args  !<((unit arg-mold) args-vase)
   ?~  args
     =/  message=tape
-      %+  weld
-      "Usage:\0a-suite!ziggurat-build project-name=@t"
-      " desk-name=@tas request-id=(unit @t) repo-host=@p"
-      " branch-name=@tas commit-hash=(unit @ux) file-path=path"
+      ;:  weld
+        "Usage:\0a-suite!ziggurat-build project-name=@t"
+        " desk-name=@tas request-id=(unit @t) repo-host=@p"
+        " branch-name=@tas commit-hash=(unit @ux)"
+        " file-path=path"
+      ==
     (return-error message)
   =.  project-name  project-name.u.args
   =.  desk-name     desk-name.u.args
@@ -67,40 +74,40 @@
     ;<  ~  bind:m
       %+  poke-our  %linedb
       :-  %linedb-action
-      !>  ^-  action:ldb
-      :^  %build  repo-host  repo-name
+      !>  ^-  action:linedb
+      :^  %build  repo-host  desk-name
       [branch-name commit-hash file-path [%ted tid.bowl]]
     ~&  %zb^%non-con^%0
     ;<  build-result=vase  bind:m  (take-poke %linedb-update)
     ~&  %zb^%non-con^%1
-    =+  !<(=update:ub build-result)
+    =+  !<(=update:linedb build-result)
     ?.  ?=(%build -.update)
       %-  return-error
       %+  weld  "{<file-path>} build failed unexpectedly,"
       " please see dojo for compilation errors"
-    ?^  q.result.update
-      =+  !<(result=(each vase tang) result.update)
-      ?:  ?=(%& -.result)  return-success
-      =*  error  (reformat-compiler-error:zig-lib p.result)
-      %-  return-error
-      %+  weld  "{<file-path>} build failed: {<error>}"
-      " please see dojo for additional compilation errors"
+    ?:  ?=(%& -.result.update)  return-success
+    =*  error
+      (reformat-compiler-error:zig-lib p.result.update)
     %-  return-error
-    %+  weld  "{<file-path>} build failed,"
-    " please see dojo for compilation errors"
-  ::  TODO: to %linedb
-  ;<  have-jam-mar=?  bind:m
-    (scry ? /cu/[desk-name]/mar/jam/hoon)
-  ?.  have-jam-mar
+    %+  weld  "{<file-path>} build failed: {<error>}"
+    " please see dojo for additional compilation errors"
+  =*  commit=@ta
+    ?~  commit-hash  %head  (scot %ux u.commit-hash)
+  =*  path-prefix=path
+   /(scot %p repo-host)/[desk-name]/[branch-name]/[commit]
+  ;<  jam-mar=(unit @t)  bind:m
+    %+  scry  (unit @t)
+    (welp [%gx %linedb path-prefix] /mar/jam/hoon/noun)
+  ?~  jam-mar
     %-  return-error
-    %+  weld  "/mar/jam/hoon does not exist in "
-    " {<desk-name>}; please add and try again"
+    %+  weld  "/mar/jam/hoon does not exist in %linedb"
+    " {<`path`path-prefix>}; please add and try again"
   ;<  smart-lib-vase=vase  bind:m
     (scry vase /gx/ziggurat/get-smart-lib-vase/noun)
   ;<  =bowl:strand  bind:m  get-bowl
+  =*  zl  zig-lib(now.bowl now.bowl, our.bowl our.bowl)
   =/  =build-result:zig
-    %^  build-contract:zig-lib  smart-lib-vase
-      /(scot %p our.bowl)/[project-name]/(scot %da now.bowl)
+    %^  build-contract:zl  smart-lib-vase  path-prefix
     file-path
   ?:  ?=(%| -.build-result)
     %-  return-error
@@ -109,14 +116,20 @@
     " with error:\0a{<(trip p.build-result)>}"
   =*  jam-path
     (need (convert-contract-hoon-to-jam:zig-lib file-path))
+  ;<  empty-vase=vase  bind:m
+    (save-file:zig-threads jam-path (jam p.build-result))
   ;<  ~  bind:m
-    %-  send-raw-card
-    %^  make-save-jam:zig-lib  desk-name  jam-path
-    p.build-result
-  ;<  ~  bind:m  (sleep ~s1)
+    %^  watch-our  /save-done  %linedb
+    [%branch-updates (snip path-prefix)]
   ;<  ~  bind:m
     %+  poke-our  %ziggurat
-    %^  make-read-desk-cage:zig-lib  project-name  desk-name
+    %^  make-read-repo-cage:zig-lib  project-name  desk-name
     request-id
+  ;<  save-done=cage  bind:m  (take-fact /save-done)
+  ;<  ~  bind:m  (leave-our /save-done %linedb)
+  ?.  ?=(%linedb-update p.save-done)     !!
+  =+  !<(=update:linedb q.save-done)
+  ?.  ?=(%new-data -.update)             !!
+  ?.  =((snip path-prefix) path.update)  !!
   return-success
 --

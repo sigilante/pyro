@@ -531,11 +531,7 @@
   (pure:m !>(repo-info.desk))
 ::
 ++  save-file
-  |=  $:  project-name=@tas
-          desk-name=@tas
-          file-path=path
-          text=@t
-      ==
+  |=  [file-path=path file-contents=@]
   =/  m  (strand ,vase)
   ^-  form:m
   ;<  repo-info-vase=vase  bind:m
@@ -557,7 +553,9 @@
     :-  %linedb-action
     !>
     :^  %commit  repo-name  branch-name
-    (~(put by snap) file-path (to-wain:format text))
+    %+  ~(put by snap)  file-path
+    ?.  ((sane %t) file-contents)  ~[file-contents]
+    (to-wain:format file-contents)
   (pure:m !>(~))
 ::
 ++  does-desk-exist
@@ -686,24 +684,6 @@
   ;<  ~  bind:m
     %-  commit-from-linedb:pyro-lib
     [whos repo-host repo-name branch-name commit-hash]
-  :: =*  ted-name=@tas  %ziggurat-commit
-  :: ;<  =bowl:strand  bind:m  get-bowl
-  :: =/  tid=@tatid
-  ::   %+  rap  3
-  ::   %+  join  '-'
-  ::   ^-  (list @t)
-  ::   :^  ted-name  repo-name  branch-name
-  ::   :+  ?~(commit-hash %head (scot %ux u.commit-hash))
-  ::     (scot %uv eny.bowl)
-  ::   ~
-  :: ;<  ~  bind:m
-  ::   %+  poke-our  %spider
-  ::   :-  %spider-start
-  ::   !>
-  ::   :-  ~
-  ::   :^  `tid  byk.bowl  ted-name
-  ::   !>
-  ::   `[tid whos repo-host repo-name branch-name commit-hash]
   (pure:m !>(~))
 ::
 ++  commit-install-start

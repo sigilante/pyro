@@ -232,67 +232,6 @@
   %.  %linedb
   ~(leave-our pass:io [%linedb project-name path-suffix])
 ::
-++  make-save-jam
-  |=  [desk-name=@tas file=path non=*]
-  ^-  card
-  ?>  ?=(%jam (rear file))
-  %-  ~(arvo pass:io /save-wire)
-  :+  %c  %info
-  [`@tas`desk-name %& [file %ins %noun !>(`@`(jam non))]~]
-::
-++  make-save-file
-  |=  [=update-info:zig file=path text=@t]
-  ^-  card
-  =*  desk-name  desk-name.update-info
-  =/  file-type=@tas  (rear file)
-  |^
-  =/  supported-file-types=(set @tas)
-    %-  ~(gas in *(set @tas))
-    ~[%hoon %ship %bill %kelvin %docket-0]
-  ?:  (~(has in supported-file-types) file-type)  make-card
-  =/  is-mark-found=?
-    .^  ?
-        %cu
-        %+  weld  /(scot %p our.bowl)/[desk-name]
-        /(scot %da now.bowl)/mar/[file-type]/hoon
-    ==
-  ?:  is-mark-found                               make-card
-  %-  update-vase-to-card
-  %-  %~  save-file  make-error-vase
-      [update-info %error]
-  %-  crip
-  ;:  weld
-      "cannot save file with mark {<`@tas`file-type>}."
-      " supported file marks are"
-      " {<`(set @tas)`supported-file-types>}"
-      " and marks with %mime grow arms in"
-      " {<`path`/[desk-name]/mar>}"
-  ==
-  ::
-  ++  make-card
-    ^-  card
-    =.  text  ?.(=('' text) text (make-template file))
-    =/  mym=mime
-      :-  /application/x-urb-unknown
-      %-  as-octt:mimes:html
-      %+  rash  text
-      (star ;~(pose (cold '\0a' (jest '\0d\0a')) next))
-    %-  ~(arvo pass:io /save-wire)
-    :-  %c
-    :^  %info  desk-name  %&
-    :_  ~  :+  file  %ins
-    =*  reamed-text  q:(slap !>(~) (ream text))  ::  =* in case text unreamable
-    ?+    file-type  [%mime !>(mym)] :: don't need to know mar if we have bytes :^)
-        %hoon        [%hoon !>(text)]
-        %ship        [%ship !>(;;(@p reamed-text))]
-        %bill        [%bill !>(;;((list @tas) reamed-text))]
-        %kelvin      [%kelvin !>(;;([@tas @ud] reamed-text))]
-        %docket-0
-      =-  [%docket-0 !>((need (from-clauses:mime:dock -)))]
-      ;;((list clause:dock) reamed-text)
-    ==
-  --
-::
 ++  convert-contract-hoon-to-jam
   |=  contract-hoon-path=path
   ^-  (unit path)
@@ -340,13 +279,6 @@
   ::
   ++  parse-main  ::  first
     ^-  (each [raw=(list [face=term =path]) contract-hoon=hoon] @t)
-    =*  have-file
-      (does-linedb-have-file repo-path to-compile)
-    ?.  have-file
-      :-  %|
-      %-  crip
-      %+  weld  "did not find contract at"
-      " {<`path`to-compile>} in repo {<`path`repo-path>}"
     =*  p=path
       ;:  welp
           /(scot %p our.bowl)/linedb/(scot %da now.bowl)
@@ -354,36 +286,45 @@
           to-compile
           /noun
       ==
-    [%& (parse-pile:conq p (trip (need .^((unit @t) %gx p))))]  ::  TODO: handle need better
+    =+  .^(file-contents=(unit @t) %gx p)
+    ?~  file-contents
+      :-  %|
+      %-  crip
+      %+  weld  "did not find contract at"
+      " {<`path`to-compile>} in repo {<`path`repo-path>}"
+    [%& (parse-pile:conq p (trip u.file-contents))]
   ::
   ++  parse-imports  ::  second
     |=  raw=(list [face=term p=path])
     ^-  (each (list hoon) @t)
-    =/  non-existent-libs=(list path)
-      %+  murn  raw
-      |=  [face=term p=path]
-      =*  import-hoon-file-path=path  (welp p /hoon)
-      =*  have-file
-        %+  does-linedb-have-file  repo-path
-        import-hoon-file-path
-      ?:  have-file  ~  `import-hoon-file-path
-    ?^  non-existent-libs
-      :-  %|
-      %-  crip
-      %+  weld  "did not find imports for {<to-compile>} at"
-      " {<`(list path)`non-existent-libs>}>}"
-    :-  %&
-    %+  turn  raw
-    |=  [face=term p=path]
-    =*  tp=path
-      ;:  welp
-         /(scot %p our.bowl)/linedb/(scot %da now.bowl)
-         p
-         /hoon
+    =/  imports-or-error=(each (list [@tas path @t]) @t)
+      =|  imports=(list [@tas path @t])
+      |-
+      ?~  raw  [%& (flop imports)]
+      =*  face=term  face.i.raw
+      =*  p=path     (snoc p.i.raw %hoon)
+      =*  tp=path
+        ;:  welp
+           /(scot %p our.bowl)/linedb/(scot %da now.bowl)
+           repo-path
+           p
+           /noun
+        ==
+      =+  .^(file-contents=(unit @t) %gx tp)
+      ?~  file-contents
+        :-  %|
+        %-  crip
+        "did not find imports for {<to-compile>} at {<p>}"
+      %=  $
+          raw      t.raw
+          imports  [[face tp u.file-contents] imports]
       ==
+    ?:  ?=(%| -.imports-or-error)  [%| p.imports-or-error]
+    :-  %&
+    %+  turn  p.imports-or-error
+    |=  [face=@tas tp=path file-contents=@t]
     ^-  hoon
-    :+  %ktts  face
-    +:(parse-pile:conq tp (trip (need .^((unit @t) %cx tp))))  ::  TODO: handle need better
+    [%ktts face +:(parse-pile:conq tp (trip file-contents))]
   ::
   ++  build-imports  ::  third
     |=  braw=(list hoon)
@@ -2186,7 +2127,7 @@
         [%add-project-desk (ot ~[[%index ni:dejs-soft:format] [%repo-host (se %p)] [%repo-name (se %tas)] [%branch-name (se %tas)] [%commit-hash (se-soft %ux)]])]
         [%delete-project-desk ul]
     ::
-        [%save-file (ot ~[[%file pa] [%text so]])]
+        [%save-file (ot ~[[%file pa] [%contents so]])]  :: TODO: allow non-@t %contents
         [%delete-file (ot ~[[%file pa]])]
         [%make-configuration-file ul]
     ::
