@@ -231,18 +231,6 @@
   ^-  card
   %.  %linedb
   ~(leave-our pass:io [%linedb project-name path-suffix])
-:: ::
-:: ++  make-watch-for-file-changes
-::   |=  [project-name=@t desk-name=@tas]
-::   ^-  card
-::   %-  ~(warp-our pass:io /clay/[project-name]/[desk-name])
-::   [desk-name ~ %next %v da+now.bowl /]
-:: ::
-:: ++  make-cancel-watch-for-file-changes
-::   |=  [project-name=@t desk-name=@tas]
-::   ^-  card
-::   %-  ~(warp-our pass:io /clay/[project-name]/[desk-name])
-::   [desk-name ~]
 ::
 ++  make-save-jam
   |=  [desk-name=@tas file=path non=*]
@@ -2195,7 +2183,7 @@
         [%delete-sync-desk-vships (ot ~[[%ships (ar (se %p))]])]
     ::
         [%change-focus ul]
-        [%add-project-desk (ot ~[[%index ni:dejs-soft:format] [%fetch-desk-from-remote-ship (se-soft %p)]])]
+        [%add-project-desk (ot ~[[%index ni:dejs-soft:format] [%repo-host (se %p)] [%repo-name (se %tas)] [%branch-name (se %tas)] [%commit-hash (se-soft %ux)]])]
         [%delete-project-desk ul]
     ::
         [%save-file (ot ~[[%file pa] [%text so]])]
