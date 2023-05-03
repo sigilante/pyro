@@ -717,7 +717,7 @@
   ^-  ?
   ::  NOTE: `query-path` should NOT have the scry /noun.
   =*  query-result
-    .^  (unit *)
+    .^  *
         %gx
         %-  weld  :_  (snoc query-path %noun)
         /(scot %p our.bowl)/linedb/(scot %da now.bowl)

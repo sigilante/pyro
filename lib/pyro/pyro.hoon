@@ -135,7 +135,6 @@
           repo=@tas
           branch=@tas
           commit-hash=(unit @ux)
-          bill=(list dude:gall)
       ==
   =/  m  (strand ,~)
   ^-  form:m
@@ -145,7 +144,7 @@
     :-  %linedb-action
     !>  ^-  action:linedb
     :^  %make-install-args  repo-host  repo
-    [branch commit-hash bill [%ted tid.bowl]]
+    [branch commit-hash [%ted tid.bowl]]
   ;<  install-args-result=vase  bind:m
     (take-poke %linedb-update)
   =+  !<(=update:linedb install-args-result)

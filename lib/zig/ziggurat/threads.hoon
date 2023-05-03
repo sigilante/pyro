@@ -549,8 +549,9 @@
     ?~  commit-hash  %head  (scot %uv u.commit-hash)
   ;<  snap=(map path wain)  bind:m
     %+  scry  (map path wain)
-    :^  %gx  %linedb  %snap
+    :+  %gx  %linedb
     /[repo-host]/[repo-name]/[branch-name]/[commit]/noun
+  :: ?~  snap  !!  ::  TODO
   ;<  ~  bind:m
     %+  poke-our  %linedb
     :-  %linedb-action
@@ -674,7 +675,7 @@
   $(repo-dependencies t.repo-dependencies)
 ::
 ++  start-commit-thread
-  |=  [whos=(list @p) start-apps=(map @tas (list @tas))]
+  |=  whos=(list @p)
   |=  $:  repo-host=@p
           repo-name=@tas
           branch-name=@tas
@@ -682,11 +683,9 @@
       ==
   =/  m  (strand ,vase)
   ^-  form:m
-  =*  bill=(list @tas)
-    (~(gut by start-apps) repo-name ~)
   ;<  ~  bind:m
     %-  commit-from-linedb:pyro-lib
-    [whos repo-host repo-name branch-name commit-hash bill]
+    [whos repo-host repo-name branch-name commit-hash]
   :: =*  ted-name=@tas  %ziggurat-commit
   :: ;<  =bowl:strand  bind:m  get-bowl
   :: =/  tid=@tatid
@@ -721,7 +720,7 @@
   ;<  =bowl:strand  bind:m  get-bowl
   ;<  empty-vase=vase  bind:m
     %+  iterate-over-repo-dependencies  repo-dependencies
-    (start-commit-thread whos start-apps)
+    (start-commit-thread whos)
   ;<  state=state-0:zig  bind:m  get-state
   =/  =project:zig  (~(got by projects.state) project-name)
   =.  sync-desk-to-vship.project

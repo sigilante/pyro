@@ -563,7 +563,6 @@
         %read-repo
       ::  for internal use -- app calls itself to scry clay
       =/  =project:zig  (~(got by projects) project-name.act)
-      ~&  %read-repo^act^project
       =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
       =*  repo-host    repo-host.repo-info.desk
       =*  branch-name  branch-name.repo-info.desk
@@ -572,8 +571,9 @@
         ?~  commit-hash  %head  (scot %ux u.commit-hash)
       =.  dir.desk
         %-  sort  :_  aor
-        %-  need  ::  TODO
-        .^  (unit (list path))
+        %~  tap  in
+        %~  key  by
+        .^  (map path wain)
             %gx
             :-  (scot %p our.bowl)
             :^  %linedb  (scot %da now.bowl)
@@ -1216,7 +1216,7 @@
           /(scot %p repo-host)/[repo-name]/[branch-name]
         /[commit]
     :^  %k  %lard  q.byk.bowl
-    %-  (start-commit-thread:zig-threads whos start-apps)
+    %-  (start-commit-thread:zig-threads whos)
     [repo-host repo-name branch-name commit-hash]
   --
 ::
@@ -1226,6 +1226,8 @@
   ?+    w  (on-arvo:def w sign-arvo)
       [%new-project-from-remote @ ~]  `this
       [%sync @ @ @ @ @ @ ~]           `this
+      [%save @ @ ^]                   ::`this
+    ~&  sign-arvo  `this
   ::
       [%on-init-zig-setup ~]
     =*  our  (scot %p our.bowl)
