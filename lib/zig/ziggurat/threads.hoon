@@ -221,9 +221,21 @@
   =/  m  (strand ,vase)
   ^-  form:m
   =/  address=@ux  (~(got by ship-to-address) who)
-  ;<  code-atom=@  bind:m
-    (scry @ [%cx desk-name contract-jam-path])
-  =/  code  [- +]:(cue code-atom)
+  ;<  state=state-0:zig  bind:m  get-state
+  =/  =project:zig
+    (~(got by projects.state) project-name)
+  =/  =desk:zig  (got-desk:zig-lib project desk-name)
+  =*  rh  (scot %p repo-host.repo-info.desk)
+  =*  rn  repo-name.repo-info.desk
+  =*  bn  branch-name.repo-info.desk
+  =*  ch  commit-hash.repo-info.desk
+  =*  co=@ta  ?~  ch  %head  (scot %ux u.ch)
+  ;<  code-atom=(unit @)  bind:m
+    %+  scry  (unit @)
+    %-  snoc  :_  %noun
+    `path`[%gx %linedb rh rn bn co contract-jam-path]
+  ?~  code-atom  !!  :: TODO
+  =/  code  [- +]:(cue u.code-atom)
   |^
   ;<  empty-vase=vase  bind:m
     %-  send-pyro-poke

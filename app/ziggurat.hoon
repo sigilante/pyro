@@ -96,6 +96,19 @@
 ++  on-load
   |=  =old=vase
   ::  on-load: pre-cue our compiled smart contract library
+  =*  scry-prefix=path
+    :^  (scot %p our.bowl)  q.byk.bowl  (scot %da now.bowl)
+    /lib/zig/sys
+  =.  smart-lib-noun
+    .^  *
+        %cx
+        (weld scry-prefix /smart-lib/noun)
+    ==
+  =.  zink-cax-noun
+    .^  *
+        %cx
+        (weld scry-prefix /hash-cache/noun)
+    ==
   =/  smart-lib=vase  ;;(vase (cue +.+:;;([* * @] smart-lib-noun)))
   =/  =eng:zig
     %~  engine  engine
