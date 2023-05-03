@@ -70,6 +70,7 @@
       =sync-desk-to-vship
       most-recent-snap=path
       saved-thread-queue=thread-queue
+      start-apps=(map @tas (list @tas))
   ==
 +$  desk
   $:  name=@tas
@@ -80,6 +81,7 @@
       saved-test-steps=(map thread-name=@tas [test-imports=imports =test-steps])
   ==
 +$  repo-info
+  ::  commit-hash=~ -> most recent commit
   $:  repo-host=@p
       repo-name=@tas
       branch-name=@tas
@@ -88,15 +90,7 @@
 ::
 +$  build-result  (each [bat=* pay=*] @t)
 ::
-+$  repo-dependencies
-  (list repo-dependency)
-+$  repo-dependency
-  ::  commit-hash=~ -> get most recent commit
-  $:  who=@p
-      repo-name=@tas
-      branch-name=@tas
-      commit-hash=(unit @ux)
-  ==
++$  repo-dependencies  (list repo-info)
 ::
 +$  configs  (mip:mip project-name=@t [who=@p what=@tas] @)
 +$  config   (map [who=@p what=@tas] @)
@@ -126,6 +120,7 @@
   (list [who=@p app=(unit @tas) file=path])
 ::
 +$  action
+  $+  ziggurat-action
   $:  project-name=@t
       desk-name=@tas
       request-id=(unit @t)
@@ -155,9 +150,9 @@
           [%deploy-contract who=(unit @p) town-id=@ux contract-jam-path=path]
       ::
           [%build-file =path]
-          [%watch-repo-for-changes who=@p branch-name=@tas]
-          [%read-repo who=@p branch-name=@tas commit-hash=(unit @ux)]
-          [%read-desk ~]
+          [%watch-repo-for-changes ~]
+          [%read-repo ~]
+          :: [%read-desk ~]
       ::
           [%queue-thread thread-name=@tas payload=thread-queue-payload]
           [%save-thread thread-name=@tas test-imports=imports =test-steps] :: TODO; take in test-steps(?) and convert to thread

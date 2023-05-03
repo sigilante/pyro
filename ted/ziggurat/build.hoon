@@ -25,6 +25,9 @@
   $:  project-name=@t
       desk-name=@tas
       request-id=(unit @t)
+      repo-host=@p
+      branch-name=@tas
+      commit-hash=(unit @ux)
       file-path=path
   ==
 ::
@@ -48,20 +51,44 @@
     =/  message=tape
       %+  weld
       "Usage:\0a-suite!ziggurat-build project-name=@t"
-      " desk-name=@tas request-id=(unit @t) file-path=path"
+      " desk-name=@tas request-id=(unit @t) repo-host=@p"
+      " branch-name=@tas commit-hash=(unit @ux) file-path=path"
     (return-error message)
   =.  project-name  project-name.u.args
   =.  desk-name     desk-name.u.args
   =*  request-id    request-id.u.args
+  =*  repo-host     repo-host.u.args
+  =*  branch-name   branch-name.u.args
+  =*  commit-hash   commit-hash.u.args
   =*  file-path     file-path.u.args
   ?~  file-path  (return-error "file-path must be non-~")
   ?.  =(%con i.file-path)
-    ;<  result=vase  bind:m
-      (build:zig-threads request-id file-path)
-    ?^  q.result  return-success
+    ;<  =bowl:strand  bind:m  get-bowl
+    ;<  ~  bind:m
+      %+  poke-our  %linedb
+      :-  %linedb-action
+      !>  ^-  action:ldb
+      :^  %build  repo-host  repo-name
+      [branch-name commit-hash file-path [%ted tid.bowl]]
+    ~&  %zb^%non-con^%0
+    ;<  build-result=vase  bind:m  (take-poke %linedb-update)
+    ~&  %zb^%non-con^%1
+    =+  !<(=update:ub build-result)
+    ?.  ?=(%build -.update)
+      %-  return-error
+      %+  weld  "{<file-path>} build failed unexpectedly,"
+      " please see dojo for compilation errors"
+    ?^  q.result.update
+      =+  !<(result=(each vase tang) result.update)
+      ?:  ?=(%& -.result)  return-success
+      =*  error  (reformat-compiler-error:zig-lib p.result)
+      %-  return-error
+      %+  weld  "{<file-path>} build failed: {<error>}"
+      " please see dojo for additional compilation errors"
     %-  return-error
     %+  weld  "{<file-path>} build failed,"
     " please see dojo for compilation errors"
+  ::  TODO: to %linedb
   ;<  have-jam-mar=?  bind:m
     (scry ? /cu/[desk-name]/mar/jam/hoon)
   ?.  have-jam-mar

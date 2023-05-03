@@ -15,10 +15,13 @@
 =*  scry            scry:strandio
 =*  send-raw-card   send-raw-card:strandio
 =*  sleep           sleep:strandio
+=*  take-fact       take-fact:strandio
+=*  take-kick       take-kick:strandio
 =*  take-poke-ack   take-poke-ack:strandio
 =*  take-sign-arvo  take-sign-arvo:strandio
 =*  wait            wait:strandio
 =*  warp            warp:strandio
+=*  watch-our       watch-our:strandio
 ::
 |_  $:  project-name=@t
         desk-name=@tas
@@ -389,6 +392,7 @@
         /gall/use/eth-watcher
         /gall/use/hark-system-hook
         /gall/use/hark
+        /gall/use/linedb
         /gall/use/notify
         /gall/use/ping
         /gall/use/pyre
@@ -607,29 +611,63 @@
   (pure:m p.payload.update)
 ::
 ++  iterate-over-repo-dependencies
-  =/  m  (strand ,~)
+  =/  m  (strand ,vase)
   |=  $:  =repo-dependencies:zig
-          gate=$-(repo-dependency:zig form:m)
+          gate=$-(repo-info:zig form:m)
       ==
   ^-  form:m
   |-
-  ?~  repo-dependencies  (pure:m ~)
-  ;<  ~  bind:m  (gate i.repo-dependencies)
+  ?~  repo-dependencies  (pure:m !>(~))
+  ;<  empty-vase=vase  bind:m  (gate i.repo-dependencies)
   $(repo-dependencies t.repo-dependencies)
 ::
 ++  iterate-over-desks
-  =/  m  (strand ,~)
-  |=  [desk-names=(list @tas) gate=$-(@tas form:m)]
+  =/  m  (strand ,vase)
+  |=  [=repo-dependencies:zig gate=$-(@tas form:m)]
   ^-  form:m
   |-
-  ?~  desk-names  (pure:m ~)
-  =*  desk-name  i.desk-names
-  ;<  ~  bind:m  (gate desk-name)
-  $(desk-names t.desk-names)
+  ?~  repo-dependencies  (pure:m !>(~))
+  =*  desk-name  repo-name.i.repo-dependencies
+  ;<  empty-vase=vase  bind:m  (gate desk-name)
+  $(repo-dependencies t.repo-dependencies)
+::
+++  start-commit-thread
+  |=  [whos=(list @p) start-apps=(map @tas (list @tas))]
+  |=  $:  repo-host=@p
+          repo-name=@tas
+          branch-name=@tas
+          commit-hash=(unit @ux)
+      ==
+  =/  m  (strand ,vase)
+  ^-  form:m
+  =*  bill=(list @tas)
+    (~(gut by start-apps) repo-name ~)
+  ;<  ~  bind:m
+    %-  commit-from-linedb:pyro-lib
+    [whos repo-host repo-name branch-name commit-hash bill]
+  :: =*  ted-name=@tas  %ziggurat-commit
+  :: ;<  =bowl:strand  bind:m  get-bowl
+  :: =/  tid=@tatid
+  ::   %+  rap  3
+  ::   %+  join  '-'
+  ::   ^-  (list @t)
+  ::   :^  ted-name  repo-name  branch-name
+  ::   :+  ?~(commit-hash %head (scot %ux u.commit-hash))
+  ::     (scot %uv eny.bowl)
+  ::   ~
+  :: ;<  ~  bind:m
+  ::   %+  poke-our  %spider
+  ::   :-  %spider-start
+  ::   !>
+  ::   :-  ~
+  ::   :^  `tid  byk.bowl  ted-name
+  ::   !>
+  ::   `[tid whos repo-host repo-name branch-name commit-hash]
+  (pure:m !>(~))
 ::
 ++  commit-install-start
   |=  $:  whos=(list @p)
-          desk-names=(list @tas)
+          =repo-dependencies:zig
           install=(map @tas (list @p))
           start-apps=(map @tas (list @tas))
       ==
@@ -639,11 +677,9 @@
   =/  m  (strand ,vase)
   ^-  form:m
   ;<  =bowl:strand  bind:m  get-bowl
-  ::  TODO: need commit-from-linedb
-  :: ;<  ~  bind:m
-  ::   %+  iterate-over-desks  desk-names
-  ::   |=  desk-name=@tas
-  ::   (commit:pyro-lib whos our.bowl desk-name %da now.bowl)
+  ;<  empty-vase=vase  bind:m
+    %+  iterate-over-repo-dependencies  repo-dependencies
+    (start-commit-thread whos start-apps)
   ;<  state=state-0:zig  bind:m  get-state
   =/  =project:zig  (~(got by projects.state) project-name)
   =.  sync-desk-to-vship.project
@@ -660,6 +696,9 @@
       (~(put by projects.state) project-name project)
     ==
   ~&  %cis^%0
+  =*  desk-names=(list @tas)
+    %+  turn  repo-dependencies
+    |=([@ desk-name=@tas *] desk-name)
   ;<  ~  bind:m
     (iterate-over-whos whos (block-on-commit desk-names))
   ?:  ?|  =(0 ~(wyt by install))
@@ -786,9 +825,6 @@
   ~&  %sp^%0
   ;<  state=state-0:zig  bind:m  get-state
   =/  old-focused-project=@tas  focused-project.state
-  =/  repo-dependency-names=(list @tas)
-    %+  turn  repo-dependencies
-    |=([@ desk-name=@tas *] desk-name)
   |^
   ?:  =('global' project-name)
     ;<  ~  bind:m
@@ -801,13 +837,13 @@
   =.  state  new-state
   ~&  %sp^%2
   ;<  =bowl:strand  bind:m  get-bowl
-  ;<  ~  bind:m
-    %+  iterate-over-repo-dependencies
+  ;<  empty-vase=vase  bind:m
+    %+  iterate-over-desks
       :_  repo-dependencies
       [our.bowl project-name %master ~]
     make-read-repo
-  ;<  ~  bind:m
-    %+  iterate-over-repo-dependencies
+  ;<  empty-vase=vase  bind:m
+    %+  iterate-over-desks
       :_  repo-dependencies
       [our.bowl project-name %master ~]
     make-watch-repo
@@ -819,7 +855,8 @@
   ~&  %sp^%5
   ;<  empty-vase=vase  bind:m
     %-  commit-install-start
-    [whos repo-dependency-names install start-apps]
+    [whos repo-dependencies install start-apps]
+  ~&  %sp^%6
   return-success
   ::
   ++  send-state-views
@@ -844,14 +881,14 @@
     |-
     ?~  repo-dependencies  (pure:m ~)
     =*  dep           i.repo-dependencies
-    =*  who           who.dep
+    =*  repo-host     repo-host.dep
     =*  repo-name     repo-name.dep
     =*  branch-name   branch-name.dep
     :: =*  desired-hash  desired-hash.dep
     ;<  ~  bind:m
       %+  poke-our  %linedb
       :-  %linedb-action
-      !>([%fetch who repo-name branch-name])
+      !>([%fetch repo-host repo-name branch-name])
     $(repo-dependencies t.repo-dependencies)
   ::
   ++  get-cass
@@ -925,6 +962,9 @@
   ::
   ++  make-sync-desk-to-vship
     ^-  sync-desk-to-vship:zig
+    =*  repo-dependency-names=(list @tas)
+      %+  turn  repo-dependencies
+      |=([@ desk-name=@tas *] desk-name)
     %-  ~(gas by *sync-desk-to-vship:zig)
     %+  turn  repo-dependency-names
     |=  desk-name=@tas
@@ -933,8 +973,18 @@
   ++  set-initial-state
     =/  m  (strand ,state-0:zig)
     ^-  form:m
+    ;<  =bowl:strand  bind:m  get-bowl
     =/  =project:zig
       (~(gut by projects.state) project-name *project:zig)
+    =.  desks.project
+      %+  turn
+        :_  repo-dependencies
+        `repo-info:zig`[our.bowl project-name %master ~]
+      |=  =repo-info:zig
+      =|  =desk:zig
+      :-  repo-name.repo-info
+      desk(name repo-name.repo-info, repo-info repo-info)
+    =.  start-apps.project  start-apps
     =.  state
       %=  state
           focused-project  project-name
@@ -957,41 +1007,37 @@
     (pure:m state)
   ::
   ++  make-watch-repo
-    |=  $:  who=@p
-            repo-name=@tas
-            branch-name=@tas
-            commit-hash=(unit @ux)
-        ==
-    =/  m  (strand ,~)
+    |=  desk-name=@tas
+    =/  m  (strand ,vase)
     ^-  form:m
-    %+  poke-our  %ziggurat
-    :-  %ziggurat-action
-    !>  ^-  action:zig
-    :^  project-name  repo-name  request-id
-    [%watch-repo-for-changes who branch-name]
+    ;<  ~  bind:m
+      %+  poke-our  %ziggurat
+      :-  %ziggurat-action
+      !>  ^-  action:zig
+      :^  project-name  desk-name  request-id
+      [%watch-repo-for-changes ~]
+    (pure:m !>(~))
   ::
   ++  make-read-repo
-    |=  $:  who=@p
-            repo-name=@tas
-            branch-name=@tas
-            commit-hash=(unit @ux)
-        ==
-    =/  m  (strand ,~)
-    ^-  form:m
-    %+  poke-our  %ziggurat
-    :-  %ziggurat-action
-    !>  ^-  action:zig
-    :^  project-name  repo-name  request-id
-    [%read-repo who branch-name commit-hash]
-  ::
-  ++  make-read-desk
     |=  desk-name=@tas
-    =/  m  (strand ,~)
+    =/  m  (strand ,vase)
     ^-  form:m
-    %+  poke-our  %ziggurat
-    :-  %ziggurat-action
-    !>  ^-  action:zig
-    [project-name desk-name request-id %read-desk ~]
+    ;<  ~  bind:m
+      %+  poke-our  %ziggurat
+      :-  %ziggurat-action
+      !>  ^-  action:zig
+      :^  project-name  desk-name  request-id
+      [%read-repo ~]
+    (pure:m !>(~))
+  :: ::
+  :: ++  make-read-desk
+  ::   |=  desk-name=@tas
+  ::   =/  m  (strand ,~)
+  ::   ^-  form:m
+  ::   %+  poke-our  %ziggurat
+  ::   :-  %ziggurat-action
+  ::   !>  ^-  action:zig
+  ::   [project-name desk-name request-id %read-desk ~]
   ::
   ++  return-failure
     =/  m  (strand ,vase)

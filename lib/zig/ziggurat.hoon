@@ -151,31 +151,52 @@
   [%kiln-uninstall !>(`@tas`desk-name)]
 ::
 ++  make-build-file
-  |=  [=update-info:zig file-path=path]
+  |=  $:  =update-info:zig
+          file-path=path
+      ==
   ^-  card
   =*  project-name  project-name.update-info
   =*  desk-name     desk-name.update-info
   =*  request-id    request-id.update-info
-  ?<  ?=(%con -.file-path)
+  :: ?<  ?=(%con -.file-path)
   %-  ~(poke-self pass:io /self-wire)
   :-  %ziggurat-action
   !>  ^-  action:zig
   :^  project-name  desk-name  request-id
   [%build-file file-path]
 ::
-++  make-read-desk
-  |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
+++  make-read-repo
+  |=  $:  project-name=@t
+          desk-name=@tas
+          request-id=(unit @t)
+      ==
   ^-  card
   %-  ~(poke-self pass:io /self-wire)
-  (make-read-desk-cage project-name desk-name request-id)
+  (make-read-repo-cage project-name desk-name request-id)
 ::
-++  make-read-desk-cage
-  |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
+++  make-read-repo-cage
+  |=  $:  project-name=@t
+          desk-name=@tas
+          request-id=(unit @t)
+      ==
   ^-  cage
   :-  %ziggurat-action
   !>  ^-  action:zig
-  :^  project-name  desk-name  request-id
-  [%read-desk ~]
+  [project-name desk-name request-id [%read-repo ~]]
+:: ::
+:: ++  make-read-desk
+::   |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
+::   ^-  card
+::   %-  ~(poke-self pass:io /self-wire)
+::   (make-read-desk-cage project-name desk-name request-id)
+:: ::
+:: ++  make-read-desk-cage
+::   |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
+::   ^-  cage
+::   :-  %ziggurat-action
+::   !>  ^-  action:zig
+::   :^  project-name  desk-name  request-id
+::   [%read-desk ~]
 ::
 ++  make-run-queue
   |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
@@ -187,21 +208,29 @@
   [%run-queue ~]
 ::
 ++  make-watch-for-file-changes
-  |=  [who=@p repo-name=@tas branch-name=@tas]
+  |=  $:  project-name=@tas
+          repo-host=@p
+          repo-name=@tas
+          branch-name=@tas
+      ==
   ^-  card
   =*  path-suffix=path
-    /(scot %p ~nec)/[repo-name]/[branch-name]
-  %+  ~(watch-our pass:io [%linedb path-suffix])  %linedb
-  [%branch-updates path-suffix]
+    /(scot %p repo-host)/[repo-name]/[branch-name]
+  %+  ~(watch-our pass:io [%linedb project-name path-suffix])
+  %linedb  [%branch-updates path-suffix]
 ::
 ++  make-cancel-watch-for-file-changes
-  |=  [who=@p repo-name=@tas branch-name=@tas]
+  |=  $:  project-name=@tas
+          repo-host=@p
+          repo-name=@tas
+          branch-name=@tas
+      ==
   ^-  card
   =*  path-suffix=path
-    /(scot %p ~nec)/[repo-name]/[branch-name]
+    /(scot %p repo-host)/[repo-name]/[branch-name]
   ^-  card
-  %-  ~(leave-our pass:io [%linedb path-suffix])
-  [%branch-updates path-suffix]
+  %.  %linedb
+  ~(leave-our pass:io [%linedb project-name path-suffix])
 :: ::
 :: ++  make-watch-for-file-changes
 ::   |=  [project-name=@t desk-name=@tas]
@@ -611,23 +640,6 @@
     ship-to-address
   (get-ship-to-address-map 'global' configs)
 ::
-++  sync-desk-to-virtualship-card
-  |=  [who=@p project-name=@tas]
-  ^-  card
-  %+  %~  poke-our  pass:io
-      /sync/(scot %da now.bowl)/[project-name]/(scot %p who)
-    %pyro
-  (sync-desk-to-virtualship-cage who project-name)
-::
-++  sync-desk-to-virtualship-cage
-  |=  [who=@p project-name=@tas]
-  ^-  cage
-  :-  %pyro-events
-  !>  ^-  (list pyro-event:pyro)
-  :_  ~
-  :+  who  /c/commit/(scot %p who)
-  (park:pyro-lib our.bowl project-name %da now.bowl)
-::
 ++  make-cis-running
   |=  [ships=(list @p) desk-name=@tas]
   ^-  (map @p [@t ?])
@@ -735,7 +747,7 @@
     :^  (scot %p our.bowl)  %linedb  (scot %da now.bowl)
     :^  (scot %p who)  project-repo-name  branch-name
     :-  ?~  commit-hash  %head  (scot %ux u.commit-hash)
-    /zig/state-views/[project-repo-name]/hoon
+    /zig/state-views/[project-repo-name]/hoon/noun
   =+  .^(state-views-text=(unit @t) %gx p)
   ?~  state-views-text  ~  ::  TODO
   =/  build-result
@@ -2198,8 +2210,9 @@
         [%deploy-contract deploy]
     ::
         [%build-file (ot ~[[%path pa]])]
-        [%read-repo (ot ~[[%who (se %p)] [%branch-name (se %tas)] [%commit-hash (se-soft %ux)]])]
-        [%read-desk ul]
+        [%watch-repo-for-changes ul]
+        [%read-repo ul]
+        :: [%read-desk ul]
     ::
         [%queue-thread queue-thread]
         [%save-thread save-thread]
