@@ -2,10 +2,10 @@
     info+'The contract & app development suite from Uqbar (Alpha)'
     color+0xf2.f3ef  :: purple is 0x72.7bf2 pink is 0xdd.7c8a
     :: https://developers.urbit.org/reference/additional/dist/glob
-    glob-http+['https://personal-server.fra1.digitaloceanspaces.com/glob-0v6.1dojl.mhkd3.1hues.366er.260om.glob' 0v6.1dojl.mhkd3.1hues.366er.260om]
+    glob-http+['https://personal-server.fra1.digitaloceanspaces.com/glob-0v6.bv6s5.2n27i.tap23.2kof5.3lfc3.glob' 0v6.bv6s5.2n27i.tap23.2kof5.3lfc3]
     base+'ziggurat'
     image+'https://hodzod-walrus.s3.us-east-2.amazonaws.com/hodzod-walrus/2022.9.12..23.15.34-R8S9LBS4.png'
-    version+[0 0 9]
+    version+[0 0 10]
     website+'https://uqbar.network'
     license+'MIT'
 ==

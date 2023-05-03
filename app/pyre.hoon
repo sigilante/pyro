@@ -12,15 +12,14 @@
 +*  this  .
     def   ~(. (default-agent this %.n) bowl)
     hc    ~(. +> bowl)
-    card  card:agent:gall
+    card  $+(card card:agent:gall)
 ++  on-init
   ^-  (quip card _this)
   :_  this
-  :-  [%pass /bind %arvo %e %connect `/pyro %pyre]
-  (make-resub:pyre our.bowl)
+  [%pass /bind %arvo %e %connect `/pyro %pyre]~
 ::
 ++  on-save  on-save:def
-++  on-load  |=(=vase (make-resub:pyre our.bowl)^this)
+++  on-load  on-load:def
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
@@ -32,63 +31,52 @@
     :_  this
     cards:(pass-request:(eyre:hc who) rid req)
   ::
-      %noun  (make-resub:pyre our.bowl)^this
-  ==
-::
-++  on-agent
-  |=  [=wire =sign:agent:gall]
-  ^-  (quip card _this)
-  ?+    wire  (on-agent:def wire sign)
-      [%ames @ ~]
-    ?.  ?=(%fact -.sign)  (on-agent:def wire sign)
-    =+  ef=!<([pyro-effect] q.cage.sign)
-    ?>  ?=(%send -.q.ufs.ef)
-    [(send:ames:hc now.bowl who.ef ufs.ef) this]
-  ::
-      [%behn @ ~]
-    ?.  ?=(%fact -.sign)  (on-agent:def wire sign)
-    =+  ef=!<([pyro-effect] q.cage.sign)
-    =^  cards  behn-piers
-      ?+  -.q.ufs.ef  [~ behn-piers]
-        %doze     abet:(doze:(behn:hc who.ef) ufs.ef)
-        %kill     `(~(del by behn-piers) who.ef)
-      ==
-    [cards this]
-  ::
-      [%dill %blit ~]
-    ?.  ?=(%fact -.sign)  (on-agent:def wire sign)
-    =+  ef=!<([pyro-effect] q.cage.sign)
-    ?>  ?=(%blit -.q.ufs.ef)
-    =+  out=(blit:dill:hc ef)
-    ~?  !=(~ out)  out  
-    `this
-  ::
-      [%eyre %response ~]
-    ?.  ?=(%fact -.sign)  (on-agent:def wire sign)
-    =+  ef=!<([pyro-effect] q.cage.sign)
-    ?>  ?=(%response -.q.ufs.ef)
-    =^  cards  eyre-piers
-      abet:(handle-response:(eyre who.ef) ufs.ef)
-    [cards this]
-  ::
-      [%iris @ ~]
-    ?.  ?=(%fact -.sign)  (on-agent:def wire sign)
-    =+  ef=!<([pyro-effect] q.cage.sign)
-    =^  cards  iris-piers
-      ?+  -.q.ufs.ef  [~ iris-piers]
-        %request  abet:(request:(iris:hc who.ef) ufs.ef)
-        %kill     `(~(del by iris-piers) who.ef)
-      ==
-    [cards this]
+      %pyro-effect
+    =+  ef=!<([pyro-effect] vase)
+    ?-    -.q.ufs.ef
+    ::  ames
+        %send  [(send:ames:hc now.bowl who.ef ufs.ef) this]
+    ::  behn
+        %doze
+      =^  cards  behn-piers
+        abet:(doze:(behn:hc who.ef) ufs.ef)
+      [cards this]
+    ::  clay
+        %ergo  `this
+    ::  dill
+        %blit
+      =+  out=(blit:dill:hc ef)
+      ~?  !=(~ out)  out
+      [%give %fact [/blit]~ pyro-effect+!>(ef)]~^this
+    ::  eyre
+        %thus  `this
+        %response
+      =^  cards  eyre-piers
+        abet:(handle-response:(eyre who.ef) ufs.ef)
+      [cards this]
+    ::  iris
+        %request
+      =^  cards  iris-piers
+        abet:(request:(iris:hc who.ef) ufs.ef)
+      [cards this]
+    ::  gall
+        %poke-ack  `this
+    ::  pyro specific
+        %kill
+      =.  iris-piers  (~(del by iris-piers) who.ef)
+      =.  behn-piers  (~(del by behn-piers) who.ef)
+      `this
+    ==
   ==
 ::
 ++  on-watch
   |=  =path
   ^-  (quip card _this)
-  ?>  ?=([%http-response *] path)
-  `this
-++  on-leave  on-leave:def
-++  on-peek   on-peek:def
+  ?+  path  (on-watch:def path)
+    [%http-response *]  `this
+    [%blit ~]           `this
+  ==
+::
 ++  on-arvo
   |=  [=wire =sign-arvo]
   ^-  (quip card _this)
@@ -114,6 +102,9 @@
       [%bind ~]  ?>(?=([%eyre %bound %.y *] sign-arvo) `this)
   ==
 ::
+++  on-agent  on-agent:def
+++  on-leave  on-leave:def
+++  on-peek   on-peek:def
 ++  on-fail   on-fail:def
 --
 ::

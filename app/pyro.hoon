@@ -12,16 +12,6 @@
 ::  :pyro|unpause ~nec
 ::  :pyro|kill ~nec
 ::
-::  +on-watch paths:
-::  /effect        subscribe to effects one by one
-::  /effects       subscribe to effects in list form
-::  /effect/~dev   subscribe to all effects of a given ship
-::  /effect/blit   subscribe to all effects of a certain kind (e.g. blits)
-::  /effects/~dev  subscribe to all effects of a given ship in list form
-::  /events/~dev   subscribe to all events of a given ship
-::  /event/~dev/*  subscribe to all events of a given ship and wire
-::  /boths/~dev    subscribe to all events and effects of a given ship
-::
 /-  *zig-pyro
 /+  pyro=pyro-pyro,
     default-agent,
@@ -117,23 +107,6 @@
       ==
     [cards this]
   ::
-  ++  on-watch
-    |=  =path
-    ^-  (quip card _this)
-    ?:  ?=([?(%effects %effect) ~] path)
-      `this
-    ?:  ?=([%effect @ ~] path)
-      `this
-    ?:  ?=([%event @ ^] path)
-      ?~  (slaw %p i.t.path)
-        ~|([%pyro-bad-subscribe-path-ship path] !!)
-      `this
-    ?.  ?=([?(%effects %effect %events %boths) @ ~] path)
-      ~|([%pyro-bad-subscribe-path path] !!)
-    ?~  (slaw %p i.t.path)
-      ~|([%pyro-bad-subscribe-path-ship path] !!) 
-    `this
-  ::
   ++  on-peek
     |=  =path
     ^-  (unit (unit cage))
@@ -170,6 +143,8 @@
       =/  paf  t.t.t.path
       (scry:(pe who) (weld /gx/[her]/[dap]/0 paf))
     ==
+  ::
+  ++  on-watch  on-watch:def
   ++  on-leave  on-leave:def
   ++  on-agent  on-agent:def
   ++  on-arvo   on-arvo:def
@@ -179,6 +154,7 @@
 ::  unix-{effects,events,boths}: collect jar of effects and events to
 ::    brodcast all at once to avoid gall backpressure
 ::
+::  TODO we don't do anything with events/boths so we can probably delete them 
 =|  unix-effects=(jar ship unix-effect)
 =|  unix-events=(jar ship unix-timed-event)
 =|  unix-boths=(jar ship unix-both)
@@ -314,65 +290,15 @@
   ^-  (quip card _state)
   ::
   =.  this
-    =/  =path  /effect
     %-  emit-cards
     %-  zing
     %+  turn  ~(tap by unix-effects)
     |=  [=ship ufs=(list unix-effect)]
-    %-  zing
     %+  turn  ufs
     |=  uf=unix-effect
-    =+  paths=~[/effect /effect/[-.q.uf]]
-    [%give %fact paths %pyro-effect !>(`pyro-effect`[ship uf])]~
-  ::
-  =.  this
-    =/  =path  /effects
-    %-  emit-cards
-    %+  turn  ~(tap by unix-effects)
-    |=  [=ship ufs=(list unix-effect)]
-    [%give %fact ~[path] %pyro-effects !>(`pyro-effects`[ship (flop ufs)])]
-  ::
-  =.  this
-    %-  emit-cards
-    %-  zing
-    %+  turn  ~(tap by unix-effects)
-    |=  [=ship ufs=(list unix-effect)]
-    =/  =path  /effect/(scot %p ship)
-    %+  turn  ufs
-    |=  uf=unix-effect
-    [%give %fact ~[path] %pyro-effect !>(`pyro-effect`[ship uf])]
-  ::
-  =.  this
-    %-  emit-cards
-    %+  turn  ~(tap by unix-effects)
-    |=  [=ship ufs=(list unix-effect)]
-    =/  =path  /effects/(scot %p ship)
-    [%give %fact ~[path] %pyro-effects !>(`pyro-effects`[ship (flop ufs)])]
-  ::
-  =.  this
-    %-  emit-cards
-    %+  turn  ~(tap by unix-events)
-    |=  [=ship ve=(list unix-timed-event)]
-    =/  =path  /events/(scot %p ship)
-    [%give %fact ~[path] %pyro-events !>(`pyro-events`[ship (flop ve)])]
-  ::
-  =.  this
-    %-  emit-cards
-    %-  zing
-    %+  turn  ~(tap by unix-events)
-    |=  [=ship utes=(list unix-timed-event)]
-    %+  turn  utes
-    |=  ut=unix-timed-event
-    =/  =path  (weld /event/(scot %p ship) p.ue.ut)
-    [%give %fact ~[path] %pyro-event !>(`pyro-event`[ship ue.ut])]
-  ::
-  =.  this
-    %-  emit-cards
-    %+  turn  ~(tap by unix-boths)
-    |=  [=ship bo=(list unix-both)]
-    =/  =path  /boths/(scot %p ship)
-    [%give %fact ~[path] %pyro-boths !>(`pyro-boths`[ship (flop bo)])]
-  ::
+    :^  %pass  /pyre  %agent
+    :+  [our.bowl %pyre]  %poke
+    pyro-effect+!>(`pyro-effect`[ship uf])
   [(flop cards) state]
 ::
 ++  emit-cards
@@ -395,6 +321,7 @@
   |=  act=action
   ^-  (quip card _state)
   ?-    -.act
+  ::
       %init-ship
     =.  this  apex-pyro  =<  abet-pyro
     =.  this  abet-pe:unpause:(publish-effect:(pe who.act) [/ %kill ~])
