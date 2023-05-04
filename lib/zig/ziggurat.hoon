@@ -630,6 +630,33 @@
   ^-  path
   /ted/ziggurat/[thread-name]/hoon
 ::
+++  get-fit
+  |=  [repo-path=path file-path-prefix=@tas file-path=@tas]
+  ^-  (unit path)
+  =/  scry-prefix=path
+    :^  (scot %p our.bowl)  %linedb  (scot %da now.bowl)
+    repo-path
+  =/  scry-suffix=path  /hoon/noun
+  =/  possible-paths=(list path)  (segments:clay file-path)
+  ~&  `(list path)`possible-paths
+  |-
+  ?~  possible-paths  ~
+  =*  p  i.possible-paths
+  ~&  ;:  weld
+          scry-prefix
+          [file-path-prefix p]
+          scry-suffix
+      ==
+  =+  .^  f=(unit @t)
+          %gx
+          ;:  weld
+              scry-prefix
+              [file-path-prefix p]
+              scry-suffix
+      ==  ==
+  ?^  f  `[file-path-prefix p]
+  $(possible-paths t.possible-paths)
+::
 ++  add-to-queue
   |=  $:  =thread-queue:zig
           thread-name=@tas

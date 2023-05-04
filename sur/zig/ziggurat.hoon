@@ -152,11 +152,10 @@
           [%build-file =path]
           [%watch-repo-for-changes ~]
           [%read-repo ~]
-          :: [%read-desk ~]
       ::
           [%queue-thread thread-name=@tas payload=thread-queue-payload]
-          [%save-thread thread-name=@tas test-imports=imports =test-steps] :: TODO; take in test-steps(?) and convert to thread
-          [%delete-thread thread-name=@tas] :: TODO; take in test-steps(?) and convert to thread
+          [%save-thread thread-name=@tas test-imports=imports =test-steps]
+          [%delete-thread thread-name=@tas]
           [%run-queue ~]
           [%clear-queue ~]
       ::

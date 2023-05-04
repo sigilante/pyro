@@ -1,4 +1,5 @@
-/-  spider,
+/-  linedb,
+    spider,
     pyro=zig-pyro,
     wallet=zig-wallet,
     zig=zig-ziggurat
@@ -17,6 +18,7 @@
 =*  sleep           sleep:strandio
 =*  take-fact       take-fact:strandio
 =*  take-kick       take-kick:strandio
+=*  take-poke       take-poke:strandio
 =*  take-poke-ack   take-poke-ack:strandio
 =*  take-sign-arvo  take-sign-arvo:strandio
 =*  wait            wait:strandio
@@ -566,13 +568,27 @@
   (pure:m |(?=(^ fil.a) ?=(^ dir.a)))
 ::
 ++  build
-  |=  [request-id=(unit @t) file-path=path]
+  |=  [repo-info:zig file-path=path]
   =/  m  (strand ,vase)
   ^-  form:m
   ;<  =bowl:strand  bind:m  get-bowl
-  ;<  build-result=(unit vase)  bind:m
-    (build-file [our.bowl desk-name %da now.bowl] file-path)
-  (pure:m ?~(build-result !>(~) u.build-result))
+  ;<  ~  bind:m
+    %+  poke-our  %linedb
+    :-  %linedb-action
+    !>  ^-  action:linedb
+    :^  %build  repo-host  repo-name
+    [branch-name commit-hash file-path [%ted tid.bowl]]
+  ~&  %z^%b^%0
+  ;<  build-result=vase  bind:m  (take-poke %linedb-update)
+  ~&  %z^%b^%1
+  =+  !<(=update:linedb build-result)
+  ~&  %z^%b^%2
+  ?.  ?=(%build -.update)  !!  ::  TODO
+  ~&  %z^%b^%3
+  ?:  ?=(%& -.result.update)  (pure:m p.result.update)
+  ~&  %z^%b^%4
+  ~&  %ziggurat^%build^(reformat-compiler-error:zig-lib p.result.update)
+  (pure:m !>(~))  ::  TODO: give back tang
 ::
 ++  create-desk
   |=  =update-info:zig
