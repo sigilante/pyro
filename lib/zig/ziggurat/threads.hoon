@@ -637,23 +637,15 @@
   (send-raw-card %pass w %arvo %c task)
 ::
 ++  make-snap
-  |=  [project-name=@t request-id=(unit @t)]
+  |=  [focused-project=@t request-id=(unit @t)]
   =/  m  (strand ,vase)
   ^-  form:m
-  ?:  =('zig' project-name)  (pure:m !>(~))
-  ;<  =update:zig  bind:m
-    (scry update:zig /gx/ziggurat/focused-project/noun)
-  =/  focused-project=@t
-    ?>  ?=(^ update)  :: TODO: ?
-    ?>  ?=(%focused-project -.update)
-    ?>  ?=(%& -.payload.update)
-    p.payload.update
-  ?:  =('' focused-project)  (pure:m !>(~))
   ;<  ~  bind:m
     %+  poke-our  %ziggurat
     :-  %ziggurat-action
     !>  ^-  action:zig
     [focused-project %$ request-id %take-snapshot ~]
+  ;<  ~  bind:m  (sleep ~s1)
   (pure:m !>(~))
 ::
 ++  get-state

@@ -193,9 +193,8 @@
       :^  project-name.act  desk-name.act
         request-id.act
       :^  %queue-thread
-        (cat 3 'make-snap-' desk-name.act)  %lard
-      %+  make-snap:zig-threads  project-name.act
-      request-id.act
+        (cat 3 'make-snap-' focused-project)  %lard
+      (make-snap:zig-threads focused-project request-id.act)
     ::
         %delete-project
       =/  =project:zig  (~(got by projects) project-name.act)
@@ -332,7 +331,7 @@
         [%restore-snap new-snap-path]
       =/  old-project=project:zig  (~(got by projects) old)
       =/  old-snap-path=path
-        /[new]/(scot %da now.bowl)
+        /[old]/(scot %da now.bowl)
       =.  most-recent-snap.old-project  old-snap-path
       :_  %=  state
               focused-project  new
@@ -738,7 +737,6 @@
       ==
     ::
         %run-queue
-      ~&  %z^%run-queue
       =/  run-queue-error
         %~  run-queue  make-error-vase:zig-lib
         [update-info %error]
