@@ -31,7 +31,7 @@
   =/  args  !<((unit arg-mold) args-vase)
   ?~  args
     ~&  >>>  "Usage:"
-    ~&  >>>  "-zig!ziggurat-test-subscribe iterations=(unit @ud)"
+    ~&  >>>  "-suite!ziggurat-print-updates iterations=(unit @ud)"
     (pure:m !>(~))
   =*  iterations    iterations.u.args
   ::
