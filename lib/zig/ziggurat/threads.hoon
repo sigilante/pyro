@@ -12,6 +12,7 @@
 =*  build-file      build-file:strandio
 =*  get-bowl        get-bowl:strandio
 =*  get-time        get-time:strandio
+=*  leave-our       leave-our:strandio
 =*  poke-our        poke-our:strandio
 =*  scry            scry:strandio
 =*  send-raw-card   send-raw-card:strandio
@@ -490,15 +491,29 @@
       ==
   =/  m  (strand ,vase)
   ^-  form:m
+  =*  branch-path=path
+    /(scot %p repo-host)/[repo-name]/[branch-name]
+  ~&  %z^%fr^branch-path
+  ;<  ~  bind:m
+    %^  watch-our  /fetch-done  %linedb
+    [%branch-updates branch-path]
   ;<  ~  bind:m
     %+  poke-our  %linedb
     :-  %linedb-action
     !>  [%fetch repo-host repo-name branch-name]
-  ;<  ~  bind:m  (sleep ~s10)  ::  TODO: add %linedb update on action complete and wait for that rather than doing this hacky sleep
+  ;<  fetch-done=cage  bind:m  (take-fact /fetch-done)
+  ~&  %z^%fr^%1
+  ;<  ~  bind:m  (leave-our /fetch-done %linedb)
+  ?.  ?=(%linedb-update p.fetch-done)  !!
+  =+  !<(=update:linedb q.fetch-done)
+  ?.  ?=(%new-data -.update)          !!
+  ?.  =(branch-path path.update)      !!
+  ~&  %z^%fr^%2
   ?~  followup-action  (pure:m !>(~))
   ;<  ~  bind:m
     %+  poke-our  %ziggurat
     [%ziggurat-action u.followup-action]
+  ~&  %z^%fr^%3
   (pure:m !>(~))
 ::
 ++  branch-if-remote
@@ -513,12 +528,26 @@
   =*  repo-name    repo-name.repo-info.desk
   =*  branch-name  branch-name.repo-info.desk
   ?:  =(our.bowl repo-host)  (pure:m !>(repo-info.desk))
+  =*  branch-path=path
+    /(scot %p our.bowl)/[repo-name]/[branch-name]
+  ;<  ~  bind:m
+    %^  watch-our  /branch-done  %linedb
+    [%branch-updates branch-path]
   ;<  ~  bind:m
     %+  poke-our  %linedb
     :-  %linedb-action
     !>
     [%branch repo-host repo-name branch-name branch-name]
+  ;<  branch-done=cage  bind:m  (take-fact /branch-done)
+  ~&  %z^%fr^%1
+  ;<  ~  bind:m  (leave-our /branch-done %linedb)
+  ?.  ?=(%linedb-update p.branch-done)  !!
+  =+  !<(=update:linedb q.branch-done)
+  ?.  ?=(%new-data -.update)          !!
+  ?.  =(branch-path path.update)      !!
   =.  repo-host.repo-info.desk  our.bowl
+  ;<  empty-vase=vase  bind:m
+    (fetch-repo our.bowl repo-name branch-name ~)
   ;<  ~  bind:m
     %+  poke-our  %ziggurat
     :-  %ziggurat-action
@@ -705,6 +734,7 @@
   |^
   =/  m  (strand ,vase)
   ^-  form:m
+  ~&  %cis^%0
   ;<  =bowl:strand  bind:m  get-bowl
   ;<  empty-vase=vase  bind:m
     %+  iterate-over-repo-dependencies  repo-dependencies
@@ -724,7 +754,7 @@
         projects
       (~(put by projects.state) project-name project)
     ==
-  ~&  %cis^%0
+  ~&  %cis^%1
   =*  desk-names=(list @tas)
     %+  turn  repo-dependencies
     |=([@ desk-name=@tas *] desk-name)
@@ -734,9 +764,9 @@
           (~(all by install) |=(a=(list @) ?=(~ a)))
       ==
     (pure:m !>(~))
-  ~&  %cis^%1
-  ;<  ~  bind:m  install-and-start-apps
   ~&  %cis^%2
+  ;<  ~  bind:m  install-and-start-apps
+  ~&  %cis^%3
   (pure:m !>(~))
   ::
   ++  scry-virtualship-desks
@@ -869,19 +899,19 @@
   ;<  empty-vase=vase  bind:m
     %+  iterate-over-desks
       :_  repo-dependencies
-      [our.bowl project-name %master ~]
+      [repo-host project-name %master ~]  ::  TODO: generalize from [%master ~]
     make-read-repo
   ;<  empty-vase=vase  bind:m
     %+  iterate-over-desks
       :_  repo-dependencies
-      [our.bowl project-name %master ~]
+      [repo-host project-name %master ~]  ::  TODO: generalize from [%master ~]
     make-watch-repo
   ;<  ~  bind:m  start-new-ships
   ~&  %sp^%3
   ;<  ~  bind:m  send-new-project-update
   ~&  %sp^%4
   ;<  ~  bind:m  send-state-views
-  ~&  %sp^%5
+  ~&  %sp^%5^repo-dependencies
   ;<  empty-vase=vase  bind:m
     %-  commit-install-start
     [whos repo-dependencies install start-apps]
@@ -1008,7 +1038,7 @@
     =.  desks.project
       %+  turn
         :_  repo-dependencies
-        `repo-info:zig`[our.bowl project-name %master ~]
+        `repo-info:zig`[repo-host project-name %master ~]  ::  TODO: generalize from [%master ~]
       |=  =repo-info:zig
       =|  =desk:zig
       :-  repo-name.repo-info
@@ -1058,15 +1088,6 @@
       :^  project-name  desk-name  request-id
       [%read-repo ~]
     (pure:m !>(~))
-  :: ::
-  :: ++  make-read-desk
-  ::   |=  desk-name=@tas
-  ::   =/  m  (strand ,~)
-  ::   ^-  form:m
-  ::   %+  poke-our  %ziggurat
-  ::   :-  %ziggurat-action
-  ::   !>  ^-  action:zig
-  ::   [project-name desk-name request-id %read-desk ~]
   ::
   ++  return-failure
     =/  m  (strand ,vase)

@@ -1316,7 +1316,7 @@
       (on-arvo:def w sign-arvo)
     =.  status  [%ready ~]
     ?:  ?=(%| -.p.+.sign-arvo)
-      ~&  (reformat-compiler-error:zig-lib p.p.+.sign-arvo)  ::  TODO
+      ~&  %thread-result^w^(reformat-compiler-error:zig-lib p.p.+.sign-arvo)  ::  TODO
       `this(status status)
     =/  cards=(list card)
       ?.  ?=(%zig-configuration (end [3 17] thread-name))
