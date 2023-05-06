@@ -491,9 +491,18 @@
       ==
   =/  m  (strand ,vase)
   ^-  form:m
+  ;<  =bowl:strand  bind:m  get-bowl
   =*  branch-path=path
     /(scot %p repo-host)/[repo-name]/[branch-name]
   ~&  %z^%fr^branch-path
+  ?:  =(our.bowl repo-host)
+    ;<  ~  bind:m
+      %+  poke-our  %linedb
+      :-  %linedb-action
+      !>  [%fetch repo-host repo-name branch-name]
+    ;<  ~  bind:m  (sleep ~s1)
+    ~&  %z^%fr^%self-fetch
+    (pure:m !>(~))
   ;<  ~  bind:m
     %^  watch-our  /fetch-done  %linedb
     [%branch-updates branch-path]
@@ -501,19 +510,20 @@
     %+  poke-our  %linedb
     :-  %linedb-action
     !>  [%fetch repo-host repo-name branch-name]
-  ;<  fetch-done=cage  bind:m  (take-fact /fetch-done)
   ~&  %z^%fr^%1
+  ;<  fetch-done=cage  bind:m  (take-fact /fetch-done)
+  ~&  %z^%fr^%2
   ;<  ~  bind:m  (leave-our /fetch-done %linedb)
   ?.  ?=(%linedb-update p.fetch-done)  !!
   =+  !<(=update:linedb q.fetch-done)
   ?.  ?=(%new-data -.update)          !!
   ?.  =(branch-path path.update)      !!
-  ~&  %z^%fr^%2
+  ~&  %z^%fr^%3
   ?~  followup-action  (pure:m !>(~))
   ;<  ~  bind:m
     %+  poke-our  %ziggurat
     [%ziggurat-action u.followup-action]
-  ~&  %z^%fr^%3
+  ~&  %z^%fr^%4
   (pure:m !>(~))
 ::
 ++  branch-if-remote
@@ -588,6 +598,102 @@
     ?.  ((sane %t) file-contents)  ~[file-contents]
     (to-wain:format file-contents)
   (pure:m !>(~))
+::
+++  update-pyro-desks-to-repo
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ;<  state=state-0:zig  bind:m  get-state
+  =/  =project:zig  (~(got by projects.state) project-name)
+  =*  repo-name    desk-name
+  =/  =desk:zig  (got-desk:zig-lib project repo-name)
+  =*  repo-host    repo-host.repo-info.desk
+  =*  branch-name  branch-name.repo-info.desk
+  =*  commit-hash  commit-hash.repo-info.desk
+  ?^  commit-hash
+    ::  dependency desk is fixed at given commit
+    ::   -> do not update
+    (pure:m !>(~))
+  ::  dependency desk is set to %head
+  ::   -> do update
+  ::
+  =*  sync-desk-to-vship  sync-desk-to-vship.project
+  =*  whos=(list @p)
+    ~(tap in (~(get ju sync-desk-to-vship) repo-name))
+  ;<  empty-vase=vase  bind:m
+    %-  (start-commit-thread whos)
+    [repo-host repo-name branch-name commit-hash]
+  ;<  ~  bind:m
+    %+  poke-our  %ziggurat
+    (make-read-repo-cage:zig-lib project-name desk-name ~)
+  =/  file-paths=(list path)  ~(tap in to-compile.desk)
+  ;<  empty-vase=vase  bind:m
+    |-
+    ?~  file-paths  (pure:m !>(~))
+    ;<  ~  bind:m
+      %+  poke-our  %ziggurat
+      :-  %ziggurat-action
+      !>  ^-  action:zig
+      :^  project-name  desk-name  ~
+      [%build-file i.file-paths]
+    $(file-paths t.file-paths)
+  ;<  =bowl:strand  bind:m  get-bowl
+  =*  zl  zig-lib(our.bowl our.bowl, now.bowl now.bowl)
+  =/  most-recent-commit-hash=(unit @ux)
+    %^  get-most-recent-commit:zl  repo-host  repo-name
+    branch-name
+  ?~  most-recent-commit-hash  !!  :: TODO
+  ;<  state=state-0:zig  bind:m  get-state
+  =/  =project:zig  (~(got by projects.state) project-name)
+  =/  =desk:zig  (got-desk:zig-lib project repo-name)
+  =.  most-recently-seen-commit.desk
+    u.most-recent-commit-hash
+  ;<  ~  bind:m
+    %+  poke-our  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:zig
+    :^  project-name  desk-name  ~
+    :-  %set-ziggurat-state
+    %=  state
+        projects
+      %+  ~(put by projects.state)  project-name
+      (put-desk:zig-lib project desk-name desk)
+    ==
+  (pure:m !>(~))
+  ::  TODO: make use of diff to determine which of files
+  ::   files-to-compile have changed and compile only those
+  %+  murn  ~(tap in to-compile.desk)
+  |=  file-path=path
+  ?~  file-path  ~
+  :-  ~
+  %+  make-build-file:zig-lib  [project-name repo-name %$ ~]
+  file-path
+  :: =+  !<(=domo:clay q.r.u.p.sign-arvo)
+  :: =/  updated-files=(set path)
+  ::   =/  =tako:clay  (~(got by hit.domo) let.domo)
+  ::   =+  .^  =yaki:clay
+  ::           %cs
+  ::           %+  weld  /(scot %p our.bowl)/[desk-name]
+  ::           /(scot %da now.bowl)/yaki/(scot %uv tako)
+  ::       ==
+  ::   ~(key by q.yaki)
+  :: =/  files-to-compile=(list path)
+  ::   ~(tap in (~(int in updated-files) to-compile.desk))
+  :: :_  this
+  :: %+  weld
+  ::   ?:  =(0 (lent files-to-compile))
+  ::     :_  ~
+  ::     (make-read-desk:zig-lib project-name desk-name ~)
+  ::   %+  murn  files-to-compile
+  ::   |=  file-path=path
+  ::   ?~  file-path  ~
+  ::   :-  ~
+  ::   %.  [[project-name desk-name %$ ~] file-path]
+  ::   make-build-file:zig-lib
+  :: %+  turn
+  ::   %~  tap  in
+  ::   (~(get ju sync-desk-to-vship) desk-name)
+  :: |=  who=@p
+  :: (sync-desk-to-virtualship-card:zig-lib who desk-name)
 ::
 ++  does-desk-exist
   |=  desk-name=@tas
@@ -943,11 +1049,8 @@
     =*  repo-host     repo-host.dep
     =*  repo-name     repo-name.dep
     =*  branch-name   branch-name.dep
-    :: =*  desired-hash  desired-hash.dep
-    ;<  ~  bind:m
-      %+  poke-our  %linedb
-      :-  %linedb-action
-      !>([%fetch repo-host repo-name branch-name])
+    ;<  empty-vase=vase  bind:m
+      (fetch-repo repo-host repo-name branch-name ~)
     $(repo-dependencies t.repo-dependencies)
   ::
   ++  get-cass
@@ -1046,7 +1149,7 @@
     =.  start-apps.project  start-apps
     =.  state
       %=  state
-          focused-project  project-name
+          :: focused-project  project-name
       ::
           projects
         %+  ~(put by projects.state)  project-name
@@ -1063,6 +1166,11 @@
       !>  ^-  action:zig
       :-  project-name
       [desk-name request-id %set-ziggurat-state state]
+    ;<  ~  bind:m
+      %+  poke-our  %ziggurat
+      :-  %ziggurat-action
+      !>  ^-  action:zig
+      [project-name project-name request-id %change-focus ~]
     (pure:m state)
   ::
   ++  make-watch-repo

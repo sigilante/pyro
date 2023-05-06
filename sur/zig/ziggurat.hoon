@@ -75,6 +75,7 @@
 +$  desk
   $:  name=@tas
       =repo-info
+      most-recently-seen-commit=@ux
       dir=(list path)
       user-files=(set path)
       to-compile=(set path)

@@ -201,17 +201,23 @@
       :_  %=  state
               projects
             (~(del by projects) project-name.act)
-          ::
-              focused-project
-            ?.  =(focused-project project-name.act)
-              focused-project
-            ?.  (~(has by projects) %zig-dev)  ''  %zig-dev
           ==
-      %+  turn  desks.project
-      |=  [desk-name=@tas @ =repo-info:zig ^]
-      %+  make-cancel-watch-for-file-changes:zig-lib
-        project-name.act
-      [repo-host repo-name branch-name]:repo-info
+      =*  cards
+        %+  turn  desks.project
+        |=  [desk-name=@tas @ =repo-info:zig ^]
+        %+  make-cancel-watch-for-file-changes:zig-lib
+          project-name.act
+        [repo-host repo-name branch-name]:repo-info
+      =/  new-focus=(unit @tas)
+        ?.  =(focused-project project-name.act)  ~
+        ?.  (~(has by projects) %zig-dev)  `''  `%zig-dev
+      ?~  new-focus  cards
+      %+  snoc  cards
+      %-  ~(poke-self pass:io /self-wire)
+      :-  %ziggurat-action
+      !>  ^-  action:zig
+      :^  u.new-focus  desk-name.act  request-id.act
+      [%change-focus ~]
     ::
         %add-sync-desk-vships
       |^
@@ -311,11 +317,19 @@
       [%ziggurat-update !>(`update:zig`update.act)]
     ::
         %change-focus
+      |^
       =/  old=@t  focused-project
       =*  new=@t  project-name.act
       ?:  =(old new)  `state
       =/  new-project=project:zig  (~(got by projects) new)
       =*  new-snap-path  most-recent-snap.new-project
+      =/  cards=(list card)
+        :_  %-  sync-out-of-date-desks
+            (val-desk:zig-lib new-project)
+        %+  ~(poke-our pass:io /pyro-wire)  %pyro
+        :-  %pyro-action
+        !>  ^-  action:pyro
+        [%restore-snap new-snap-path]
       ?.  (~(has by projects) old)
         :_  %=  state
                 focused-project  new
@@ -324,11 +338,9 @@
               %+  ~(put by projects)  new
               new-project(saved-thread-queue ~)
             ==
-        :_  ~
-        %+  ~(poke-our pass:io /pyro-wire)  %pyro
-        :-  %pyro-action
-        !>  ^-  action:pyro
-        [%restore-snap new-snap-path]
+        %+  weld  cards
+        %+  update-linedb-watches  ~
+        (project-to-repo-infos new-project)
       =/  old-project=project:zig  (~(got by projects) old)
       =/  old-snap-path=path
         /[old]/(scot %da now.bowl)
@@ -342,16 +354,60 @@
               [old old-project(saved-thread-queue thread-queue)]
             ~
           ==
-      :+  %+  ~(poke-our pass:io /pyro-wire)  %pyro
-          :-  %pyro-action
-          !>  ^-  action:pyro
-          :+  %snap-ships  old-snap-path
-          pyro-ships.old-project
-        %+  ~(poke-our pass:io /pyro-wire)  %pyro
-        :-  %pyro-action
-        !>  ^-  action:pyro
-        [%restore-snap new-snap-path]
-      ~
+      :_  %+  weld  cards
+          %+  update-linedb-watches
+            (project-to-repo-infos old-project)
+          (project-to-repo-infos new-project)
+      %+  ~(poke-our pass:io /pyro-wire)  %pyro
+      :-  %pyro-action
+      !>  ^-  action:pyro
+      :+  %snap-ships  old-snap-path
+      pyro-ships.old-project
+    ::
+    ++  project-to-repo-infos
+      |=  =project:zig
+      ^-  (list repo-info:zig)
+      %+  turn  (val-desk:zig-lib project)
+      |=(=desk:zig repo-info.desk)
+    ::
+    ++  update-linedb-watches
+      |=  [old=(list repo-info:zig) new=(list repo-info:zig)]
+      ^-  (list card)
+      %+  weld
+        %+  turn  old
+        |=  [repo-host=@p repo-name=@tas branch-name=@tas *]
+        %-  make-cancel-watch-for-file-changes:zig-lib
+        [focused-project repo-host repo-name branch-name]
+      %+  turn  new
+      |=  [repo-host=@p repo-name=@tas branch-name=@tas *]
+      %-  make-watch-for-file-changes:zig-lib
+      [project-name.act repo-host repo-name branch-name]
+    ::
+    ++  sync-out-of-date-desks
+      |=  desks=(list desk:zig)
+      ^-  (list card)
+      %+  murn  desks
+      |=  =desk:zig
+      =*  ri  repo-info.desk
+      =/  most-recent-commit=(unit @ux)
+        %-  get-most-recent-commit:zig-lib
+        [repo-host repo-name branch-name]:ri
+      ?~  most-recent-commit
+        ~&  %ziggurat^%sync-out-of-date-desks^%unexpected-null^ri
+        ~
+      ?:  .=  u.most-recent-commit
+          most-recently-seen-commit.desk
+        ~
+      =*  desk-name  name.desk
+      :-  ~
+      %-  %~  arvo  pass:io
+          /update-pyro-desk/[project-name.act]/[desk-name]
+      :^  %k  %lard  q.byk.bowl
+      %~  update-pyro-desks-to-repo  ziggurat-threads
+      :+  project-name.act  desk-name
+      %+  get-ship-to-address-map:zig-lib
+      project-name.act  configs
+    --
     ::
         %add-project-desk
       =/  add-project-desk-error
@@ -1161,96 +1217,24 @@
 ++  on-agent
   |=  [w=wire =sign:agent:gall]
   ^-  (quip card _this)
-  |^
+  :: |^
   ?+    w  (on-agent:def w sign)
       [%linedb @ @ @ @ ~]
+    ?:  ?=(%watch-ack -.sign)  `this
     ?>  ?=([%fact %linedb-update ^] sign)
     =*  project-name  i.t.w
     =*  repo-host     (slav %p i.t.t.w)
     =*  repo-name     i.t.t.t.w
     =*  branch-name   i.t.t.t.t.w
-    =/  =project:zig  (~(got by projects) project-name)
-    =*  sync-desk-to-vship  sync-desk-to-vship.project
-    =/  =desk:zig  (got-desk:zig-lib project repo-name)
-    =*  commit-hash  commit-hash.repo-info.desk
-    ?^  commit-hash
-      ::  dependency desk is fixed at given commit
-      ::   -> do not update
-      `this
-    ::  dependency desk is set to %head
-    ::   -> do update
-    ::
-    =*  whos=(list @p)
-      ~(tap in (~(get ju sync-desk-to-vship) repo-name))
     :_  this
-    :+  %+  sync-commit-to-virtualship  whos
-        :^  project-name  repo-host  repo-name
-        [branch-name commit-hash start-apps.project]
-      (make-read-repo:zig-lib project-name repo-name ~)
-    ::  TODO: make use of diff to determine which of files
-    ::   files-to-compile have changed and compile only those
-    %+  murn  ~(tap in to-compile.desk)
-    |=  file-path=path
-    ?~  file-path  ~
-    :-  ~
-    %-  make-build-file:zig-lib
-    [[project-name repo-name %$ ~] file-path]
-    :: =+  !<(=domo:clay q.r.u.p.sign-arvo)
-    :: =/  updated-files=(set path)
-    ::   =/  =tako:clay  (~(got by hit.domo) let.domo)
-    ::   =+  .^  =yaki:clay
-    ::           %cs
-    ::           %+  weld  /(scot %p our.bowl)/[desk-name]
-    ::           /(scot %da now.bowl)/yaki/(scot %uv tako)
-    ::       ==
-    ::   ~(key by q.yaki)
-    :: =/  files-to-compile=(list path)
-    ::   ~(tap in (~(int in updated-files) to-compile.desk))
-    :: :_  this
-    :: %+  weld
-    ::   ?:  =(0 (lent files-to-compile))
-    ::     :_  ~
-    ::     (make-read-desk:zig-lib project-name desk-name ~)
-    ::   %+  murn  files-to-compile
-    ::   |=  file-path=path
-    ::   ?~  file-path  ~
-    ::   :-  ~
-    ::   %.  [[project-name desk-name %$ ~] file-path]
-    ::   make-build-file:zig-lib
-    :: %+  turn
-    ::   %~  tap  in
-    ::   (~(get ju sync-desk-to-vship) desk-name)
-    :: |=  who=@p
-    :: (sync-desk-to-virtualship-card:zig-lib who desk-name)
-  ==
-  ::
-  ++  sync-commit-to-virtualship
-    |=  $:  whos=(list @p)
-            project-name=@tas
-            repo-host=@p
-            repo-name=@tas
-            branch-name=@tas
-            commit-hash=(unit @ux)
-            start-apps=(map @tas (list @tas))
-        ==
-    ^-  card
-    =*  zig-threads
-      %~  .  ziggurat-threads
-      :+  project-name  repo-name
-      %+  get-ship-to-address-map:zig-lib
-      project-name  configs
-    =*  commit
-      ?~  commit-hash  %head  (scot %ux u.commit-hash)
-    %-  %~  arvo  pass:io
-        ^-  path
-        %+  welp
-          :^  %sync  (scot %da now.bowl)  project-name
-          /(scot %p repo-host)/[repo-name]/[branch-name]
-        /[commit]
+    :_  ~
+    %-  %~  arvo  pass:io  w
     :^  %k  %lard  q.byk.bowl
-    %-  (start-commit-thread:zig-threads whos)
-    [repo-host repo-name branch-name commit-hash]
-  --
+    %~  update-pyro-desks-to-repo  ziggurat-threads
+    :+  project-name  repo-name
+    %+  get-ship-to-address-map:zig-lib
+    project-name  configs
+  ==
 ::
 ++  on-arvo
   |=  [w=wire =sign-arvo:agent:gall]
@@ -1261,6 +1245,8 @@
       [%save-thread @ @ ~]            `this
       [%add-sync-desk-vships ~]       `this
       [%queue-thread-result @ @ ^]    `this
+      [%update-pyro-desk @ @ ~]       `this
+      [%linedb @ @ @ @ ~]             `this
       [%save @ @ ^]                   ::`this
     ~&  sign-arvo  `this
   ::

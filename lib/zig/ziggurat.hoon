@@ -80,6 +80,12 @@
   %+  turn  desks.project
   |=([p=@tas q=desk:zig] p)
 ::
+++  val-desk
+  |=  =project:zig
+  ^-  (list desk:zig)
+  %+  turn  desks.project
+  |=([p=@tas q=desk:zig] q)
+::
 ++  put-desk
   |=  [=project:zig desk-name=@tas =desk:zig]
   ^-  project:zig
@@ -183,20 +189,6 @@
   :-  %ziggurat-action
   !>  ^-  action:zig
   [project-name desk-name request-id [%read-repo ~]]
-:: ::
-:: ++  make-read-desk
-::   |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
-::   ^-  card
-::   %-  ~(poke-self pass:io /self-wire)
-::   (make-read-desk-cage project-name desk-name request-id)
-:: ::
-:: ++  make-read-desk-cage
-::   |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
-::   ^-  cage
-::   :-  %ziggurat-action
-::   !>  ^-  action:zig
-::   :^  project-name  desk-name  request-id
-::   [%read-desk ~]
 ::
 ++  make-run-queue
   |=  [project-name=@t desk-name=@tas request-id=(unit @t)]
@@ -231,6 +223,15 @@
   ^-  card
   %.  %linedb
   ~(leave-our pass:io [%linedb project-name path-suffix])
+::
+++  get-most-recent-commit
+  |=  [repo-host=@p repo-name=@tas branch-name=@tas]
+  ^-  (unit @ux)
+  =*  scry-path
+    :^  (scot %p our.bowl)  %linedb  (scot %da now.bowl)
+    /(scot %p repo-host)/[repo-name]/[branch-name]/noun
+  =+  .^(log=(list [commit-hash=@ux @ @ @]) %gx scry-path)
+  ?~  log  ~  `commit-hash.i.log
 ::
 ++  convert-contract-hoon-to-jam
   |=  contract-hoon-path=path
