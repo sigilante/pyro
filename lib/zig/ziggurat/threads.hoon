@@ -658,15 +658,9 @@
       %+  ~(put by projects.state)  project-name
       (put-desk:zig-lib project desk-name desk)
     ==
-  (pure:m !>(~))
   ::  TODO: make use of diff to determine which of files
   ::   files-to-compile have changed and compile only those
-  %+  murn  ~(tap in to-compile.desk)
-  |=  file-path=path
-  ?~  file-path  ~
-  :-  ~
-  %+  make-build-file:zig-lib  [project-name repo-name %$ ~]
-  file-path
+  (pure:m !>(~))
   :: =+  !<(=domo:clay q.r.u.p.sign-arvo)
   :: =/  updated-files=(set path)
   ::   =/  =tako:clay  (~(got by hit.domo) let.domo)
