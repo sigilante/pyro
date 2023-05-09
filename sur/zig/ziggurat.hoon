@@ -217,6 +217,7 @@
       %configs
       %ship-to-address-map
       %build-result
+      %long-operation-on-step
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -228,6 +229,11 @@
   ==
 ::
 ++  data  |$(this (each this [level=error-level message=@t]))
+::
++$  long-operation-info
+  (unit long-operation-info-body)
++$  long-operation-info-body
+  [name=@tas steps=(list @tas) current-step=(unit @tas)]
 ::
 +$  update
   $@  ~
@@ -263,5 +269,6 @@
       [%configs update-info payload=(data configs) ~]
       [%ship-to-address-map update-info payload=(data (map @p @ux)) ~]
       [%build-result update-info payload=(data ~) =path]
+      [%long-operation-current-step update-info payload=(data long-operation-info-body) ~]
   ==
 --

@@ -962,6 +962,22 @@
       [/app/[name]/hoon %ins hoon+!>((make-template /app/[name]/hoon))]
   ==
 ::
+++  make-operation-steps
+  |%
+  ++  setup-project
+    ^-  (list @tas)
+    :^  %build-configuration-thread  %get-dependency-repos
+    %start-new-ships  ~
+  ::
+  ++  commit-install-start
+    ^-  (list @tas)
+    ~[%commit-files-to-pyro-ships %install-and-start-apps-on-pyro-ships]
+  ::
+  ++  fetch-repo
+    ^-  (list @tas)
+    ~[%fetch-repo]
+  --
+::
 ::  uqbar-core:lib/zink/conq/hoon duplicated here in part
 ::   with changes that allow for more verbose compilation
 ::   error output
@@ -1819,7 +1835,21 @@
     ::
         %build-result
       ['data' ~]~
+    ::
+        %long-operation-current-step
+      :_  ~
+      ['data' (long-operation-info-body p.payload.update)]
     ==
+  ::
+  ++  long-operation-info-body
+    |=  loib=long-operation-info-body:zig
+    ^-  json
+    %-  pairs
+    :^    [%name %s name.loib]
+        [%steps %a (turn steps.loib |=(s=@tas [%s s]))]
+      :-  %current-step
+      ?~(current-step.loib ~ [%s u.current-step.loib])
+    ~
   ::
   ++  pyro-ships-app-states
     |=  pyro-ships-app-states=(map @p (map @tas (set [@tas ?])))

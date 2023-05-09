@@ -483,14 +483,43 @@
     (get-virtualship-timers project-name our now)
   --
 ::
+++  send-long-operation-update
+  |=  =long-operation-info:zig
+  =/  m  (strand ,vase)
+  ~&  %z^%slou^long-operation-info
+  ^-  form:m
+  ?~  long-operation-info  (pure:m !>(~))
+  ;<  ~  bind:m
+    (watch-our /update-done %ziggurat /project)
+  ;<  ~  bind:m
+    %+  poke-our  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:zig
+    :^  project-name  desk-name  ~
+    :-  %send-update
+    :^  %long-operation-current-step
+      [project-name desk-name %send-long-operation-update ~]
+    long-operation-info  ~
+  ;<  update-done=cage  bind:m  (take-fact /update-done)
+  ;<  ~  bind:m  (leave-our /update-done %ziggurat)
+  ?.  ?=(%ziggurat-update p.update-done)         !!  ::  TODO
+  =+  !<(=update:zig q.update-done)
+  ?.  ?=(%long-operation-current-step -.update)  !!
+  ?.  ?=(%& -.payload.update)                    !!
+  ?.  =(u.long-operation-info p.payload.update)  !!
+  (pure:m !>(~))
+::
 ++  fetch-repo
   |=  $:  repo-host=@p
           repo-name=@tas
           branch-name=@tas
+          =long-operation-info:zig
           followup-action=(unit vase)
       ==
   =/  m  (strand ,vase)
   ^-  form:m
+  ;<  empty-vase=vase  bind:m
+    (send-long-operation-update long-operation-info)
   ;<  =bowl:strand  bind:m  get-bowl
   =*  branch-path=path
     /(scot %p repo-host)/[repo-name]/[branch-name]
@@ -514,10 +543,10 @@
   ;<  fetch-done=cage  bind:m  (take-fact /fetch-done)
   ~&  %z^%fr^%2
   ;<  ~  bind:m  (leave-our /fetch-done %linedb)
-  ?.  ?=(%linedb-update p.fetch-done)  !!
+  ?.  ?=(%linedb-update p.fetch-done)  !!  ::  TODO
   =+  !<(=update:linedb q.fetch-done)
-  ?.  ?=(%new-data -.update)          !!
-  ?.  =(branch-path path.update)      !!
+  ?.  ?=(%new-data -.update)           !!
+  ?.  =(branch-path path.update)       !!
   ~&  %z^%fr^%3
   ?~  followup-action  (pure:m !>(~))
   ;<  ~  bind:m
@@ -557,7 +586,7 @@
   ?.  =(branch-path path.update)      !!
   =.  repo-host.repo-info.desk  our.bowl
   ;<  empty-vase=vase  bind:m
-    (fetch-repo our.bowl repo-name branch-name ~)
+    (fetch-repo our.bowl repo-name branch-name ~ ~)
   ;<  ~  bind:m
     %+  poke-our  %ziggurat
     :-  %ziggurat-action
@@ -828,12 +857,15 @@
           =repo-dependencies:zig
           install=(map @tas (list @p))
           start-apps=(map @tas (list @tas))
+          =long-operation-info:zig
       ==
   =/  commit-poll-duration=@dr  ~s1
   =/  start-poll-duration=@dr   (div ~s1 10)
   |^
   =/  m  (strand ,vase)
   ^-  form:m
+  ;<  empty-vase=vase  bind:m
+    (send-long-operation-update long-operation-info)
   ~&  %cis^%0
   ;<  =bowl:strand  bind:m  get-bowl
   ;<  empty-vase=vase  bind:m
@@ -860,6 +892,12 @@
     |=([@ desk-name=@tas *] desk-name)
   ;<  ~  bind:m
     (iterate-over-whos whos (block-on-commit desk-names))
+  ;<  empty-vase=vase  bind:m
+    %-  send-long-operation-update
+    ?~  long-operation-info  ~
+    :^  ~  name.u.long-operation-info
+      steps.u.long-operation-info
+    `%install-and-start-apps-on-pyro-ships
   ?:  ?|  =(0 ~(wyt by install))
           (~(all by install) |=(a=(list @) ?=(~ a)))
       ==
@@ -978,10 +1016,13 @@
           whos=(list @p)
           install=(map @tas (list @p))
           start-apps=(map @tas (list @tas))
+          =long-operation-info:zig
       ==
   =/  m  (strand ,vase)
   ^-  form:m
   ~&  %sp^%0
+  ;<  empty-vase=vase  bind:m
+    (send-long-operation-update long-operation-info)
   ;<  state=state-0:zig  bind:m  get-state
   =/  old-focused-project=@tas  focused-project.state
   |^
@@ -1006,6 +1047,10 @@
       :_  repo-dependencies
       [repo-host project-name %master ~]  ::  TODO: generalize from [%master ~]
     make-watch-repo
+  ;<  empty-vase=vase  bind:m
+    %-  send-long-operation-update
+    ?~  long-operation-info  ~
+    long-operation-info(current-step.u `%start-new-ships)
   ;<  ~  bind:m  start-new-ships
   ~&  %sp^%3
   ;<  ~  bind:m  send-new-project-update
@@ -1013,8 +1058,12 @@
   ;<  ~  bind:m  send-state-views
   ~&  %sp^%5^repo-dependencies
   ;<  empty-vase=vase  bind:m
-    %-  commit-install-start
-    [whos repo-dependencies install start-apps]
+    %^  commit-install-start  whos  repo-dependencies
+    :+  install  start-apps
+    ?~  long-operation-info  ~
+    %=  long-operation-info
+        current-step.u  `%commit-files-to-pyro-ships
+    ==
   ~&  %sp^%6
   return-success
   ::
@@ -1044,7 +1093,7 @@
     =*  repo-name     repo-name.dep
     =*  branch-name   branch-name.dep
     ;<  empty-vase=vase  bind:m
-      (fetch-repo repo-host repo-name branch-name ~)
+      (fetch-repo repo-host repo-name branch-name ~ ~)
     $(repo-dependencies t.repo-dependencies)
   ::
   ++  get-cass
