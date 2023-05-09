@@ -499,7 +499,7 @@
     :-  %send-update
     :^  %long-operation-current-step
       [project-name desk-name %send-long-operation-update ~]
-    long-operation-info  ~
+    [%& u.long-operation-info]  ~
   ;<  update-done=cage  bind:m  (take-fact /update-done)
   ;<  ~  bind:m  (leave-our /update-done %ziggurat)
   ?.  ?=(%ziggurat-update p.update-done)         !!  ::  TODO
