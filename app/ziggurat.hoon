@@ -194,27 +194,15 @@
             project(saved-thread-queue thread-queue)
           ==
       ?:  =('zig-dev' project-name.act)  cards
-      :: :+  %-  ~(poke-self pass:io /self-wire)
-      ::     :-  %ziggurat-action
-      ::     !>  ^-  action:zig
-      ::     :^  project-name.act  desk-name.act  request-id.act
-      ::     :^  %queue-thread  %send-long-operation-update
-      ::       %lard
-      ::     ?>  (^ long-operation-info)
-      ::     %-  send-long-operation-update:zig-threads
-      ::     %=  long-operation-info
-      ::         current-step.u  `%build-configuration-thread
-      ::     ==
-      :-
-        %-  ~(poke-self pass:io /self-wire)
-        :-  %ziggurat-action
-        !>  ^-  action:zig
-        :^  project-name.act  desk-name.act
-          request-id.act
-        :^  %queue-thread
-          (cat 3 'make-snap-' focused-project)  %lard
-        (make-snap:zig-threads focused-project request-id.act)
-      cards
+      :_  cards
+      %-  ~(poke-self pass:io /self-wire)
+      :-  %ziggurat-action
+      !>  ^-  action:zig
+      :^  project-name.act  desk-name.act
+        request-id.act
+      :^  %queue-thread
+        (cat 3 'make-snap-' focused-project)  %lard
+      (make-snap:zig-threads focused-project request-id.act)
     ::
         %delete-project
       =/  =project:zig  (~(got by projects) project-name.act)
@@ -270,31 +258,21 @@
           commit-install-start:make-operation-steps:zig-lib
         `%commit-files-to-pyro-ships
       :_  state
-      :^    %-  ~(poke-self pass:io /self-wire)
-            :-  %ziggurat-action
-            !>  ^-  action:zig
-            :^  project-name.act  desk-name.act  request-id.act
-            :^    %queue-thread
-                (cat 3 'add-sync-desk-vships-' desk-name.act)
-              %lard
-            %+  commit-install-start:zig-threads  ships.act
-            :^    ~[repo-info.desk]
-                %-  ~(put by *(map @tas (list @p)))
+      :+  %-  ~(poke-self pass:io /self-wire)
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  project-name.act  desk-name.act  request-id.act
+          :^    %queue-thread
+              (cat 3 'add-sync-desk-vships-' desk-name.act)
+            %lard
+          %^  commit-install-start:zig-threads  ships.act
+            ~[repo-info.desk]
+          :^    %-  ~(put by *(map @tas (list @p)))
                 [desk-name install]:act
               %-  ~(put by *(map @tas (list @tas)))
               [desk-name start-apps]:act
             long-operation-info
-          %-  ~(poke-self pass:io /self-wire)
-          :-  %ziggurat-action
-          !>  ^-  action:zig
-          :^  project-name.act  desk-name.act  request-id.act
-          :^  %queue-thread  %send-long-operation-update
-            %lard
-          %-  send-long-operation-update:zig-threads
-          ?~  long-operation-info  ~
-          %=  long-operation-info
-              current-step.u  ~
-          ==
+          %.y
         %-  ~(poke-self pass:io /self-wire)
         :-  %ziggurat-action
         !>  ^-  action:zig
@@ -463,7 +441,7 @@
         %=  desk
             name  desk-name.act
             repo-info
-          [repo-host repo-name branch-name commit-hash]:act
+          [repo-host desk-name branch-name commit-hash]:act
         ==
       =.  desks.project
         ?~  index.act
@@ -474,34 +452,36 @@
         :_  `%fetch-repo
         fetch-repo:make-operation-steps:zig-lib
       :_  state
-      :^    %-  %~  arvo  pass:io
-                /new-project-from-remote/[repo-name.act]
-            :^  %k  %lard  q.byk.bowl
-            %+  fetch-repo:zig-threads  repo-host.act
-            :^  repo-name.act  branch-name.act
-              long-operation-info
-            :-  ~
-            !>  ^-  action:zig
-            :^  project-name.act  repo-name.act  request-id.act
-            :-  %set-ziggurat-state
-            %=  -.state
-                projects
-              (~(put by projects) project-name.act project)
-            ==
-          %-  make-read-repo:zig-lib
-          [project-name repo-name request-id]:act
-        %-  ~(poke-self pass:io /self-wire)
-        :-  %ziggurat-action
+      :_  ~
+      %-  %~  arvo  pass:io
+          /new-project-from-remote/[desk-name.act]
+      :^  %k  %lard  q.byk.bowl
+      =/  m  (strand ,vase)
+      ^-  form:m
+      ;<  empty-vase=vase  bind:m
+        %+  fetch-repo:zig-threads  repo-host.act
+        :^  desk-name.act  branch-name.act
+          long-operation-info
+        :-  ~
         !>  ^-  action:zig
-        :^  project-name.act  desk-name.act  request-id.act
-        :^  %queue-thread  %send-long-operation-update
-          %lard
+        :^  project-name.act  desk-name.act
+          request-id.act
+        :-  %set-ziggurat-state
+        %=  -.state
+            projects
+          (~(put by projects) project-name.act project)
+        ==
+      ;<  ~  bind:m
+        %+  poke-our:strandio  %ziggurat
+        %-  make-read-repo-cage:zig-lib
+        [project-name desk-name request-id]:act
+      ;<  empty-vase=vase  bind:m
         %-  send-long-operation-update:zig-threads
         ?~  long-operation-info  ~
         %=  long-operation-info
             current-step.u  ~
         ==
-      ~
+      (pure:m !>(~))
     ::
         %delete-project-desk
       =/  delete-project-desk-error

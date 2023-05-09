@@ -136,7 +136,7 @@
           [%send-update =update]
       ::
           [%change-focus ~]
-          [%add-project-desk index=(unit @ud) repo-host=@p repo-name=@tas branch-name=@tas commit-hash=(unit @ux)]  ::  index=~ -> add to end
+          [%add-project-desk index=(unit @ud) repo-host=@p branch-name=@tas commit-hash=(unit @ux)]  ::  index=~ -> add to end
           [%delete-project-desk ~]
       ::
           [%save-file file=path contents=@]  ::  generates new file or overwrites existing

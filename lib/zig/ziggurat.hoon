@@ -2182,7 +2182,7 @@
         [%delete-sync-desk-vships (ot ~[[%ships (ar (se %p))]])]
     ::
         [%change-focus ul]
-        [%add-project-desk (ot ~[[%index ni:dejs-soft:format] [%repo-host (se %p)] [%repo-name (se %tas)] [%branch-name (se %tas)] [%commit-hash (se-soft %ux)]])]
+        [%add-project-desk (ot ~[[%index ni:dejs-soft:format] [%repo-host (se %p)] [%branch-name (se %tas)] [%commit-hash (se-soft %ux)]])]
         [%delete-project-desk ul]
     ::
         [%save-file (ot ~[[%file pa] [%contents so]])]  :: TODO: allow non-@t %contents

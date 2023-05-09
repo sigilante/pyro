@@ -531,6 +531,10 @@
       !>  [%fetch repo-host repo-name branch-name]
     ;<  ~  bind:m  (sleep ~s1)
     ~&  %z^%fr^%self-fetch
+    ?~  followup-action  (pure:m !>(~))
+    ;<  ~  bind:m
+      %+  poke-our  %ziggurat
+      [%ziggurat-action u.followup-action]
     (pure:m !>(~))
   ;<  ~  bind:m
     %^  watch-our  /fetch-done  %linedb
@@ -858,6 +862,7 @@
           install=(map @tas (list @p))
           start-apps=(map @tas (list @tas))
           =long-operation-info:zig
+          is-top-level=?
       ==
   =/  commit-poll-duration=@dr  ~s1
   =/  start-poll-duration=@dr   (div ~s1 10)
@@ -901,11 +906,19 @@
   ?:  ?|  =(0 ~(wyt by install))
           (~(all by install) |=(a=(list @) ?=(~ a)))
       ==
-    (pure:m !>(~))
+    ?.  is-top-level  (pure:m !>(~))
+    %-  send-long-operation-update
+    ?~  long-operation-info  ~
+    :^  ~  name.u.long-operation-info
+    steps.u.long-operation-info  ~
   ~&  %cis^%2
   ;<  ~  bind:m  install-and-start-apps
   ~&  %cis^%3
-  (pure:m !>(~))
+  ?.  is-top-level  (pure:m !>(~))
+  %-  send-long-operation-update
+  ?~  long-operation-info  ~
+  :^  ~  name.u.long-operation-info
+  steps.u.long-operation-info  ~
   ::
   ++  scry-virtualship-desks
     |=  who=@p
@@ -1059,11 +1072,12 @@
   ~&  %sp^%5^repo-dependencies
   ;<  empty-vase=vase  bind:m
     %^  commit-install-start  whos  repo-dependencies
-    :+  install  start-apps
-    ?~  long-operation-info  ~
-    %=  long-operation-info
-        current-step.u  `%commit-files-to-pyro-ships
-    ==
+    :^  install  start-apps
+      ?~  long-operation-info  ~
+      %=  long-operation-info
+          current-step.u  `%commit-files-to-pyro-ships
+      ==
+    %.n
   ~&  %sp^%6
   return-success
   ::
