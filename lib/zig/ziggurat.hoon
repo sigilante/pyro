@@ -1655,13 +1655,6 @@
     !>  ^-  update:zig
     [%get-dev-desk update-info [%| level message] ~]
   ::
-  ++  suspend-uninstall-to-make-dev-desk
-    |=  message=@t
-    ^-  vase
-    !>  ^-  update:zig
-    :^  %suspend-uninstall-to-make-dev-desk  update-info
-    [%| level message]  ~
-  ::
   ++  build-result
     |=  message=@t
     ^-  vase
@@ -1818,9 +1811,6 @@
       ['data' ~]~
     ::
         %get-dev-desk
-      ['data' ~]~
-    ::
-        %suspend-uninstall-to-make-dev-desk
       ['data' ~]~
     ::
         %ziggurat-state
@@ -2226,7 +2216,6 @@
         [%change-settings change-settings]
     ::
         [%get-dev-desk (se %p)]
-        [%suspend-uninstall-to-make-dev-desk ul]
     ==
   ::
   ++  queue-thread

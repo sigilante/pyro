@@ -178,7 +178,6 @@
           [%change-settings =settings]
       ::
           [%get-dev-desk who=@p]
-          [%suspend-uninstall-to-make-dev-desk ~]
       ==
   ==
 ::
@@ -212,7 +211,6 @@
       %add-project-desk
       %delete-project-desk
       %get-dev-desk
-      %suspend-uninstall-to-make-dev-desk
       %ziggurat-state
       %configs
       %ship-to-address-map
@@ -264,7 +262,6 @@
       [%add-project-desk update-info payload=(data ~) ~]
       [%delete-project-desk update-info payload=(data ~) ~]
       [%get-dev-desk update-info payload=(data ~) ~]
-      [%suspend-uninstall-to-make-dev-desk update-info payload=(data ~) ~]
       [%ziggurat-state update-info payload=(data state-0) ~]
       [%configs update-info payload=(data configs) ~]
       [%ship-to-address-map update-info payload=(data (map @p @ux)) ~]

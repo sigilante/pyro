@@ -1095,16 +1095,6 @@
       :+  (make-new-desk:zig-lib desk-name.act)
         (get-dev-desk:zig-lib [who desk-name]:act)
       ~
-    ::
-        %suspend-uninstall-to-make-dev-desk
-      :_  state
-      :^    (suspend-desk:zig-lib desk-name.act)
-          (uninstall-desk:zig-lib desk-name.act)
-        %-  update-vase-to-card:zig-lib
-        %.  'suspending and unsyncing dev desk'
-        %~  suspend-uninstall-to-make-dev-desk
-        make-error-vase:zig-lib  [update-info %warning]
-      ~
     ==
     ::
     ++  compile-imports
