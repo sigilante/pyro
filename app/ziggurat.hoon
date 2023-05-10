@@ -608,6 +608,9 @@
       =/  queue-thread-error
         %~  queue-thread  make-error-vase:zig-lib
         [update-info %error]
+      =*  thread-name=@tas
+        %^  cat  3  'deploy-contract-'
+        (spat contract-jam-path.act)
       =/  host=(unit @p)
         %^  town-id-to-sequencer-host:zig-lib  project-name.act
         town-id.act  configs
@@ -616,6 +619,7 @@
         :_  ~
         %-  update-vase-to-card:zig-lib
         %-  queue-thread-error
+        :_  thread-name
         %-  crip
         %+  weld  "could not find host for town-id"
         " {<town-id.act>} amongst {<configs>}"
@@ -625,10 +629,7 @@
           :-  %ziggurat-action
           !>  ^-  action:zig
           :^  project-name.act  desk-name.act  request-id.act
-          :^    %queue-thread
-              %^  cat  3  'deploy-contract-'
-              (spat contract-jam-path.act)
-            %lard
+          :^  %queue-thread  thread-name  %lard
           %-  send-wallet-transaction:zig-threads
           :^  who  u.host  !>(deploy-contract:zig-threads)
           [who contract-jam-path.act %.n ~]
@@ -740,8 +741,8 @@
         :_  state
         :_  ~
         %-  update-vase-to-card:zig-lib
-        %-  queue-thread-error
-        'thread not found'
+        %+  queue-thread-error  'thread not found'
+        thread-name.act
       :_  state
       :_  ~
       %-  %~  arvo  pass:io
@@ -756,7 +757,20 @@
         (build:zig-threads ri (snoc u.thread-path %hoon))
       ~&  %z^%qt^%0
       =+  !<(thread=(each vase tang) thread-vase)
-      ?:  ?=(%| -.thread)  !!  ::  TODO
+      ?:  ?=(%| -.thread)
+        ;<  ~  bind:m
+          %+  poke-our:strandio  %ziggurat
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  project-name.act  desk-name.act  request-id.act
+          :-  %send-update
+          !<  update:zig
+          %+  queue-thread-error
+            %^  cat  3
+            '\0afailed to build thread\0a'  :: TODO: remove one \0a
+            (reformat-compiler-error:zig-lib p.thread)
+          thread-name.act
+        (pure:m !>(~))
       ~&  %z^%qt^%1
       =^  update-vase=vase  thread-queue
         %-  add-to-queue:zig-lib
@@ -1189,6 +1203,9 @@
       =*  project-name  project-name.update-info
       =*  desk-name     desk-name.update-info
       =*  request-id    request-id.update-info
+      =/  new-project-error
+        %~  new-project  make-error-vase:zig-lib
+        [update-info %error]
       =/  =long-operation-info:zig
         :+  ~  %new-project
         :_  `%get-dependency-repos
@@ -1229,16 +1246,22 @@
               [repo-host desk-name branch-name commit-hash]
             =+  !<  configuration-thread=(each vase tang)
                 configuration-thread-vase
-            ?:  ?=(%| -.configuration-thread)  !!  ::  TODO
+            ?:  ?=(%| -.configuration-thread)
+              ;<  ~  bind:m
+                %+  poke-our:strandio  %ziggurat
+                :-  %ziggurat-action
+                !>  ^-  action:zig
+                :^  project-name  desk-name  request-id
+                :-  %send-update
+                !<  update:zig
+                %-  new-project-error
+                %^  cat  3
+                '\0afailed to build configuration file\0a'
+                %-  reformat-compiler-error:zig-lib
+                p.configuration-thread
+              (pure:m !>(~))
             ~&  %zspfc^%3
             ;<  empty-vase=vase  bind:m
-            :: ;<  ~  bind:m
-              :: %+  poke-our:strandio  %ziggurat
-              :: :-  %ziggurat-action
-              :: !>  ^-  action:zig
-              :: :^  project-name  desk-name  request-id
-              :: :^  %queue-thread
-              ::   (cat 3 'zig-configuration-' desk-name)  %lard
               !<  shed:khan
               %+  slam
                 (slap p.configuration-thread (ream '$'))
@@ -1264,17 +1287,6 @@
                   current-step.u  ~
               ==
             (pure:m !>(~))
-            :: %-  ~(poke-self pass:io /self-wire)
-            :: :-  %ziggurat-action
-            :: !>  ^-  action:zig
-            :: :^  project-name.act  desk-name.act  request-id.act
-            :: :^  %queue-thread  %send-long-operation-update
-            ::   %lard
-            :: %-  send-long-operation-update:zig-threads
-            :: ?~  long-operation-info  ~
-            :: %=  long-operation-info
-            ::     current-step.u  ~
-            :: ==
           %-  ~(poke-self pass:io /self-wire)
           :-  %ziggurat-action
           !>  ^-  action:zig
@@ -1423,8 +1435,17 @@
     ~&  %z^%thread-result^thread-name
     =.  status  [%ready ~]
     ?:  ?=(%| -.p.+.sign-arvo)
-      ~&  %thread-result^w^(reformat-compiler-error:zig-lib p.p.+.sign-arvo)  ::  TODO
-      `this(status status)
+      =*  error-message  (reformat-compiler-error:zig-lib p.p.+.sign-arvo)
+      ~&  %thread-result^w^error-message
+      =*  update-info
+        [project-name desk-name %thread-result ~]
+      =/  thread-error
+        %~  thread-result  make-error-vase:zig-lib
+        [update-info %error]
+      :_  this(status status)
+      :_  ~
+      %-  update-vase-to-card:zig-lib
+      (thread-error error-message thread-name)
     =/  cards=(list card)
       ?.  ?=(%zig-configuration (end [3 17] thread-name))
         ~

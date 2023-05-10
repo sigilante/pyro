@@ -1592,10 +1592,11 @@
     [%new-project update-info [%| level message] ~]
   ::
   ++  queue-thread
-    |=  message=@t
+    |=  [message=@t thread-name=@tas]
     ^-  vase
     !>  ^-  update:zig
-    [%queue-thread update-info [%| level message] ~]
+    :-  %queue-thread
+    [update-info [%| level message] thread-name]
   ::
   ++  run-queue
     |=  message=@t
@@ -1656,6 +1657,13 @@
     ^-  vase
     !>  ^-  update:zig
     [%build-result update-info [%| level message] ~]
+  ::
+  ++  thread-result
+    |=  [message=@t thread-name=@tas]
+    ^-  vase
+    !>  ^-  update:zig
+    :^  %thread-result  update-info  [%| level message]
+    thread-name
   --
 ::
 ::  json
@@ -1724,7 +1732,9 @@
       ~
     ::
         %queue-thread
-      ['data' %s p.payload.update]~
+      :+  ['thread_name' %s thread-name.update]
+        ['data' %s p.payload.update]
+      ~
     ::
         ?(%add-user-file %delete-user-file)
       :+  ['file' (path file.update)]
@@ -1825,6 +1835,11 @@
         %long-operation-current-step
       :_  ~
       ['data' (long-operation-info-body p.payload.update)]
+    ::
+        %thread-result
+      :+  ['thread_name' %s thread-name.update]
+        ['data' ~]
+      ~
     ==
   ::
   ++  long-operation-info-body

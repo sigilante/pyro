@@ -214,6 +214,7 @@
       %ship-to-address-map
       %build-result
       %long-operation-on-step
+      %thread-result
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -240,7 +241,7 @@
       [%new-project update-info payload=(data =sync-desk-to-vship) ~]
       [%add-config update-info payload=(data [who=@p what=@tas item=@]) ~]
       [%delete-config update-info payload=(data [who=@p what=@tas]) ~]
-      [%queue-thread update-info payload=(data @tas) ~]
+      [%queue-thread update-info payload=(data @tas) thread-name=@tas]
       [%run-queue update-info payload=(data ~) ~]
       [%add-user-file update-info payload=(data ~) file=path]
       [%delete-user-file update-info payload=(data ~) file=path]
@@ -265,5 +266,6 @@
       [%ship-to-address-map update-info payload=(data (map @p @ux)) ~]
       [%build-result update-info payload=(data ~) =path]
       [%long-operation-current-step update-info payload=(data long-operation-info-body) ~]
+      [%thread-result update-info payload=(data ~) thread-name=@tas]
   ==
 --
