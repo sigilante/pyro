@@ -505,35 +505,6 @@
     ?:  (gth max-print-size noah-code-size)  [id item]
     [id item(code.p [0 0])]
   --
-::  scry %ca or fetch from local cache
-::
-++  scry-or-cache-ca
-  |=  [desk-name=@tas p=path =ca-scry-cache:zig]
-  |^  ^-  (unit [vase ca-scry-cache:zig])
-  =/  scry-path=path
-    :-  (scot %p our.bowl)
-    (weld /[desk-name]/(scot %da now.bowl) p)
-  ?~  cache=(~(get by ca-scry-cache) [desk-name p])
-    scry-and-cache-ca
-  ?.  =(p.u.cache .^(@ %cz scry-path))  scry-and-cache-ca
-  `[q.u.cache ca-scry-cache]
-  ::
-  ++  scry-and-cache-ca
-    ^-  (unit [vase ca-scry-cache:zig])
-    =/  scry-result
-      %-  mule
-      |.
-      =/  scry-path=path
-        :-  (scot %p our.bowl)
-        (weld /[desk-name]/(scot %da now.bowl) p)
-      =/  scry-vase=vase  .^(vase %ca scry-path)
-      :-  scry-vase
-      %+  ~(put by ca-scry-cache)  [desk-name p]
-      [`@ux`.^(@ %cz scry-path) scry-vase]
-    ?:  ?=(%& -.scry-result)  `p.scry-result
-    ~&  %ziggurat^%scry-and-cache-ca-fail
-    ~
-  --
 ::
 ++  town-id-to-sequencer-host
   |=  [project-name=@t town-id=@ux =configs:zig]
@@ -1397,6 +1368,31 @@
     ^-  @t
     ''
   --
+::
+++  project-to-repo-infos
+  |=  =project:zig
+  ^-  (list repo-info:zig)
+  %+  turn  (val-desk project)
+  |=(=desk:zig repo-info.desk)
+::
+++  find-file-in-repos
+  |=  [file-path=path repo-infos=(list repo-info:zig)]
+  ^-  (unit repo-info:zig)
+  ?~  repo-infos  ~
+  =*  repo-info  i.repo-infos
+  =*  repo-host  (scot %p repo-host.repo-info)
+  =*  repo-name  repo-name.repo-info
+  =*  branch-name  branch-name.repo-info
+  =*  commit-hash  commit-hash.repo-info
+  =*  commit=@ta
+    ?~  commit-hash  %head  (scot %ux u.commit-hash)
+  =*  file-scry-path=path
+    %-  weld  :_  (snoc file-path %noun)
+    :^  (scot %p our.bowl)  %linedb  (scot %da now.bowl)
+    /[repo-host]/[repo-name]/[branch-name]/[commit]
+  =*  file-contents  .^((unit @t) %gx file-scry-path)
+  ?^  file-contents  `repo-info
+  $(repo-infos t.repo-infos)
 ::
 ++  find-file-in-desks
   |=  [file-path=path desk-names=(list @tas)]

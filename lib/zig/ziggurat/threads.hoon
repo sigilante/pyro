@@ -745,12 +745,15 @@
   ~&  %z^%b^%1
   =+  !<(=update:linedb build-result)
   ~&  %z^%b^%2
-  ?.  ?=(%build -.update)  !!  ::  TODO
+  %-  pure:m
+  !>  ^-  (each vase tang)
+  ?.  ?=(%build -.update)
+    [%| [%leaf "unexpected build result"]~]
   ~&  %z^%b^%3
-  ?:  ?=(%& -.result.update)  (pure:m p.result.update)
+  ?:  ?=(%& -.result.update)  [%& p.result.update]
   ~&  %z^%b^%4
   ~&  %ziggurat^%build^(reformat-compiler-error:zig-lib p.result.update)
-  (pure:m !>(~))  ::  TODO: give back tang
+  [%| p.result.update]
 ::
 ++  create-desk
   |=  =update-info:zig

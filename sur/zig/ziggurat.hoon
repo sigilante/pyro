@@ -20,9 +20,7 @@
   $:  state-0
       =eng
       smart-lib-vase=vase
-      =ca-scry-cache
   ==
-+$  ca-scry-cache  (map [@tas path] (pair @ux vase))
 +$  eng  $_  ~(engine engine-lib !>(0) *(map * @) jets:zink %.y %.n)  ::  sigs off, hints off
 ::
 +$  thread-queue

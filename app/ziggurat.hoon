@@ -23,7 +23,7 @@
     ziggurat-lib=zig-ziggurat
 ::
 |%
-+$  card  card:agent:gall
++$  card  $+(card card:agent:gall)
 --
 ::
 =|  inflated-state-0:zig
@@ -72,7 +72,7 @@
       ~(wait pass:io /on-init-zig-setup)
   %_    this
       state
-    :_  [eng smart-lib ~]
+    :_  [eng smart-lib]
     :*  %0
         ~
     ::
@@ -114,7 +114,7 @@
     %~  engine  engine
     ::  sigs off, hints off
     [smart-lib ;;((map * @) (cue +.+:;;([* * @] zink-cax-noun))) jets:zink %.y %.n]
-  `this(state [!<(state-0:zig old-vase) eng smart-lib ~])
+  `this(state [!<(state-0:zig old-vase) eng smart-lib])
 ::
 ++  on-watch
   |=  p=path
@@ -354,7 +354,7 @@
             ==
         %+  weld  cards
         %+  update-linedb-watches  ~
-        (project-to-repo-infos new-project)
+        (project-to-repo-infos:zig-lib new-project)
       =/  old-project=project:zig  (~(got by projects) old)
       =/  old-snap-path=path
         /[old]/(scot %da now.bowl)
@@ -370,19 +370,13 @@
           ==
       :_  %+  weld  cards
           %+  update-linedb-watches
-            (project-to-repo-infos old-project)
-          (project-to-repo-infos new-project)
+            (project-to-repo-infos:zig-lib old-project)
+          (project-to-repo-infos:zig-lib new-project)
       %+  ~(poke-our pass:io /pyro-wire)  %pyro
       :-  %pyro-action
       !>  ^-  action:pyro
       :+  %snap-ships  old-snap-path
       pyro-ships.old-project
-    ::
-    ++  project-to-repo-infos
-      |=  =project:zig
-      ^-  (list repo-info:zig)
-      %+  turn  (val-desk:zig-lib project)
-      |=(=desk:zig repo-info.desk)
     ::
     ++  update-linedb-watches
       |=  [old=(list repo-info:zig) new=(list repo-info:zig)]
@@ -710,6 +704,9 @@
       update-info
     ::
         %queue-thread
+      =/  queue-thread-error
+        %~  queue-thread  make-error-vase:zig-lib
+        [update-info %error]
       ?:  ?=(%lard -.payload.act)
         =^  update-vase=vase  thread-queue
           %-  add-to-queue:zig-lib
@@ -739,7 +736,12 @@
           thread-name-with-prefix
         ?~  thread-path-with-prefix  [~ thread-name.act]
         [thread-path-with-prefix thread-name-with-prefix]
-      ?~  thread-path  ~&  %z^%qt^act  !!  ::  TODO
+      ?~  thread-path
+        :_  state
+        :_  ~
+        %-  update-vase-to-card:zig-lib
+        %-  queue-thread-error
+        'thread not found'
       :_  state
       :_  ~
       %-  %~  arvo  pass:io
@@ -750,17 +752,18 @@
       =/  m  (strand ,vase)
       ^-  form:m
       ~&  %z^%qt^%m1
-      ;<  thread=vase  bind:m
+      ;<  thread-vase=vase  bind:m
         (build:zig-threads ri (snoc u.thread-path %hoon))
       ~&  %z^%qt^%0
-      ?~  q.thread  (pure:m thread)
+      =+  !<(thread=(each vase tang) thread-vase)
+      ?:  ?=(%| -.thread)  !!  ::  TODO
       ~&  %z^%qt^%1
       =^  update-vase=vase  thread-queue
         %-  add-to-queue:zig-lib
         :^  thread-queue  thread-name.act
           :-  %lard
           !<  shed:khan
-          %+  slam  thread
+          %+  slam  p.thread
           !>  ^-  vase
           ?.  =(!>(~) args.payload.act)  args.payload.act
           !>(`[project-name desk-name request-id]:act)
@@ -780,7 +783,7 @@
         :^  project-name.act  desk-name.act  request-id.act
         [%send-update !<(update:zig update-vase)]
       ~&  %z^%qt^%4
-      (pure:m thread)
+      (pure:m p.thread)
     ::
         %save-thread
       =/  =project:zig  (~(got by projects) project-name.act)
@@ -1029,15 +1032,27 @@
               :+  (scot %p our.bowl)  %pyro
               /[now]/[who]/[app]/dbug/state/noun/noun
           ==
-      =^  subject=(each vase @t)  state
+      :_  state
+      :_  ~
+      %-  %~  arvo  pass:io
+          /pyro-agent-state
+      :^  %k  %lard  q.byk.bowl
+      =/  m  (strand ,vase)
+      ^-  form:m
+      ;<  subject=(each vase @t)  bind:m
         (compile-imports ~(tap by imports.act))
       ?:  ?=(%| -.subject)
-        :_  state
-        :_  ~
-        %-  update-vase-to-card:zig-lib
-        %-  state-error
-        %^  cat  3  'compilation of imports failed:\0a'
-        p.subject
+        ;<  ~  bind:m
+          %+  poke-our:strandio  %ziggurat
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  project-name.act  desk-name.act  request-id.act
+          :-  %send-update
+          !<  update:zig
+          %-  state-error
+          %^  cat  3  'compilation of imports failed:\0a'
+          p.subject
+        (pure:m !>(~))
       =.  p.subject
         ;:(slop agent-state !>(who=(slav %p who)) p.subject)
       =/  modified-state=vase
@@ -1045,12 +1060,17 @@
       ::  %shown-pyro-agent-state over %pyro-agent-state
       ::   because there are casts deep in vanes that don't
       ::   take too kindly to vases within vases
-      :_  state
-      :_  ~
-      %-  update-vase-to-card:zig-lib
-      %.  [(show-state:zig-lib modified-state) wex sup]
-      %~  shown-pyro-agent-state  make-update-vase:zig-lib
-      update-info
+      ;<  ~  bind:m
+        %+  poke-our:strandio  %ziggurat
+        :-  %ziggurat-action
+        !>  ^-  action:zig
+        :^  project-name.act  desk-name.act  request-id.act
+        :-  %send-update
+        !<  update:zig
+        %.  [(show-state:zig-lib modified-state) wex sup]
+        %~  shown-pyro-agent-state  make-update-vase:zig-lib
+        update-info
+      (pure:m !>(~))
     ::
         %pyro-chain-state
       =?  grab.act  =('' grab.act)  '-'
@@ -1067,25 +1087,42 @@
         :_  ~
         %-  update-vase-to-card:zig-lib
         (state-error p.chain-state)
-      =^  subject=(each vase @t)  state
+      :_  state
+      :_  ~
+      %-  %~  arvo  pass:io
+          /pyro-chain-state
+      :^  %k  %lard  q.byk.bowl
+      =/  m  (strand ,vase)
+      ^-  form:m
+      ;<  subject=(each vase @t)  bind:m
         (compile-imports ~(tap by imports.act))
       ?:  ?=(%| -.subject)
-        :_  state
-        :_  ~
-        %-  update-vase-to-card:zig-lib
-        %-  state-error
-        %^  cat  3  'compilation of imports failed:\0a'
-        p.subject
+        ;<  ~  bind:m
+          %+  poke-our:strandio  %ziggurat
+          :-  %ziggurat-action
+          !>  ^-  action:zig
+          :^  project-name.act  desk-name.act  request-id.act
+          :-  %send-update
+          !<  update:zig
+          %-  state-error
+          %^  cat  3  'compilation of imports failed:\0a'
+          p.subject
+        (pure:m !>(~))
       =.  p.subject
         ;:(slop !>(p.chain-state) !>(who=~nec) p.subject)
       =/  modified-state=vase
         (slap p.subject (loud-ream:zig-lib grab.act /))
-      :_  state
-      :_  ~
-      %-  update-vase-to-card:zig-lib
-      %.  (show-state:zig-lib modified-state)
-      %~  shown-pyro-chain-state  make-update-vase:zig-lib
-      update-info
+      ;<  ~  bind:m
+        %+  poke-our:strandio  %ziggurat
+        :-  %ziggurat-action
+        !>  ^-  action:zig
+        :^  project-name.act  desk-name.act  request-id.act
+        :-  %send-update
+        !<  update:zig
+        %.  (show-state:zig-lib modified-state)
+        %~  shown-pyro-chain-state  make-update-vase:zig-lib
+        update-info
+      (pure:m !>(~))
     ::
         %change-settings
       `state(settings settings.act)
@@ -1099,37 +1136,47 @@
     ::
     ++  compile-imports
       |=  imports=(list [face=@tas =path])
-      ^-  [(each vase @t) _state]
+      =/  m  (strand ,(each vase @t))
+      ^-  form:m
       =/  =project:zig  (~(got by projects) project-name.act)
-      =/  compilation-result
-        %-  mule
-        |.
-        =/  [subject=vase c=ca-scry-cache:zig]
-          %+  roll  imports
-          |:  [[face=`@tas`%$ sur=`path`/] [subject=`vase`!>(..zuse) ca-scry-cache=ca-scry-cache:state]]
-          =*  sur-path  (snoc sur %hoon)
-          =/  import-desk=(unit @tas)
-            %+  find-file-in-desks:zig-lib  sur-path
-            [desk-name.act (turn desks.project head)]
-          ?~  import-desk  !!  ::  TODO: handle error
-          =^  sur-hoon=vase  ca-scry-cache
-            %-  need  ::  TODO: handle error
-            %^  scry-or-cache-ca:zig-lib  u.import-desk
-            sur-path  ca-scry-cache
-          :_  ca-scry-cache
-          %-  slop  :_  subject
-          sur-hoon(p [%face face p.sur-hoon])
-        :_  c
-        ;:(slop !>(configs=configs) !>(bowl=bowl) subject)
-      ?:  ?=(%& -.compilation-result)
-        :-  [%& -.p.compilation-result]
-        state(ca-scry-cache +.p.compilation-result)
-      :_  state
-      :-  %|
-      %-  crip
-      %+  roll  p.compilation-result
-      |=  [in=tank out=tape]
-      :(weld ~(ram re in) "\0a" out)
+      =/  repo-infos=(list repo-info:zig)
+        (project-to-repo-infos:zig-lib project)
+      |^
+      ;<  subject=(each vase tang)  bind:m  build-subject
+      ?:  ?=(%| -.subject)
+        %-  pure:m
+        :-  %|
+        (reformat-compiler-error:zig-lib p.subject)
+      %-  pure:m
+      :-  %&
+      ;:(slop !>(configs=configs) !>(bowl=bowl) p.subject)
+      ::
+      ++  build-subject
+        =/  m  (strand ,(each vase tang))
+        ^-  form:m
+        =/  working-subject=vase  !>(..zuse)
+        |-
+        ?~  imports  (pure:m [%& working-subject])
+        =*  face         face.i.imports
+        =*  import-path  (snoc path.i.imports %hoon)
+        =/  repo-info=(unit repo-info:zig)
+          %+  find-file-in-repos:zig-lib  import-path
+          repo-infos
+        ?~  repo-info
+          %-  pure:m
+          :-  %|
+          [%leaf "could not find import {<import-path>}"]~
+        ;<  result-vase=vase  bind:m
+          (build:zig-threads u.repo-info import-path)
+        =+  !<(result=(each vase tang) result-vase)
+        ?:  ?=(%| -.result)  (pure:m [%| p.result])
+        %=  $
+            imports  t.imports
+            working-subject
+          %-  slop  :_  working-subject
+          p.result(p [%face face p.p.result])
+        ==
+      --
     ::
     ++  setup-project-desk
       |=  $:  repo-host=@p
@@ -1177,10 +1224,12 @@
               %=  long-operation-info
                   current-step.u  `%uild-configuration-thread
               ==
-            ;<  configuration-thread=vase  bind:m
+            ;<  configuration-thread-vase=vase  bind:m
               %-  build:zig-threads  :_  config-file-path
               [repo-host desk-name branch-name commit-hash]
-            ?~  q.configuration-thread  !!  ::  TODO
+            =+  !<  configuration-thread=(each vase tang)
+                configuration-thread-vase
+            ?:  ?=(%| -.configuration-thread)  !!  ::  TODO
             ~&  %zspfc^%3
             ;<  empty-vase=vase  bind:m
             :: ;<  ~  bind:m
@@ -1191,7 +1240,8 @@
               :: :^  %queue-thread
               ::   (cat 3 'zig-configuration-' desk-name)  %lard
               !<  shed:khan
-              %+  slam  (slap configuration-thread (ream '$'))
+              %+  slam
+                (slap p.configuration-thread (ream '$'))
               !>  ^-  vase
               ?:  =(!>(~) special-configuration-args)
                 !>
@@ -1313,6 +1363,8 @@
       [%queue-thread-result @ @ ^]    `this
       [%update-pyro-desk @ @ ~]       `this
       [%linedb @ @ @ @ ~]             `this
+      [%pyro-agent-state ~]           `this
+      [%pyro-chain-state ~]           `this
       [%save @ @ ^]                   ::`this
     ~&  sign-arvo  `this
   ::
@@ -1351,12 +1403,14 @@
       %-  update-vase-to-card:zig-lib
       %-  build-error
       (reformat-compiler-error:zig-lib p.p.+.sign-arvo)
-    =+  !<(error-text=(unit @t) q.p.p.+.sign-arvo)
+    =+  !<(result=(each vase tang) q.p.p.+.sign-arvo)
     :_  ~
     %-  update-vase-to-card:zig-lib
-    ?^  error-text  (build-error u.error-text)
-    %.  file-path
-    ~(build-result make-update-vase:zig-lib update-info)
+    ?:  ?=(%& -.result)
+      %.  file-path
+      ~(build-result make-update-vase:zig-lib update-info)
+    %-  build-error
+    (reformat-compiler-error:zig-lib p.result)
   ::
       [%thread-result @ @ @ ~]
     =*  project-name  i.t.w
