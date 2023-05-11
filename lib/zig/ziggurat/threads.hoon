@@ -237,7 +237,18 @@
     %+  scry  (unit @)
     %-  snoc  :_  %noun
     `path`[%gx %linedb rh rn bn co contract-jam-path]
-  ?~  code-atom  !!  :: TODO
+  ?~  code-atom
+    ;<  ~  bind:m
+      %+  poke-our  %ziggurat
+      :-  %ziggurat-action
+      !>  ^-  action:zig
+      :^  project-name  desk-name  ~
+      :-  %send-update
+      !<  update:zig
+      %.  ['contract not found' contract-jam-path]
+      %~  deploy-contract  make-error-vase:zig-lib
+      [[project-name desk-name %deploy-contract ~] %error]
+    (pure:m !>(`(unit @ux)`~))
   =/  code  [- +]:(cue u.code-atom)
   |^
   ;<  empty-vase=vase  bind:m
@@ -252,7 +263,7 @@
             town=town-id
             [%noun %deploy mutable code interface=~]
         ==
-  (pure:m !>(`@ux`compute-contract-hash))
+  (pure:m !>(`(unit @ux)``compute-contract-hash))
   ::
   ++  town-id
     ^-  @ux
@@ -500,13 +511,22 @@
     :^  %long-operation-current-step
       [project-name desk-name %send-long-operation-update ~]
     [%& u.long-operation-info]  ~
+  |-
   ;<  update-done=cage  bind:m  (take-fact /update-done)
-  ;<  ~  bind:m  (leave-our /update-done %ziggurat)
-  ?.  ?=(%ziggurat-update p.update-done)         !!  ::  TODO
+  ?.  ?=(%ziggurat-update p.update-done)
+    ~&  %ziggurat^%send-long-operation-update^%unexpected-mark
+    $
   =+  !<(=update:zig q.update-done)
-  ?.  ?=(%long-operation-current-step -.update)  !!
-  ?.  ?=(%& -.payload.update)                    !!
-  ?.  =(u.long-operation-info p.payload.update)  !!
+  ?.  ?=(%long-operation-current-step -.update)
+    ~&  %ziggurat^%send-long-operation-update^%unexpected-update
+    $
+  ?.  ?=(%& -.payload.update)
+    ~&  %ziggurat^%send-long-operation-update^%unexpected-error
+    !!
+  ?.  =(u.long-operation-info p.payload.update)
+    ~&  %ziggurat^%send-long-operation-update^%unexpected-content
+    !!
+  ;<  ~  bind:m  (leave-our /update-done %ziggurat)
   (pure:m !>(~))
 ::
 ++  fetch-repo
@@ -621,7 +641,6 @@
     %+  scry  (map path wain)
     :+  %gx  %linedb
     /[repo-host]/[repo-name]/[branch-name]/[commit]/noun
-  :: ?~  snap  !!  ::  TODO
   ;<  ~  bind:m
     %+  poke-our  %linedb
     :-  %linedb-action
@@ -674,7 +693,20 @@
   =/  most-recent-commit-hash=(unit @ux)
     %^  get-most-recent-commit:zl  repo-host  repo-name
     branch-name
-  ?~  most-recent-commit-hash  !!  :: TODO
+  ?~  most-recent-commit-hash
+    ;<  ~  bind:m
+      %+  poke-our  %ziggurat
+      :-  %ziggurat-action
+      !>  ^-  action:zig
+      :^  project-name  desk-name  ~
+      :-  %send-update
+      !<  update:zig
+      %.  %-  crip  %+  weld  "did not find commits in repo"
+          " {<repo-host>} {<repo-name>} {<branch-name>}"
+      %~  linedb  make-error-vase:zig-lib
+      :_  %error
+      [project-name desk-name %update-pyro-desks-to-repo ~]
+    (pure:m !>(~))
   ;<  state=state-0:zig  bind:m  get-state
   =/  =project:zig  (~(got by projects.state) project-name)
   =/  =desk:zig  (got-desk:zig-lib project repo-name)
@@ -1112,36 +1144,6 @@
     ;<  empty-vase=vase  bind:m
       (fetch-repo repo-host repo-name branch-name ~ ~)
     $(repo-dependencies t.repo-dependencies)
-  ::
-  ++  get-cass
-    |=  [who=@p desk-name=@tas when=@da]
-    =/  m  (strand ,cass:clay)
-    ^-  form:m
-    ;<  =riot:clay  bind:m
-      (warp who desk-name ~ %sing %w da+when /)
-    ?~  riot  !!  :: TODO
-    (pure:m !<(cass:clay q.r.u.riot))
-  ::
-  ++  get-dome
-    |=  [who=@p desk-name=@tas]
-    =/  m  (strand ,dome:clay)
-    ^-  form:m
-    ;<  now=@da  bind:m  get-time
-    ;<  =riot:clay  bind:m
-      (warp who desk-name ~ %sing %v da+now /)
-    ?~  riot  !!  :: TODO
-    (pure:m !<(dome:clay q.r.u.riot))
-  ::
-  ++  get-revision-number-of-hash
-    |=  [desired-hash=@ux =dome:clay]
-    ^-  (unit @ud)
-    =/  commits=(list (pair @ud @uvi))  ~(tap by hit.dome)
-    |-
-    ?~  commits  ~
-    =*  revision-number  p.i.commits
-    =*  commit-hash      q.i.commits
-    ?.  =(desired-hash commit-hash)  $(commits t.commits)
-    `revision-number
   ::
   ++  send-error
     |=  message=@t

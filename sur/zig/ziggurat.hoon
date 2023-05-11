@@ -267,5 +267,7 @@
       [%build-result update-info payload=(data ~) =path]
       [%long-operation-current-step update-info payload=(data long-operation-info-body) ~]
       [%thread-result update-info payload=(data ~) thread-name=@tas]
+      [%deploy-contract update-info payload=(data ~) =path]
+      [%linedb update-info payload=(data ~) ~]
   ==
 --

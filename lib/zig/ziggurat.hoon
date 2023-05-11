@@ -677,12 +677,12 @@
     :-  ?~  commit-hash  %head  (scot %ux u.commit-hash)
     /zig/state-views/[project-repo-name]/hoon/noun
   =+  .^(state-views-text=(unit @t) %gx p)
-  ?~  state-views-text  ~  ::  TODO
+  ?~  state-views-text  ~
   =/  build-result
     %-  mule
     |.
     (slap !>(..zuse) (ream u.state-views-text))
-  ?:  ?=(%| -.build-result)  ~  :: TODO
+  ?:  ?=(%| -.build-result)  ~
   `!<(state-views:zig p.build-result)
 ::
 ++  convert-test-steps-to-thread
@@ -1664,6 +1664,18 @@
     !>  ^-  update:zig
     :^  %thread-result  update-info  [%| level message]
     thread-name
+  ::
+  ++  deploy-contract
+    |=  [message=@t p=path]
+    ^-  vase
+    !>  ^-  update:zig
+    [%deploy-contract update-info [%| level message] p]
+  ::
+  ++  linedb
+    |=  message=@t
+    ^-  vase
+    !>  ^-  update:zig
+    [%linedb update-info [%| level message] ~]
   --
 ::
 ::  json
@@ -1840,6 +1852,12 @@
       :+  ['thread_name' %s thread-name.update]
         ['data' ~]
       ~
+    ::
+        %deploy-contract
+      ['data' ~]~
+    ::
+        %linedb
+      ['data' ~]~
     ==
   ::
   ++  long-operation-info-body

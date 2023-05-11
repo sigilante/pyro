@@ -338,8 +338,10 @@
       =/  new-project=project:zig  (~(got by projects) new)
       =*  new-snap-path  most-recent-snap.new-project
       =/  cards=(list card)
-        :_  %-  sync-out-of-date-desks
-            (val-desk:zig-lib new-project)
+        %-  sync-out-of-date-desks
+        (val-desk:zig-lib new-project)
+      =?  cards  !=(~ new-snap-path)
+        :_  cards
         %+  ~(poke-our pass:io /pyro-wire)  %pyro
         :-  %pyro-action
         !>  ^-  action:pyro
