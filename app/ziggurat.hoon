@@ -258,27 +258,29 @@
           commit-install-start:make-operation-steps:zig-lib
         `%commit-files-to-pyro-ships
       :_  state
-      :+  %-  ~(poke-self pass:io /self-wire)
-          :-  %ziggurat-action
-          !>  ^-  action:zig
-          :^  project-name.act  desk-name.act  request-id.act
-          :^    %queue-thread
-              (cat 3 'add-sync-desk-vships-' desk-name.act)
-            %lard
-          %^  commit-install-start:zig-threads  ships.act
-            ~[repo-info.desk]
-          :^    %-  ~(put by *(map @tas (list @p)))
-                [desk-name install]:act
-              %-  ~(put by *(map @tas (list @tas)))
-              [desk-name start-apps]:act
-            long-operation-info
-          %.y
-        %-  ~(poke-self pass:io /self-wire)
+      :_  ~
+      %-  %~  arvo  pass:io  /add-sync-desk-vships
+      :^  %k  %lard  q.byk.bowl
+      %+  skip-queue:zig-threads  request-id.act
+      =/  m  (strand ,vase)
+      ^-  form:m
+      ;<  ~  bind:m
+        %+  poke-our:strandio  %ziggurat
         :-  %ziggurat-action
         !>  ^-  action:zig
         :^  project-name.act  desk-name.act  request-id.act
-        [%run-queue ~]
-      ~
+        :^    %queue-thread
+            (cat 3 'add-sync-desk-vships-' desk-name.act)
+          %lard
+        %^  commit-install-start:zig-threads  ships.act
+          ~[repo-info.desk]
+        :^    %-  ~(put by *(map @tas (list @p)))
+              [desk-name install]:act
+            %-  ~(put by *(map @tas (list @tas)))
+            [desk-name start-apps]:act
+          long-operation-info
+        %.y
+      (pure:m !>(~))
       ::
       ++  find-missing
         ::  return needles not in haystack
@@ -627,20 +629,22 @@
         " {<town-id.act>} amongst {<configs>}"
       =*  who  ?^(who.act u.who.act u.host)
       :_  state
-      :+  %-  ~(poke-self pass:io /self-wire)
-          :-  %ziggurat-action
-          !>  ^-  action:zig
-          :^  project-name.act  desk-name.act  request-id.act
-          :^  %queue-thread  thread-name  %lard
-          %-  send-wallet-transaction:zig-threads
-          :^  who  u.host  !>(deploy-contract:zig-threads)
-          [who contract-jam-path.act %.n ~]
-        %-  ~(poke-self pass:io /self-wire)
+      :_  ~
+      %-  %~  arvo  pass:io  /deploy-contract
+      :^  %k  %lard  q.byk.bowl
+      %+  skip-queue:zig-threads  request-id.act
+      =/  m  (strand ,vase)
+      ^-  form:m
+      ;<  ~  bind:m
+        %+  poke-our:strandio  %ziggurat
         :-  %ziggurat-action
         !>  ^-  action:zig
         :^  project-name.act  desk-name.act  request-id.act
-        [%run-queue ~]
-      ~
+        :^  %queue-thread  thread-name  %lard
+        %-  send-wallet-transaction:zig-threads
+        :^  who  u.host  !>(deploy-contract:zig-threads)
+        [who contract-jam-path.act %.n ~]
+      (pure:m !>(~))
     ::
         %build-file
       =/  =project:zig  (~(got by projects) project-name.act)
@@ -1239,119 +1243,126 @@
         config-file-path
       ~&  %z^%np^%does-config-exist^does-config-exist
       ?:  does-config-exist
-        :+  %-  ~(poke-self pass:io /self-wire)
-            :-  %ziggurat-action
-            !>  ^-  action:zig
-            :^  project-name  desk-name  request-id
-            :^    %queue-thread
-                (cat 3 'zig-configuration-' desk-name)
-              %lard
-            =/  m  (strand ,vase)
-            ^-  form:m
-            ;<  empty-vase=vase  bind:m
-              %-  send-long-operation-update:zig-threads
-              ?~  long-operation-info  ~
-              %=  long-operation-info
-                  current-step.u  `%uild-configuration-thread
-              ==
-            ;<  configuration-thread-vase=vase  bind:m
-              %-  build:zig-threads  :_  config-file-path
-              [repo-host desk-name branch-name commit-hash]
-            =+  !<  configuration-thread=(each vase tang)
-                configuration-thread-vase
-            ?:  ?=(%| -.configuration-thread)
-              ;<  ~  bind:m
-                %+  poke-our:strandio  %ziggurat
-                :-  %ziggurat-action
-                !>  ^-  action:zig
-                :^  project-name  desk-name  request-id
-                :-  %send-update
-                !<  update:zig
-                %-  new-project-error
-                %^  cat  3
-                '\0afailed to build configuration file\0a'
-                %-  reformat-compiler-error:zig-lib
-                p.configuration-thread
-              (pure:m !>(~))
-            ~&  %zspfc^%3
-            ;<  empty-vase=vase  bind:m
-              !<  shed:khan
-              %+  slam
-                (slap p.configuration-thread (ream '$'))
-              !>  ^-  vase
-              ?:  =(!>(~) special-configuration-args)
-                !>
-                :^  ~  project-name  desk-name
-                [request-id repo-host long-operation-info]
-              ;:  slop
-                  !>(~)
-                  !>(project-name)
-                  !>(desk-name)
-                  !>(request-id)
-                  !>(repo-host)
-                  !>(long-operation-info)
-                  special-configuration-args
-              ==
-            ~&  %zspfc^%5
-            ;<  empty-vase=vase  bind:m
-              %-  send-long-operation-update:zig-threads
-              ?~  long-operation-info  ~
-              %=  long-operation-info
-                  current-step.u  ~
-              ==
-            (pure:m !>(~))
-          %-  ~(poke-self pass:io /self-wire)
+        :_  ~
+        %-  %~  arvo  pass:io
+          /setup-project-desk/yes-configuration
+        :^  %k  %lard  q.byk.bowl
+        %+  skip-queue:zig-threads  request-id.act
+        =/  m  (strand ,vase)
+        ^-  form:m
+        ;<  ~  bind:m
+          %+  poke-our:strandio  %ziggurat
           :-  %ziggurat-action
           !>  ^-  action:zig
-          :^  project-name.act  desk-name.act  request-id.act
-          [%run-queue ~]
-        ~
-      =/  cards=(list card)
-        :+  %-  ~(poke-self pass:io /self-wire)
-            :-  %ziggurat-action
-            !>  ^-  action:zig
-            :^  project-name  desk-name  request-id
-            :^  %queue-thread
-              (cat 3 'zig-configuration-' desk-name)  %lard
-            =/  m  (strand ,vase)
-            ^-  form:m
-            ;<  empty-vase=vase  bind:m
-              %:  setup-project:zig-threads
-                  repo-host
-                  request-id
-                  [our.bowl desk-name %master ~]~
-                  ~
-                  default-ships:zig-lib
-                  ~
-                  ~
-                  long-operation-info
-              ==
+          :^  project-name  desk-name  request-id
+          :^    %queue-thread
+              (cat 3 'zig-configuration-' desk-name)
+            %lard
+          =/  m  (strand ,vase)
+          ^-  form:m
+          ;<  empty-vase=vase  bind:m
+            %-  send-long-operation-update:zig-threads
+            ?~  long-operation-info  ~
+            %=  long-operation-info
+                current-step.u  `%uild-configuration-thread
+            ==
+          ;<  configuration-thread-vase=vase  bind:m
+            %-  build:zig-threads  :_  config-file-path
+            [repo-host desk-name branch-name commit-hash]
+          =+  !<  configuration-thread=(each vase tang)
+              configuration-thread-vase
+          ?:  ?=(%| -.configuration-thread)
+            ;<  ~  bind:m
+              %+  poke-our:strandio  %ziggurat
+              :-  %ziggurat-action
+              !>  ^-  action:zig
+              :^  project-name  desk-name  request-id
+              :-  %send-update
+              !<  update:zig
+              %-  new-project-error
+              %^  cat  3
+              '\0afailed to build configuration file\0a'
+              %-  reformat-compiler-error:zig-lib
+              p.configuration-thread
+            (pure:m !>(~))
+          ~&  %zspfc^%3
+          ;<  empty-vase=vase  bind:m
+            !<  shed:khan
+            %+  slam
+              (slap p.configuration-thread (ream '$'))
+            !>  ^-  vase
+            ?:  =(!>(~) special-configuration-args)
+              !>
+              :^  ~  project-name  desk-name
+              [request-id repo-host long-operation-info]
+            ;:  slop
+                !>(~)
+                !>(project-name)
+                !>(desk-name)
+                !>(request-id)
+                !>(repo-host)
+                !>(long-operation-info)
+                special-configuration-args
+            ==
+          ~&  %zspfc^%5
+          ;<  empty-vase=vase  bind:m
             %-  send-long-operation-update:zig-threads
             ?~  long-operation-info  ~
             %=  long-operation-info
                 current-step.u  ~
             ==
-          %-  ~(poke-self pass:io /self-wire)
+          (pure:m !>(~))
+        (pure:m !>(~))
+      :_  ~
+      %-  %~  arvo  pass:io
+        /setup-project-desk/no-configuration
+      :^  %k  %lard  q.byk.bowl
+      %+  skip-queue:zig-threads  request-id.act
+      =/  m  (strand ,vase)
+      ^-  form:m
+      ;<  empty-vase=vase  bind:m
+        ?:  %.  desk-name
+            %~  has  in
+            .^  (set @tas)
+                %cd
+                /(scot %p our.bowl)//(scot %da now.bowl)
+            ==
+          (pure:m !>(~))
+        ;<  ~  bind:m
+          %+  poke-our:strandio  %ziggurat
           :-  %ziggurat-action
           !>  ^-  action:zig
-          :^  project-name.act  desk-name.act  request-id.act
-          [%run-queue ~]
-        ~
-      ?:  %.  desk-name
-          %~  has  in
-          .^  (set @tas)
-              %cd
-              /(scot %p our.bowl)//(scot %da now.bowl)
+          :^  project-name  desk-name  request-id
+          :^  %queue-thread
+            (cat 3 'create-desk-' desk-name)  %lard
+          (create-desk:zig-threads update-info)
+        (pure:m !>(~))
+      ;<  ~  bind:m
+        %+  poke-our:strandio  %ziggurat
+        :-  %ziggurat-action
+        !>  ^-  action:zig
+        :^  project-name  desk-name  request-id
+        :^  %queue-thread
+          (cat 3 'zig-configuration-' desk-name)  %lard
+        =/  m  (strand ,vase)
+        ^-  form:m
+        ;<  empty-vase=vase  bind:m
+          %:  setup-project:zig-threads
+              repo-host
+              request-id
+              [our.bowl desk-name %master ~]~
+              ~
+              default-ships:zig-lib
+              ~
+              ~
+              long-operation-info
           ==
-        cards
-      :_  cards
-      %-  ~(poke-self pass:io /self-wire)
-      :-  %ziggurat-action
-      !>  ^-  action:zig
-      :^  project-name  desk-name  request-id
-      :^  %queue-thread
-        (cat 3 'create-desk-' desk-name)  %lard
-      (create-desk:zig-threads update-info)
+        %-  send-long-operation-update:zig-threads
+        ?~  long-operation-info  ~
+        %=  long-operation-info
+            current-step.u  ~
+        ==
+      (pure:m !>(~))
     --
   --
 ::
@@ -1390,6 +1401,9 @@
       [%linedb @ @ @ @ ~]             `this
       [%pyro-agent-state ~]           `this
       [%pyro-chain-state ~]           `this
+      [%add-sync-desk-vships ~]       `this
+      [%deploy-contract ~]            `this
+      [%setup-project-desk @ ~]       `this
       [%save @ @ ^]                   ::`this
     ~&  sign-arvo  `this
   ::
