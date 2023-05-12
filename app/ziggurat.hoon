@@ -1369,7 +1369,6 @@
 ++  on-agent
   |=  [w=wire =sign:agent:gall]
   ^-  (quip card _this)
-  :: |^
   ?+    w  (on-agent:def w sign)
       [%linedb @ @ @ @ ~]
     ?:  ?=(%watch-ack -.sign)  `this
