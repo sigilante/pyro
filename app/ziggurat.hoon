@@ -1003,7 +1003,75 @@
       ==
     ::
         %publish-app
-      !!  :: TODO
+      =/  =project:zig  (~(got by projects) project-name.act)
+      =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
+      =*  repo-host    (scot %p repo-host.repo-info.desk)
+      =*  repo-name    desk-name.act
+      =*  branch-name  branch-name.repo-info.desk
+      =*  commit-hash  commit-hash.repo-info.desk
+      =*  commit=@ta
+        ?~  commit-hash  %head
+        (scot %ux u.commit-hash)
+      =*  scry-prefix
+        :^  (scot %p our.bowl)  %linedb  (scot %da now.bowl)
+        /[repo-host]/[repo-name]/[branch-name]/[commit]
+      =|  cards=(list card)
+      ::  make desk.bill if it does not exist
+      =/  desk-bill-current-contents=(unit @t)
+        .^((unit @t) %gx (weld scry-prefix /desk/bill/noun))
+      =?  cards  ?=(~ desk-bill-current-contents)
+        :_  cards
+        %-  %~  arvo  pass:io
+            [%save project-name.act desk-name.act /desk/bill]
+        :^  %k  %lard  q.byk.bowl
+        (save-file:zig-threads /desk/bill '~')
+      ::  make desk.ship if it does not exist
+      =/  desk-ship-current-contents=(unit @t)
+        .^((unit @t) %gx (weld scry-prefix /desk/ship/noun))
+      =?  cards  ?=(~ desk-ship-current-contents)
+        :_  cards
+        %-  %~  arvo  pass:io
+            [%save project-name.act desk-name.act /desk/ship]
+        :^  %k  %lard  q.byk.bowl
+        %+  save-file:zig-threads  /desk/ship
+        (crip "{<our.bowl>}")
+      ::  make docket if it does not exist
+      =/  desk-docket-current-contents=(unit @t)
+        .^((unit @t) %gx (weld scry-prefix /desk/docket-0/noun))
+      =?  cards  ?=(~ desk-ship-current-contents)
+        :_  cards
+        %-  %~  arvo  pass:io
+            :^  %save  project-name.act  desk-name.act
+            /desk/docket-0
+        :^  %k  %lard  q.byk.bowl
+        %+  save-file:zig-threads  /desk/docket-0
+        %-  crip
+        """
+        :~  title+{<title.act>}
+            info+{<info.act>}
+            color+{<color.act>}
+            glob-ames+[{<our.bowl>} 0v0]
+            base+{<`@t`project-name.act>}
+            image+{<image.act>}
+            version+{<version.act>}
+            website+{<website.act>}
+            license+{<license.act>}
+        ==
+        """
+      ::  put files into our clay
+      =.  cards
+        :_  cards
+        %+  ~(poke-our pass:io /treaty-wire)  %linedb
+        :-  %linedb-action
+        !>
+        :^  %install  repo-host.repo-info.desk  repo-name
+        [branch-name commit-hash]
+      ::  publish via treaty
+      =.  cards
+        :_  cards
+        %+  ~(poke-our pass:io /treaty-wire)  %treaty
+        [%alliance-update-0 !>([%add our.bowl repo-name])]
+      [(flop cards) state]
     ::
         %add-user-file
       =/  =project:zig  (~(got by projects) project-name.act)

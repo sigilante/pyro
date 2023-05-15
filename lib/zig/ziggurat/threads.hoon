@@ -251,6 +251,7 @@
     (pure:m !>(`(unit @ux)`~))
   =/  code  [- +]:(cue u.code-atom)
   |^
+  ::  TODO: send %update if contract-hash already exists
   =*  wallet-poke-cage=cage
     :-  %wallet-poke 
     !>  ^-  wallet-poke:wallet
