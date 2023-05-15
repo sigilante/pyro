@@ -606,7 +606,7 @@
       :-  ~
       state(projects (~(put by projects) project-name.act project))
     ::
-        %deploy-contract
+        %deploy-contract-virtualnet
       =/  =project:zig  (~(got by projects) project-name.act)
       =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
       =/  queue-thread-error
@@ -643,7 +643,33 @@
         :^  %queue-thread  thread-name  %lard
         %-  send-wallet-transaction:zig-threads
         :^  who  u.host  !>(deploy-contract:zig-threads)
-        [who contract-jam-path.act %.n ~]
+        [[%& who] town-id.act contract-jam-path.act %.n ~]
+      (pure:m !>(~))
+    ::
+        %deploy-contract-livenet
+      =/  =project:zig  (~(got by projects) project-name.act)
+      =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
+      =/  queue-thread-error
+        %~  queue-thread  make-error-vase:zig-lib
+        [update-info %error]
+      =*  thread-name=@tas
+        %^  cat  3  'deploy-contract-'
+        (spat contract-jam-path.act)
+      :_  state
+      :_  ~
+      %-  %~  arvo  pass:io  /deploy-contract
+      :^  %k  %lard  q.byk.bowl
+      %+  skip-queue:zig-threads  request-id.act
+      =/  m  (strand ,vase)
+      ^-  form:m
+      ;<  ~  bind:m
+        %+  poke-our:strandio  %ziggurat
+        :-  %ziggurat-action
+        !>  ^-  action:zig
+        :^  project-name.act  desk-name.act  request-id.act
+        :^  %queue-thread  thread-name  %lard
+        %+  deploy-contract:zig-threads  [%| from.act]
+        [town-id.act contract-jam-path.act %.n ~]
       (pure:m !>(~))
     ::
         %build-file

@@ -1577,6 +1577,12 @@
     ^-  vase
     !>  ^-  update:zig
     [%build-result update-info [%& ~] p]
+  ::
+  ++  deploy-contract
+    |=  [contract-id=@ux p=path]
+    ^-  vase
+    !>  ^-  update:zig
+    [%deploy-contract update-info [%& contract-id] p]
   --
 ::
 ++  make-error-vase
@@ -2213,7 +2219,8 @@
     ::
         [%register-for-compilation (ot ~[[%file pa]])]
         [%unregister-for-compilation (ot ~[[%file pa]])]
-        [%deploy-contract deploy]
+        [%deploy-contract-virtualnet deploy-virtual]
+        [%deploy-contract-livenet deploy-live]
     ::
         [%build-file (ot ~[[%path pa]])]
         [%watch-repo-for-changes ul]
@@ -2358,10 +2365,18 @@
         [%license so]
     ==
   ::
-  ++  deploy
+  ++  deploy-virtual
     ^-  $-(json [who=(unit @p) town-id=@ux contract-jam-path=path])
     %-  ot
     :~  [%who (se-soft %p)]
+        [%town-id (se %ux)]
+        [%contract-jam-path pa]
+    ==
+  ::
+  ++  deploy-live
+    ^-  $-(json [from=@ux town-id=@ux contract-jam-path=path])
+    %-  ot
+    :~  [%who (se %ux)]
         [%town-id (se %ux)]
         [%contract-jam-path pa]
     ==

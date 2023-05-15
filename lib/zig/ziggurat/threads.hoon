@@ -216,14 +216,14 @@
   (pure:m ~)
 ::
 ++  deploy-contract
-  |=  $:  who=@p
+  |=  $:  is-virtualnet-deployment=(each @p from=@ux)
+          town-id=@ux
           contract-jam-path=path
           mutable=?
           publish-contract-id=(unit @ux)  ::  ~ -> 0x1111.1111
       ==
   =/  m  (strand ,vase)
   ^-  form:m
-  =/  address=@ux  (~(got by ship-to-address) who)
   ;<  state=state-0:zig  bind:m  get-state
   =/  =project:zig
     (~(got by projects.state) project-name)
@@ -251,9 +251,7 @@
     (pure:m !>(`(unit @ux)`~))
   =/  code  [- +]:(cue u.code-atom)
   |^
-  ;<  empty-vase=vase  bind:m
-    %-  send-pyro-poke
-    :^  who  who  %uqbar
+  =*  wallet-poke-cage=cage
     :-  %wallet-poke 
     !>  ^-  wallet-poke:wallet
         :*  %transaction
@@ -263,11 +261,24 @@
             town=town-id
             [%noun %deploy mutable code interface=~]
         ==
-  (pure:m !>(`(unit @ux)``compute-contract-hash))
-  ::
-  ++  town-id
-    ^-  @ux
-    0x0  ::  hardcode
+  ;<  empty-vase=vase  bind:m
+    ?:  ?=(%& -.is-virtualnet-deployment)
+      =*  who  p.is-virtualnet-deployment
+      (send-pyro-poke who who %uqbar wallet-poke-cage)
+    ;<  ~  bind:m  (poke-our %wallet wallet-poke-cage)
+    (pure:m !>(~))
+  =/  contract-hash=@ux  compute-contract-hash
+  ;<  ~  bind:m
+    %+  poke-our  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:zig
+    :^  project-name  desk-name  ~
+    :-  %send-update
+    !<  update:zig
+    %.  [contract-hash contract-jam-path]
+    %~  deploy-contract  make-update-vase:zig-lib
+    [project-name desk-name %deploy-contract ~]
+  (pure:m !>(`(unit @ux)``contract-hash))
   ::
   ++  pci
     ^-  @ux
@@ -277,6 +288,12 @@
     ^-  @ux
     %-  hash-pact:smart
     [?.(mutable 0x0 pci) address town-id code]
+  ::
+  ++  address
+    ^-  @ux
+    ?:  ?=(%& -.is-virtualnet-deployment)
+      (~(got by ship-to-address) p.is-virtualnet-deployment)
+    from.p.is-virtualnet-deployment
   --
 ::
 ++  send-wallet-transaction
