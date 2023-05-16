@@ -195,6 +195,7 @@
     =.  van.mod.sol.snap
       =/  gal  !<(gall-type vase:(~(got by van.mod.sol.snap) %gall))
       =/  yok  (~(got by yokes.state.gal) dap)
+      ?>  ?=(%live -.yok)
       ?>  ?=(%& -.agent.yok) :: not going to handle dead agents
       =.  agent.yok
         %&^(tail (on-load:p.agent.yok vase))
