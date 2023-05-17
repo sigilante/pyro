@@ -94,7 +94,7 @@
     =+  (mule |.(!<(versioned-state old-vase)))
     ?-  -.-
       %&  `this(state +.-)
-      %|  `this
+      %|  [[%give %fact ~[/load-failed] noun+!>(~)]~ this]
     ==
   ::
   ++  on-poke
@@ -144,7 +144,13 @@
       (scry:(pe who) (weld /gx/[her]/[dap]/0 paf))
     ==
   ::
-  ++  on-watch  on-watch:def
+  ++  on-watch
+    |=  p=path
+    ^-  (quip card _this)
+    ?+  p  (on-watch:def p)
+      [%load-failed ~]  `this
+    ==
+  ::
   ++  on-leave  on-leave:def
   ++  on-agent  on-agent:def
   ++  on-arvo   on-arvo:def
