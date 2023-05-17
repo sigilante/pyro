@@ -220,6 +220,7 @@
       %thread-result
       %deploy-contract
       %linedb
+      %state-reset
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -274,5 +275,6 @@
       [%thread-result update-info payload=(data ~) thread-name=@tas]
       [%deploy-contract update-info payload=(data @ux) =path]
       [%linedb update-info payload=(data ~) ~]
+      [%state-reset update-info payload=(data ~) ~]
   ==
 --

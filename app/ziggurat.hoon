@@ -1362,7 +1362,7 @@
             %-  send-long-operation-update:zig-threads
             ?~  long-operation-info  ~
             %=  long-operation-info
-                current-step.u  `%uild-configuration-thread
+                current-step.u  `%build-configuration-thread
             ==
           ;<  configuration-thread-vase=vase  bind:m
             %-  build:zig-threads  :_  config-file-path
@@ -1473,8 +1473,12 @@
     ?>  ?=([%fact %noun ^] sign)
     =^  cards=(list card)  this  on-init
     :_  this
-    :_  cards
-    (~(leave-our pass:io w) %pyro)
+    :+  (~(leave-our pass:io w) %pyro)
+      %-  update-vase-to-card:zig-lib
+      %.  'resetting %ziggurat state to factory settings due to %pyro state wipe upon arvo change'
+      %~  state-reset  make-error-vase:zig-lib
+      [['' %$ %pyro-load-failed ~] %error]
+    cards
   ::
       [%linedb @ @ @ @ ~]
     ?:  ?=(%watch-ack -.sign)  `this
