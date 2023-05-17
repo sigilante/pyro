@@ -2245,6 +2245,17 @@
         [%change-settings change-settings]
     ::
         [%get-dev-desk (se %p)]
+    ::
+        [%set-repo-info repo-info]
+    ==
+  ::
+  ++  repo-info
+    ^-  $-(json repo-info:zig)
+    %-  ot
+    :~  [%repo-host (se %p)]
+        [%repo-name (se %tas)]
+        [%branch-name (se %tas)]
+        [%commit-hash (se-soft %ux)]
     ==
   ::
   ++  queue-thread

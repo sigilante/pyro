@@ -1148,6 +1148,17 @@
       :+  (make-new-desk:zig-lib desk-name.act)
         (get-dev-desk:zig-lib [who desk-name]:act)
       ~
+    ::
+        %set-repo-info
+      =/  =project:zig  (~(got by projects) project-name.act)
+      =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
+      :-  ~
+      %=  state
+          projects
+        %+  ~(put by projects)  project-name.act
+        %^  put-desk:zig-lib  project  desk-name.act
+        desk(repo-info repo-info.act)
+      ==
     ==
     ::
     ++  compile-imports

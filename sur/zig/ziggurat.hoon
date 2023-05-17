@@ -176,6 +176,8 @@
           [%change-settings =settings]
       ::
           [%get-dev-desk who=@p]
+      ::
+          [%set-repo-info =repo-info]
       ==
   ==
 ::
