@@ -720,17 +720,18 @@
   ;<  ~  bind:m
     %+  poke-our  %ziggurat
     (make-read-repo-cage:zig-lib project-name desk-name ~)
-  =/  file-paths=(list path)  ~(tap in to-compile.desk)
+  |^
+  ;<  paths-to-build=(list path)  bind:m  get-paths-to-build
   ;<  empty-vase=vase  bind:m
     |-
-    ?~  file-paths  (pure:m !>(~))
+    ?~  paths-to-build  (pure:m !>(~))
     ;<  ~  bind:m
       %+  poke-our  %ziggurat
       :-  %ziggurat-action
       !>  ^-  action:zig
       :^  project-name  desk-name  ~
-      [%build-file i.file-paths]
-    $(file-paths t.file-paths)
+      [%build-file i.paths-to-build]
+    $(paths-to-build t.paths-to-build)
   ;<  =bowl:strand  bind:m  get-bowl
   =*  zl  zig-lib(our.bowl our.bowl, now.bowl now.bowl)
   =/  most-recent-commit-hash=(unit @ux)
@@ -766,36 +767,41 @@
       %+  ~(put by projects.state)  project-name
       (put-desk:zig-lib project desk-name desk)
     ==
-  ::  TODO: make use of diff to determine which of files
-  ::   files-to-compile have changed and compile only those
   (pure:m !>(~))
-  :: =+  !<(=domo:clay q.r.u.p.sign-arvo)
-  :: =/  updated-files=(set path)
-  ::   =/  =tako:clay  (~(got by hit.domo) let.domo)
-  ::   =+  .^  =yaki:clay
-  ::           %cs
-  ::           %+  weld  /(scot %p our.bowl)/[desk-name]
-  ::           /(scot %da now.bowl)/yaki/(scot %uv tako)
-  ::       ==
-  ::   ~(key by q.yaki)
-  :: =/  files-to-compile=(list path)
-  ::   ~(tap in (~(int in updated-files) to-compile.desk))
-  :: :_  this
-  :: %+  weld
-  ::   ?:  =(0 (lent files-to-compile))
-  ::     :_  ~
-  ::     (make-read-desk:zig-lib project-name desk-name ~)
-  ::   %+  murn  files-to-compile
-  ::   |=  file-path=path
-  ::   ?~  file-path  ~
-  ::   :-  ~
-  ::   %.  [[project-name desk-name %$ ~] file-path]
-  ::   make-build-file:zig-lib
-  :: %+  turn
-  ::   %~  tap  in
-  ::   (~(get ju sync-desk-to-vship) desk-name)
-  :: |=  who=@p
-  :: (sync-desk-to-virtualship-card:zig-lib who desk-name)
+  ::
+  ++  get-paths-to-build
+    =/  m  (strand ,(list path))
+    ^-  form:m
+    ;<  =bowl:strand  bind:m  get-bowl
+    =*  scry-prefix=path
+      :^  (scot %p our.bowl)  %linedb  (scot %da now.bowl)
+      /(scot %p repo-host)/[desk-name]/[branch-name]
+    =+  .^  log=(list [hash=@ux @ @ @])
+            %gx
+            (snoc scry-prefix %noun)
+        ==
+    ?~  log  !!  :: TODO
+    =*  head-hash  (scot %ux hash.i.log)
+    ?~  t.log
+      ::  only have one commit
+      ::   -> skip diffing logic and build all
+      (pure:m ~(tap in to-compile.desk))
+    ::  have head and previous commit
+    ::   -> build only files that were updated
+    =*  old-head-hash  (scot %ux hash.i.t.log)
+    =+  .^  diff=(map path (urge:clay @t))
+            %gx
+            %+  weld  scry-prefix
+            /diff/[old-head-hash]/[head-hash]/noun
+        ==
+    =*  updated-files=(set path)
+      %-  ~(gas in *(set path))
+      %+  murn  ~(tap by diff)
+      |=  [p=path u=(urge:clay @t)]
+      ?:  =(1 (lent u))  ~  `p
+    %-  pure:m
+    ~(tap in (~(int in updated-files) to-compile.desk))
+  --
 ::
 ++  does-desk-exist
   |=  desk-name=@tas

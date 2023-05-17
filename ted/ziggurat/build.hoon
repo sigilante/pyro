@@ -37,15 +37,16 @@
   ==
 ::
 ++  return-success
+  |=  result=vase
   =/  m  (strand ,vase)
   ^-  form:m
-  (pure:m !>(`(unit @t)`~))
+  (pure:m !>(`(each vase tang)`[%& result]))
 ::
 ++  return-error
   |=  message=tape
   =/  m  (strand ,vase)
   ^-  form:m
-  (pure:m !>(`(unit @t)``(crip message)))
+  (pure:m !>(`(each vase tang)`[%| [%leaf message]~]))
 ::
 ++  ted
   ^-  thread:spider
@@ -85,7 +86,8 @@
       %-  return-error
       %+  weld  "{<file-path>} build failed unexpectedly,"
       " please see dojo for compilation errors"
-    ?:  ?=(%& -.result.update)  return-success
+    ?:  ?=(%& -.result.update)
+      (return-success p.result.update)
     =*  error
       (reformat-compiler-error:zig-lib p.result.update)
     %-  return-error
@@ -131,5 +133,5 @@
   =+  !<(=update:linedb q.save-done)
   ?.  ?=(%new-data -.update)             !!
   ?.  =((snip path-prefix) path.update)  !!
-  return-success
+  (return-success !>(p.build-result))
 --
