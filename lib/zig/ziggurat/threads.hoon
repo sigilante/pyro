@@ -529,6 +529,49 @@
   ;<  ~  bind:m  (leave-our /update-done %ziggurat)
   (pure:m !>(~))
 ::
+++  skip-queue
+  =/  m  (strand ,vase)
+  |=  [request-id=(unit @t) skipper=_*form:m]
+  ^-  form:m
+  ;<  starting-state=state-0:zig  bind:m  get-state
+  =/  existing-queue=thread-queue:zig
+    thread-queue.starting-state
+  ;<  ~  bind:m
+    %+  poke-our  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:zig
+    :^  project-name  desk-name  request-id
+    :-  %set-ziggurat-state
+    starting-state(thread-queue ~)
+  ;<  ~  bind:m
+    (watch-our /queue-done %ziggurat /project)
+  ;<  empty-vase=vase  bind:m  skipper
+  ;<  ~  bind:m
+    %+  poke-our:strandio  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:zig
+    :^  project-name  desk-name  request-id
+    [%run-queue ~]
+  |-
+  ;<  update-done=cage  bind:m
+    (take-fact:strandio /queue-done)
+  ?.  ?=(%ziggurat-update p.update-done)  $
+  =+  !<(=update:zig q.update-done)
+  ?.  ?=(%status -.update)                $
+  ?.  ?=(%& -.payload.update)             $
+  ?.  ?=([%ready ~] p.payload.update)     $
+  ;<  ~  bind:m
+    (leave-our:strandio /queue-done %ziggurat)
+  ;<  newest-state=state-0:zig  bind:m  get-state
+  ;<  ~  bind:m
+    %+  poke-our:strandio  %ziggurat
+    :-  %ziggurat-action
+    !>  ^-  action:zig
+    :^  project-name  desk-name  request-id
+    :-  %set-ziggurat-state
+    newest-state(thread-queue existing-queue)
+  (pure:m !>(~))
+::
 ++  fetch-repo
   |=  $:  repo-host=@p
           repo-name=@tas
