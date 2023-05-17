@@ -20,9 +20,7 @@
   $:  state-0
       =eng
       smart-lib-vase=vase
-      =ca-scry-cache
   ==
-+$  ca-scry-cache  (map [@tas path] (pair @ux vase))
 +$  eng  $_  ~(engine engine-lib !>(0) *(map * @) jets:zink %.y %.n)  ::  sigs off, hints off
 ::
 +$  thread-queue
@@ -136,7 +134,7 @@
           [%send-update =update]
       ::
           [%change-focus ~]
-          [%add-project-desk index=(unit @ud) repo-host=@p repo-name=@tas branch-name=@tas commit-hash=(unit @ux)]  ::  index=~ -> add to end
+          [%add-project-desk index=(unit @ud) repo-host=@p branch-name=@tas commit-hash=(unit @ux)]  ::  index=~ -> add to end
           [%delete-project-desk ~]
       ::
           [%save-file file=path contents=@]  ::  generates new file or overwrites existing
@@ -178,7 +176,6 @@
           [%change-settings =settings]
       ::
           [%get-dev-desk who=@p]
-          [%suspend-uninstall-to-make-dev-desk ~]
       ==
   ==
 ::
@@ -212,11 +209,12 @@
       %add-project-desk
       %delete-project-desk
       %get-dev-desk
-      %suspend-uninstall-to-make-dev-desk
       %ziggurat-state
       %configs
       %ship-to-address-map
       %build-result
+      %long-operation-on-step
+      %thread-result
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -229,6 +227,11 @@
 ::
 ++  data  |$(this (each this [level=error-level message=@t]))
 ::
++$  long-operation-info
+  (unit long-operation-info-body)
++$  long-operation-info-body
+  [name=@tas steps=(list @tas) current-step=(unit @tas)]
+::
 +$  update
   $@  ~
   $%  [%focused-project update-info payload=(data @t) ~]
@@ -238,7 +241,7 @@
       [%new-project update-info payload=(data =sync-desk-to-vship) ~]
       [%add-config update-info payload=(data [who=@p what=@tas item=@]) ~]
       [%delete-config update-info payload=(data [who=@p what=@tas]) ~]
-      [%queue-thread update-info payload=(data @tas) ~]
+      [%queue-thread update-info payload=(data @tas) thread-name=@tas]
       [%run-queue update-info payload=(data ~) ~]
       [%add-user-file update-info payload=(data ~) file=path]
       [%delete-user-file update-info payload=(data ~) file=path]
@@ -258,10 +261,13 @@
       [%add-project-desk update-info payload=(data ~) ~]
       [%delete-project-desk update-info payload=(data ~) ~]
       [%get-dev-desk update-info payload=(data ~) ~]
-      [%suspend-uninstall-to-make-dev-desk update-info payload=(data ~) ~]
       [%ziggurat-state update-info payload=(data state-0) ~]
       [%configs update-info payload=(data configs) ~]
       [%ship-to-address-map update-info payload=(data (map @p @ux)) ~]
       [%build-result update-info payload=(data ~) =path]
+      [%long-operation-current-step update-info payload=(data long-operation-info-body) ~]
+      [%thread-result update-info payload=(data ~) thread-name=@tas]
+      [%deploy-contract update-info payload=(data ~) =path]
+      [%linedb update-info payload=(data ~) ~]
   ==
 --

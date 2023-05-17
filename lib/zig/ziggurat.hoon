@@ -505,35 +505,6 @@
     ?:  (gth max-print-size noah-code-size)  [id item]
     [id item(code.p [0 0])]
   --
-::  scry %ca or fetch from local cache
-::
-++  scry-or-cache-ca
-  |=  [desk-name=@tas p=path =ca-scry-cache:zig]
-  |^  ^-  (unit [vase ca-scry-cache:zig])
-  =/  scry-path=path
-    :-  (scot %p our.bowl)
-    (weld /[desk-name]/(scot %da now.bowl) p)
-  ?~  cache=(~(get by ca-scry-cache) [desk-name p])
-    scry-and-cache-ca
-  ?.  =(p.u.cache .^(@ %cz scry-path))  scry-and-cache-ca
-  `[q.u.cache ca-scry-cache]
-  ::
-  ++  scry-and-cache-ca
-    ^-  (unit [vase ca-scry-cache:zig])
-    =/  scry-result
-      %-  mule
-      |.
-      =/  scry-path=path
-        :-  (scot %p our.bowl)
-        (weld /[desk-name]/(scot %da now.bowl) p)
-      =/  scry-vase=vase  .^(vase %ca scry-path)
-      :-  scry-vase
-      %+  ~(put by ca-scry-cache)  [desk-name p]
-      [`@ux`.^(@ %cz scry-path) scry-vase]
-    ?:  ?=(%& -.scry-result)  `p.scry-result
-    ~&  %ziggurat^%scry-and-cache-ca-fail
-    ~
-  --
 ::
 ++  town-id-to-sequencer-host
   |=  [project-name=@t town-id=@ux =configs:zig]
@@ -706,12 +677,12 @@
     :-  ?~  commit-hash  %head  (scot %ux u.commit-hash)
     /zig/state-views/[project-repo-name]/hoon/noun
   =+  .^(state-views-text=(unit @t) %gx p)
-  ?~  state-views-text  ~  ::  TODO
+  ?~  state-views-text  ~
   =/  build-result
     %-  mule
     |.
     (slap !>(..zuse) (ream u.state-views-text))
-  ?:  ?=(%| -.build-result)  ~  :: TODO
+  ?:  ?=(%| -.build-result)  ~
   `!<(state-views:zig p.build-result)
 ::
 ++  convert-test-steps-to-thread
@@ -961,6 +932,22 @@
       [/readme/md %del ~]
       [/app/[name]/hoon %ins hoon+!>((make-template /app/[name]/hoon))]
   ==
+::
+++  make-operation-steps
+  |%
+  ++  setup-project
+    ^-  (list @tas)
+    :^  %build-configuration-thread  %get-dependency-repos
+    %start-new-ships  ~
+  ::
+  ++  commit-install-start
+    ^-  (list @tas)
+    ~[%commit-files-to-pyro-ships %install-and-start-apps-on-pyro-ships]
+  ::
+  ++  fetch-repo
+    ^-  (list @tas)
+    ~[%fetch-repo]
+  --
 ::
 ::  uqbar-core:lib/zink/conq/hoon duplicated here in part
 ::   with changes that allow for more verbose compilation
@@ -1382,6 +1369,31 @@
     ''
   --
 ::
+++  project-to-repo-infos
+  |=  =project:zig
+  ^-  (list repo-info:zig)
+  %+  turn  (val-desk project)
+  |=(=desk:zig repo-info.desk)
+::
+++  find-file-in-repos
+  |=  [file-path=path repo-infos=(list repo-info:zig)]
+  ^-  (unit repo-info:zig)
+  ?~  repo-infos  ~
+  =*  repo-info  i.repo-infos
+  =*  repo-host  (scot %p repo-host.repo-info)
+  =*  repo-name  repo-name.repo-info
+  =*  branch-name  branch-name.repo-info
+  =*  commit-hash  commit-hash.repo-info
+  =*  commit=@ta
+    ?~  commit-hash  %head  (scot %ux u.commit-hash)
+  =*  file-scry-path=path
+    %-  weld  :_  (snoc file-path %noun)
+    :^  (scot %p our.bowl)  %linedb  (scot %da now.bowl)
+    /[repo-host]/[repo-name]/[branch-name]/[commit]
+  =*  file-contents  .^((unit @t) %gx file-scry-path)
+  ?^  file-contents  `repo-info
+  $(repo-infos t.repo-infos)
+::
 ++  find-file-in-desks
   |=  [file-path=path desk-names=(list @tas)]
   ^-  (unit @tas)
@@ -1580,10 +1592,11 @@
     [%new-project update-info [%| level message] ~]
   ::
   ++  queue-thread
-    |=  message=@t
+    |=  [message=@t thread-name=@tas]
     ^-  vase
     !>  ^-  update:zig
-    [%queue-thread update-info [%| level message] ~]
+    :-  %queue-thread
+    [update-info [%| level message] thread-name]
   ::
   ++  run-queue
     |=  message=@t
@@ -1639,18 +1652,30 @@
     !>  ^-  update:zig
     [%get-dev-desk update-info [%| level message] ~]
   ::
-  ++  suspend-uninstall-to-make-dev-desk
-    |=  message=@t
-    ^-  vase
-    !>  ^-  update:zig
-    :^  %suspend-uninstall-to-make-dev-desk  update-info
-    [%| level message]  ~
-  ::
   ++  build-result
     |=  message=@t
     ^-  vase
     !>  ^-  update:zig
     [%build-result update-info [%| level message] ~]
+  ::
+  ++  thread-result
+    |=  [message=@t thread-name=@tas]
+    ^-  vase
+    !>  ^-  update:zig
+    :^  %thread-result  update-info  [%| level message]
+    thread-name
+  ::
+  ++  deploy-contract
+    |=  [message=@t p=path]
+    ^-  vase
+    !>  ^-  update:zig
+    [%deploy-contract update-info [%| level message] p]
+  ::
+  ++  linedb
+    |=  message=@t
+    ^-  vase
+    !>  ^-  update:zig
+    [%linedb update-info [%| level message] ~]
   --
 ::
 ::  json
@@ -1719,7 +1744,9 @@
       ~
     ::
         %queue-thread
-      ['data' %s p.payload.update]~
+      :+  ['thread_name' %s thread-name.update]
+        ['data' %s p.payload.update]
+      ~
     ::
         ?(%add-user-file %delete-user-file)
       :+  ['file' (path file.update)]
@@ -1804,9 +1831,6 @@
         %get-dev-desk
       ['data' ~]~
     ::
-        %suspend-uninstall-to-make-dev-desk
-      ['data' ~]~
-    ::
         %ziggurat-state
       ['data' ~]~  :: TODO
       :: ['data' p.payload.update]~
@@ -1819,7 +1843,32 @@
     ::
         %build-result
       ['data' ~]~
+    ::
+        %long-operation-current-step
+      :_  ~
+      ['data' (long-operation-info-body p.payload.update)]
+    ::
+        %thread-result
+      :+  ['thread_name' %s thread-name.update]
+        ['data' ~]
+      ~
+    ::
+        %deploy-contract
+      ['data' ~]~
+    ::
+        %linedb
+      ['data' ~]~
     ==
+  ::
+  ++  long-operation-info-body
+    |=  loib=long-operation-info-body:zig
+    ^-  json
+    %-  pairs
+    :^    [%name %s name.loib]
+        [%steps %a (turn steps.loib |=(s=@tas [%s s]))]
+      :-  %current-step
+      ?~(current-step.loib ~ [%s u.current-step.loib])
+    ~
   ::
   ++  pyro-ships-app-states
     |=  pyro-ships-app-states=(map @p (map @tas (set [@tas ?])))
@@ -2152,7 +2201,7 @@
         [%delete-sync-desk-vships (ot ~[[%ships (ar (se %p))]])]
     ::
         [%change-focus ul]
-        [%add-project-desk (ot ~[[%index ni:dejs-soft:format] [%repo-host (se %p)] [%repo-name (se %tas)] [%branch-name (se %tas)] [%commit-hash (se-soft %ux)]])]
+        [%add-project-desk (ot ~[[%index ni:dejs-soft:format] [%repo-host (se %p)] [%branch-name (se %tas)] [%commit-hash (se-soft %ux)]])]
         [%delete-project-desk ul]
     ::
         [%save-file (ot ~[[%file pa] [%contents so]])]  :: TODO: allow non-@t %contents
@@ -2196,7 +2245,6 @@
         [%change-settings change-settings]
     ::
         [%get-dev-desk (se %p)]
-        [%suspend-uninstall-to-make-dev-desk ul]
     ==
   ::
   ++  queue-thread
