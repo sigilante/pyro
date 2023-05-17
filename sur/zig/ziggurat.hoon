@@ -146,7 +146,8 @@
       ::
           [%register-for-compilation file=path]
           [%unregister-for-compilation file=path]
-          [%deploy-contract who=(unit @p) town-id=@ux contract-jam-path=path]
+          [%deploy-contract-virtualnet who=(unit @p) town-id=@ux contract-jam-path=path]
+          [%deploy-contract-livenet from=@ux town-id=@ux contract-jam-path=path]
       ::
           [%build-file =path]
           [%watch-repo-for-changes ~]
@@ -217,6 +218,8 @@
       %build-result
       %long-operation-on-step
       %thread-result
+      %deploy-contract
+      %linedb
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -269,7 +272,7 @@
       [%build-result update-info payload=(data ~) =path]
       [%long-operation-current-step update-info payload=(data long-operation-info-body) ~]
       [%thread-result update-info payload=(data ~) thread-name=@tas]
-      [%deploy-contract update-info payload=(data ~) =path]
+      [%deploy-contract update-info payload=(data @ux) =path]
       [%linedb update-info payload=(data ~) ~]
   ==
 --
