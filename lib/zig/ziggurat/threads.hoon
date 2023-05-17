@@ -165,7 +165,7 @@
     =/  desks-scry=(set @tas)
       .^  (set @tas)
           %gx
-          /[our]/pyro/[now]/i/[who]/cd/[who]/base/[now]/noun
+          /[our]/pyro/[now]/i/[who]/cd/[who]//[now]/noun
       ==
     =/  desks=(list @tas)  ~(tap in desks-scry)
     |-
@@ -175,7 +175,7 @@
       .^  (set [@tas ?])
           %gx
           %+  weld  /[our]/pyro/[now]/i/[who]/ge/[who]/[desk]
-          /[now]/apps
+          /[now]/$/apps
       ==
     ?:  %.  app
         %~  has  in
@@ -387,8 +387,8 @@
     ++  get-is-iris-empty
       =/  m  (strand ,(each ~ (set duct)))
       ^-  form:m
-      ::  /i//whey from sys/vane/iris/hoon:386
-      ;<  maz=(list mass)  bind:m  (scry (list mass) /i//whey)
+      ::  /ix//$/whey from sys/vane/iris/hoon:398
+      ;<  maz=(list mass)  bind:m  (scry (list mass) /ix//$/whey)
       =/  by-duct=(map duct @ud)
         %+  filter-iris-by-duct  ignored-iris-prefixes
         ((map duct @ud) p.q:(snag 3 maz))
@@ -1057,7 +1057,7 @@
     =/  m  (strand ,?)
     ^-  form:m
     =/  w=@ta    (scot %p who)
-    (scry ? /gx/pyro/i/[w]/gu/[w]/[app]/0/noun)
+    (scry ? /gx/pyro/i/[w]/gu/[w]/[app]/0/$/noun)
   ::
   ++  iterate-over-whos
     =/  m  (strand ,~)

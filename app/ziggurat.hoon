@@ -1127,7 +1127,7 @@
       ?.  .^  ?
               %gx
               :-  (scot %p our.bowl)
-              /pyro/[now]/i/[who]/gu/[who]/[app]/[now]/noun
+              /pyro/[now]/i/[who]/gu/[who]/[app]/[now]/$/noun
           ==
         :_  state
         :_  ~
@@ -1505,7 +1505,7 @@
     =*  now  (scot %da now.bowl)
     ~&  %z^%on-init-zig-setup
     :_  this
-    ?:  .^(? %gu /[our]/subscriber/[now])  ~
+    ?:  .^(? %gu /[our]/subscriber/[now]/$)  ~
     :_  ~
     %-  ~(poke-self pass:io /self-wire)
     :-  %ziggurat-action

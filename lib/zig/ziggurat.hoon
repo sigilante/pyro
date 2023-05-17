@@ -447,7 +447,7 @@
   ?.  .^  ?
           %gx
           :+  (scot %p our.bowl)  %pyro
-          /[now]/i/[who]/gu/[who]/indexer/[now]/noun
+          /[now]/i/[who]/gu/[who]/indexer/[now]/$/noun
       ==
     :-  %|
     %-  crip
@@ -898,7 +898,7 @@
     ^-  (set [@tas ?])
     .^  (set [@tas ?])
         %gx
-        /[our]/pyro/[now]/i/[w]/ge/[w]/[desk-name]/0/apps
+        /[our]/pyro/[now]/i/[w]/ge/[w]/[desk-name]/0/$/apps
     ==
   --
 ::
