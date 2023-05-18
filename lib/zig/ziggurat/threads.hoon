@@ -617,21 +617,32 @@
       %+  poke-our  %ziggurat
       [%ziggurat-action u.followup-action]
     (pure:m !>(~))
-  ;<  ~  bind:m
-    %^  watch-our  /fetch-done  %linedb
-    [%branch-updates branch-path]
-  ;<  ~  bind:m
-    %+  poke-our  %linedb
-    :-  %linedb-action
-    !>  [%fetch repo-host repo-name branch-name]
-  ~&  %z^%fr^%1
-  ;<  fetch-done=cage  bind:m  (take-fact /fetch-done)
-  ~&  %z^%fr^%2
-  ;<  ~  bind:m  (leave-our /fetch-done %linedb)
-  ?.  ?=(%linedb-update p.fetch-done)  !!  ::  TODO
-  =+  !<(=update:linedb q.fetch-done)
-  ?.  ?=(%new-data -.update)           !!
-  ?.  =(branch-path path.update)       !!
+  ;<  empty-vase=vase  bind:m
+    =*  repo-local-copy
+      .^  *
+          %gx
+          :^  (scot %p our.bowl)  %linedb
+          (scot %da now.bowl)  (snoc branch-path %noun)
+      ==
+    ?:  ?=(^ repo-local-copy)
+      ::  already have repo
+      (pure:m !>(~))
+    ;<  ~  bind:m
+      %^  watch-our  /fetch-done  %linedb
+      [%branch-updates branch-path]
+    ;<  ~  bind:m
+      %+  poke-our  %linedb
+      :-  %linedb-action
+      !>  [%fetch repo-host repo-name branch-name]
+    ~&  %z^%fr^%1
+    ;<  fetch-done=cage  bind:m  (take-fact /fetch-done)
+    ~&  %z^%fr^%2
+    ;<  ~  bind:m  (leave-our /fetch-done %linedb)
+    ?.  ?=(%linedb-update p.fetch-done)  !!  ::  TODO
+    =+  !<(=update:linedb q.fetch-done)
+    ?.  ?=(%new-data -.update)           !!
+    ?.  =(branch-path path.update)       !!
+    (pure:m !>(~))
   ~&  %z^%fr^%3
   ?~  followup-action  (pure:m !>(~))
   ;<  ~  bind:m
