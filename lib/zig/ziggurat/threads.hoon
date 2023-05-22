@@ -224,6 +224,7 @@
       ==
   =/  m  (strand ,vase)
   ^-  form:m
+  ~&  %z^%dc^%0
   ;<  state=state-0:zig  bind:m  get-state
   =/  =project:zig
     (~(got by projects.state) project-name)
@@ -233,10 +234,22 @@
   =*  bn  branch-name.repo-info.desk
   =*  ch  commit-hash.repo-info.desk
   =*  co=@ta  ?~  ch  %head  (scot %ux u.ch)
-  ;<  code-atom=(unit @)  bind:m
-    %+  scry  (unit @)
-    %-  snoc  :_  %noun
-    `path`[%gx %linedb rh rn bn co contract-jam-path]
+  ~&  %z^%dc^%1
+  ~&  %z^%dc^%cjp^`path`contract-jam-path
+  ~&  :^  %gx  %linedb  rh
+      [rn bn co (snoc `path`contract-jam-path %noun)]
+  ;<  =bowl:strand  bind:m  get-bowl
+  =+  .^  code-atom=(unit @)
+          %gx
+          :^  (scot %p our.bowl)  %linedb
+            (scot %da now.bowl)
+          [rh rn bn co (snoc contract-jam-path %noun)]
+      ==
+  :: ;<  code-atom=(unit @)  bind:m
+  ::   %+  scry  (unit @)
+  ::   :^  %gx  %linedb  rh
+  ::   [rn bn co (snoc contract-jam-path %noun)]
+  ~&  %z^%dc^%2
   ?~  code-atom
     ;<  ~  bind:m
       %+  poke-our  %ziggurat
@@ -249,6 +262,7 @@
       %~  deploy-contract  make-error-vase:zig-lib
       [[project-name desk-name %deploy-contract ~] %error]
     (pure:m !>(`(unit @ux)`~))
+  ~&  %z^%dc^%3
   =/  code  [- +]:(cue u.code-atom)
   |^
   ::  TODO: send %update if contract-hash already exists
@@ -262,13 +276,16 @@
             town=town-id
             [%noun %deploy mutable code interface=~]
         ==
+  ~&  %z^%dc^%4
   ;<  empty-vase=vase  bind:m
     ?:  ?=(%& -.is-virtualnet-deployment)
       =*  who  p.is-virtualnet-deployment
       (send-pyro-poke who who %uqbar wallet-poke-cage)
     ;<  ~  bind:m  (poke-our %wallet wallet-poke-cage)
     (pure:m !>(~))
+  ~&  %z^%dc^%5
   =/  contract-hash=@ux  compute-contract-hash
+  ~&  %z^%dc^%6
   ;<  ~  bind:m
     %+  poke-our  %ziggurat
     :-  %ziggurat-action
@@ -279,6 +296,7 @@
     %.  [contract-hash contract-jam-path]
     %~  deploy-contract  make-update-vase:zig-lib
     [project-name desk-name %deploy-contract ~]
+  ~&  %z^%dc^%7
   (pure:m !>(`(unit @ux)``contract-hash))
   ::
   ++  pci
@@ -338,7 +356,7 @@
   ;<  ~  bind:m  (sleep ~s3)  ::  TODO: tune time
   ;<  empty-vase=vase  bind:m
     %+  send-discrete-pyro-dojo  sequencer-host
-    ':sequencer|batch'
+    '-zig!batch ~'
   (pure:m gate-output)
 ::
 ++  block-on-previous-operation
@@ -362,6 +380,7 @@
     %+  get-real-and-virtual-timers  project-name
     [our now]:bowl
   ?~  timers  (pure:m ~)
+  ~&  %z^%bopo^timers
   =*  soonest-timer  -.i.timers
   ?:  (lth (add now.bowl done-duration) soonest-timer)
     (pure:m ~)
@@ -430,15 +449,18 @@
   ::
   ++  ignored-realship-timer-prefixes
     ^-  (list path)
-    :~  /ames/pump
+    :~  /ames/fine/behn/wake
+        /ames/pump
         /eyre/channel
         /eyre/sessions
+        ::  TODO: change these to `/gall/use` ?
         /gall/use/eth-watcher
         /gall/use/hark-system-hook
         /gall/use/hark
         /gall/use/linedb
         /gall/use/notify
         /gall/use/ping
+        /gall/use/portal-store
         /gall/use/pyre
         /gall/use/spider
     ==
@@ -624,6 +646,7 @@
           :^  (scot %p our.bowl)  %linedb
           (scot %da now.bowl)  (snoc branch-path %noun)
       ==
+    ~&  %z^%fr^branch-path^%have-local-copy^?=(^ repo-local-copy)
     ?:  ?=(^ repo-local-copy)
       ::  already have repo
       (pure:m !>(~))
@@ -655,6 +678,7 @@
   |=  [project-name=@tas desk-name=@tas]
   =/  m  (strand ,vase)
   ^-  form:m
+  ~&  %z^%bir^%0
   ;<  state=state-0:zig  bind:m  get-state
   ;<  =bowl:strand  bind:m  get-bowl
   =/  =project:zig  (~(got by projects.state) project-name)
@@ -662,27 +686,44 @@
   =*  repo-host    repo-host.repo-info.desk
   =*  repo-name    repo-name.repo-info.desk
   =*  branch-name  branch-name.repo-info.desk
+  ~&  %z^%bir^%1
   ?:  =(our.bowl repo-host)  (pure:m !>(repo-info.desk))
-  =*  branch-path=path
-    /(scot %p our.bowl)/[repo-name]/[branch-name]
-  ;<  ~  bind:m
-    %^  watch-our  /branch-done  %linedb
-    [%branch-updates branch-path]
-  ;<  ~  bind:m
-    %+  poke-our  %linedb
-    :-  %linedb-action
-    !>
-    [%branch repo-host repo-name branch-name branch-name]
-  ;<  branch-done=cage  bind:m  (take-fact /branch-done)
-  ~&  %z^%fr^%1
-  ;<  ~  bind:m  (leave-our /branch-done %linedb)
-  ?.  ?=(%linedb-update p.branch-done)  !!
-  =+  !<(=update:linedb q.branch-done)
-  ?.  ?=(%new-data -.update)          !!
-  ?.  =(branch-path path.update)      !!
+  ;<  empty-vase=vase  bind:m
+    =*  branch-path=path
+      /(scot %p our.bowl)/[repo-name]/[branch-name]
+    ?:  %.  [our.bowl /[repo-name]/[branch-name]]
+        %~  has  in
+        %-  ~(gas in *(set [@p path]))
+        .^  (list [@p path])
+            %gx
+            :^  (scot %p our.bowl)  %linedb
+            (scot %da now.bowl)  /noun
+        ==
+      (pure:m !>(~))
+    ~&  %z^%bir^%2
+    ;<  ~  bind:m
+      %^  watch-our  /branch-done  %linedb
+      [%branch-updates branch-path]
+    ~&  %z^%bir^%3
+    ;<  ~  bind:m
+      %+  poke-our  %linedb
+      :-  %linedb-action
+      !>
+      [%branch repo-host repo-name branch-name branch-name]
+    ~&  %z^%bir^%4
+    ;<  branch-done=cage  bind:m  (take-fact /branch-done)
+    ~&  %z^%bir^%5
+    ;<  ~  bind:m  (leave-our /branch-done %linedb)
+    ?.  ?=(%linedb-update p.branch-done)  !!
+    =+  !<(=update:linedb q.branch-done)
+    ?.  ?=(%new-data -.update)          !!
+    ?.  =(branch-path path.update)      !!
+    (pure:m !>(~))
   =.  repo-host.repo-info.desk  our.bowl
+  ~&  %z^%bir^%6
   ;<  empty-vase=vase  bind:m
     (fetch-repo our.bowl repo-name branch-name ~ ~)
+  ~&  %z^%bir^%7
   ;<  ~  bind:m
     %+  poke-our  %ziggurat
     :-  %ziggurat-action
@@ -700,8 +741,10 @@
   |=  [file-path=path file-contents=@]
   =/  m  (strand ,vase)
   ^-  form:m
+  ~&  %z^%sf^%0
   ;<  repo-info-vase=vase  bind:m
     (branch-if-remote project-name desk-name)
+  ~&  %z^%sf^%1
   =+  !<(=repo-info:zig repo-info-vase)
   =*  repo-host    (scot %p repo-host.repo-info)
   =*  repo-name    repo-name.repo-info
@@ -721,6 +764,7 @@
     %+  ~(put by snap)  file-path
     ?.  ((sane %t) file-contents)  ~[file-contents]
     (to-wain:format file-contents)
+  ~&  %z^%sf^%2
   (pure:m !>(~))
 ::
 ++  update-pyro-desks-to-repo
@@ -862,7 +906,7 @@
   ~&  %z^%b^%3
   ?:  ?=(%& -.result.update)  [%& p.result.update]
   ~&  %z^%b^%4
-  ~&  %ziggurat^%build^(reformat-compiler-error:zig-lib p.result.update)
+  ~&  %ziggurat^%build^repo-host^repo-name^branch-name^commit-hash^(reformat-compiler-error:zig-lib p.result.update)
   [%| p.result.update]
 ::
 ++  create-desk
