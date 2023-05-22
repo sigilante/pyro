@@ -1977,11 +1977,23 @@
     ^-  json
     %-  pairs
     :~  ['name' %s name.d]
+        ['repo_info' (repo-info repo-info.d)]
         ['dir' (dir dir.d)]
         ['user_files' (dir ~(tap in user-files.d))]
         ['to_compile' (dir ~(tap in to-compile.d))]
         ['saved_test_steps' (saved-test-steps saved-test-steps.d)]
         ['index' (numb i)]
+    ==
+  ::
+  ++  repo-info
+    |=  ri=repo-info:zig
+    ^-  json
+    %-  pairs
+    :~  ['repo_host' %s (scot %p repo-host.ri)]
+        ['repo_name' %s repo-name.ri]
+        ['branch_name' %s branch-name.ri]
+        :-  'commit_hash'
+        ?~(commit-hash ~ [%s (scot %ux u.commit-hash.ri)])
     ==
   ::
   ++  saved-test-steps
