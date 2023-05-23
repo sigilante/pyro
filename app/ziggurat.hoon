@@ -1707,14 +1707,16 @@
     %~  settings  make-update-vase:zig-lib
     ['' %$ %settings ~]
   ::
-      [%state-views @ @ ~]  ::  TODO: generalize from [%master ~]
+      [%state-views @ @ @ ~]
     =*  repo-host          (slav %p i.t.t.p)
     =*  project-desk-name  i.t.t.t.p
+    =*  commit-hash=(unit @ux)
+      ?:  ?=(%head i.t.t.t.t.p)  ~  `(slav %ux i.t.t.t.t.p)
     =*  update-info
       [project-desk-name project-desk-name %state-views ~]
     =/  state-views=(unit state-views:zig)
       %-  make-state-views:zig-lib
-      [repo-host project-desk-name %master ~]
+      [repo-host project-desk-name %master commit-hash]
     ?~  state-views  ``json+!>(~)
     :^  ~  ~  %json
     !>  ^-  json
