@@ -1993,7 +1993,7 @@
         ['repo_name' %s repo-name.ri]
         ['branch_name' %s branch-name.ri]
         :-  'commit_hash'
-        ?~(commit-hash ~ [%s (scot %ux u.commit-hash.ri)])
+        ?~(commit-hash.ri ~ [%s (scot %ux u.commit-hash.ri)])
     ==
   ::
   ++  saved-test-steps
