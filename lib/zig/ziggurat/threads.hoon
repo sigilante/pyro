@@ -1191,6 +1191,9 @@
   =/  m  (strand ,vase)
   ^-  form:m
   ~&  %sp^%0
+  =.  repo-dependencies
+    :_  repo-dependencies
+    [repo-host project-name %master ~]  ::  TODO: generalize from [%master ~]
   ;<  empty-vase=vase  bind:m
     (send-long-operation-update long-operation-info)
   ;<  state=state-0:zig  bind:m  get-state
@@ -1208,15 +1211,9 @@
   ~&  %sp^%2
   ;<  =bowl:strand  bind:m  get-bowl
   ;<  empty-vase=vase  bind:m
-    %+  iterate-over-desks
-      :_  repo-dependencies
-      [repo-host project-name %master ~]  ::  TODO: generalize from [%master ~]
-    make-read-repo
+    (iterate-over-desks repo-dependencies make-read-repo)
   ;<  empty-vase=vase  bind:m
-    %+  iterate-over-desks
-      :_  repo-dependencies
-      [repo-host project-name %master ~]  ::  TODO: generalize from [%master ~]
-    make-watch-repo
+    (iterate-over-desks repo-dependencies make-watch-repo)
   ;<  empty-vase=vase  bind:m
     %-  send-long-operation-update
     ?~  long-operation-info  ~
@@ -1323,9 +1320,7 @@
     =/  =project:zig
       (~(gut by projects.state) project-name *project:zig)
     =.  desks.project
-      %+  turn
-        :_  repo-dependencies
-        `repo-info:zig`[repo-host project-name %master ~]  ::  TODO: generalize from [%master ~]
+      %+  turn  repo-dependencies
       |=  =repo-info:zig
       =|  =desk:zig
       :-  repo-name.repo-info
