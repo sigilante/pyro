@@ -2179,24 +2179,45 @@
             state-views=(list [@p (unit @tas) ^path])
         ==
     ^-  json
+    =*  our  (scot %p our.bowl)
+    =*  now  (scot %da now.bowl)
+    =+  .^  =update:zig
+            %gx
+            /[our]/ziggurat/[now]/get-ziggurat-state/noun
+        ==
+    ?:  ?=(~ update)                  [%a ~]
+    ?.  ?=(%ziggurat-state -.update)  [%a ~]
+    ?:  ?=(%| -.payload.update)       [%a ~]
+    =*  state=state-0:zig  p.payload.update
+    =*  project=project:zig
+      (~(got by projects:state) project-name)
+    =*  desk=desk:zig
+      (got-desk project project-name)
+    =/  repo-info=repo-info:zig  repo-info.desk
+    =*  rh    (scot %p repo-host.repo-info)
+    =*  rn    repo-name.repo-info
+    =*  bn  branch-name.repo-info
+    =*  commit-hash  commit-hash.repo-info
+    =*  commit=@tas
+      ?~  commit-hash  %head  (scot %ux u.commit-hash)
     :-  %a
     %+  murn  state-views
     |=  [who=@p app=(unit @tas) file-path=^path]
-    =/  file-scry-path=^path
-      %-  weld  :_  file-path
-      /(scot %p our.bowl)/[project-name]/(scot %da now.bowl)
-    =+  .^(is-file-found=? %cu file-scry-path)
-    ?.  is-file-found  ~
-    =+  .^(file-contents=@t %cx file-scry-path)
+    =*  file-scry-path=^path
+      %-  weld  :_  (snoc file-path %noun)
+      /[our]/linedb/[now]/[rh]/[rn]/[bn]/[commit]
+    =+  .^(file-contents=(unit @t) %gx file-scry-path)
+    ?~  file-contents  ~
     =/  [imports=(list [@tas ^path]) =hair]
-      (parse-start-of-pile:conq (trip file-contents))
+      (parse-start-of-pile:conq (trip u.file-contents))
     =/  json-pairs=(list [@tas json])
       :~  [%who %s (scot %p who)]
           [%what %s ?~(app %chain %agent)]
       ::
           :+  %body  %s
           %-  of-wain:format
-          (slag (dec p.hair) (to-wain:format file-contents))
+          %+  slag  (dec p.hair)
+          (to-wain:format u.file-contents)
       ::
           :-  %imports
           %-  pairs
