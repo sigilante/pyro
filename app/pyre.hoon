@@ -33,13 +33,13 @@
   ::
       %pyro-effect
     =+  ef=!<([pyro-effect] vase)
-    ?-    -.q.ufs.ef
+    ?-    -.q.uf.ef
     ::  ames
-        %send  [(send:ames:hc now.bowl who.ef ufs.ef) this]
+        %send  [(send:ames:hc who.ef uf.ef) this]
     ::  behn
         %doze
       =^  cards  behn-piers
-        abet:(doze:(behn:hc who.ef) ufs.ef)
+        abet:(doze:(behn:hc who.ef) uf.ef)
       [cards this]
     ::  clay
         %ergo  `this
@@ -52,12 +52,12 @@
         %thus  `this
         %response
       =^  cards  eyre-piers
-        abet:(handle-response:(eyre who.ef) ufs.ef)
+        abet:(handle-response:(eyre who.ef) uf.ef)
       [cards this]
     ::  iris
         %request
       =^  cards  iris-piers
-        abet:(request:(iris:hc who.ef) ufs.ef)
+        abet:(request:(iris:hc who.ef) uf.ef)
       [cards this]
     ::  gall
         %poke-ack  `this
@@ -115,14 +115,23 @@
 ++  ames
   |%
   ++  send
-    |=  [now=@da sndr=@p way=wire %send lan=lane:^ames pac=@]
+    =,  ^ames
+    |=  [sndr=@p way=wire %send lan=lane pac=@]
     ^-  (list card:agent:gall)
     =/  rcvr=ship
       ?-  -.lan
         %&  p.lan
         %|  `ship``@`p.lan
       ==
-    =/  hear-lane  %|^`address:^ames``@`sndr
+    =/  hear-lane  %|^`address``@`sndr
+    =/  =shot  (sift-shot pac)
+    ~&  >>  shot
+    ?:  &(!sam.shot req.shot) :: TODO I beleive this is right
+      =/  =peep  +:(sift-wail `@ux`content.shot)
+      :: now remote-scry this from pyro
+      :: then inject it back as an event into sndr
+      ~&  >  peep
+      ~
     :_  ~
     :*  %pass  /pyro-events  %agent  [our.bowl %pyro]  %poke
         %pyro-events  !>([rcvr /a/newt/0v1n.2m9vh %hear hear-lane pac]~)
