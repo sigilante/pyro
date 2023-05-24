@@ -52,6 +52,7 @@
           next-events=(qeu unix-event)
           paused=?
           scry-time=@da
+          namespace=(map path (list yowl:ames))
       ==
     +$  card  card:agent:gall
     --
@@ -267,6 +268,15 @@
     ::  execute scry
     ?~  mon=(de-omen path)  ~
     ?~  res=(~(peek le:part:snap [[pit vil] sol]:snap) [`~ u.mon])  ~
+    ?~  u.res  res
+    ``[p.u.u.res !<(vase [-:!>(*vase) q.u.u.res])]
+  ::
+  ++  remote-scry
+    |=  [=view =desk =spur]
+    =/  res
+      %-  ~(peek le:part:snap [[pit vil] sol]:snap)
+      [[~ ~] view [who desk da/scry-time.pier-data] spur]
+    ?~  res    res
     ?~  u.res  res
     ``[p.u.u.res !<(vase [-:!>(*vase) q.u.u.res])]
   ::
