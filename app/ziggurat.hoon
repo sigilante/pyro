@@ -996,7 +996,7 @@
           [%snap-ships snap-path pyro-ships.project]
       %=  state
           projects
-        ?^  update-project-snaps.act  projects
+        ?~  update-project-snaps.act  projects
         %+  ~(put by projects)  project-name.act
         project(most-recent-snap snap-path)
       ==
@@ -1579,10 +1579,15 @@
     ?:  ?=(%| -.p.+.sign-arvo)
       =/  =project:zig  (~(got by projects) project-name)
       =/  =desk:zig  (got-desk:zig-lib project desk-name)
-      =*  error-message=@t
-        ^-  @t
-        %^  cat  3  (crip "\0a{<repo-info.desk>}\0a")
+      =*  from-compiler
         (reformat-compiler-error:zig-lib p.p.+.sign-arvo)
+      =/  error-message=@t
+        ?:  ?=(~ (find "cancelled" (trip from-compiler)))
+          %^  cat  3  from-compiler
+          (crip "\0a{<repo-info.desk>}\0a")
+        %+  rap  3
+        :^  from-compiler  'see dojo for error details'
+        (crip "\0a{<repo-info.desk>}\0a")  ~
       ~&  %thread-result^w^error-message
       =*  update-info
         [project-name desk-name %thread-result ~]

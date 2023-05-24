@@ -356,7 +356,7 @@
   ;<  ~  bind:m  (sleep ~s3)  ::  TODO: tune time
   ;<  empty-vase=vase  bind:m
     %+  send-discrete-pyro-dojo  sequencer-host
-    '-zig!batch ~'
+    '-zig!batch'
   (pure:m gate-output)
 ::
 ++  block-on-previous-operation
