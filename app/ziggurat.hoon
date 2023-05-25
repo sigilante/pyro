@@ -1249,7 +1249,9 @@
         %set-repo-info
       =/  =project:zig  (~(got by projects) project-name.act)
       =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
-      :-  ~
+      :-  :_  ~
+          %-  make-read-repo:zig-lib
+          [project-name desk-name request-id]:act
       %=  state
           projects
         %+  ~(put by projects)  project-name.act
