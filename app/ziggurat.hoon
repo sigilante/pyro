@@ -65,11 +65,23 @@
   =*  wes-address
     0x5da4.4219.e382.ad70.db07.0a82.12d2.0559.cf8c.b44d
   ~&  %z^%on-init
-  :-  :+  %.  [%pyro /load-failed]
-          ~(watch-our pass:io /pyro-load-failed)
-        %.  (add now.bowl ~s5)
-        ~(wait pass:io /on-init-zig-setup)
-      ~
+  :-  :^    %.  [%pyro /load-failed]
+            ~(watch-our pass:io /pyro-load-failed)
+          %.  (add now.bowl ~s5)
+          ~(wait pass:io /on-init-zig-setup)
+        %+  ~(poke-our pass:io /unsync-suite)  %hood
+        :-  %kiln-unsync
+        !>  ^-  [@tas @p @tas]
+        :+  q.byk.bowl
+          make-canonical-distribution-ship:zig-lib
+        q.byk.bowl
+      :_  ~
+      %-  %~  arvo  pass:io
+          /suite-desk-update
+      :^  %k  %lard  q.byk.bowl
+      %+  ~(watch-for-desk-update ziggurat-threads '' %$ ~)
+        make-canonical-distribution-ship:zig-lib
+      q.byk.bowl
   %_    this
       state
     :_  [eng smart-lib]
@@ -1256,6 +1268,14 @@
         %^  put-desk:zig-lib  project  desk-name.act
         desk(repo-info repo-info.act)
       ==
+    ::
+        %update-suite
+      :_  state
+      :_  ~
+      %-  ~(arvo pass:io /update-suite)
+      :^  %c  %merg  q.byk.bowl
+      :-  make-canonical-distribution-ship:zig-lib
+      [q.byk.bowl da+now.bowl %only-that]
     ==
     ::
     ++  compile-imports
@@ -1513,6 +1533,7 @@
       [%add-sync-desk-vships ~]       `this
       [%deploy-contract ~]            `this
       [%setup-project-desk @ ~]       `this
+      [%update-suite ~]               `this
       [%save @ @ ^]                   ::`this
     ~&  sign-arvo  `this
   ::
@@ -1532,6 +1553,27 @@
         make-canonical-distribution-ship:zig-lib
       %master
     :-  ~  !>(~)
+  ::
+      [%suite-desk-update ~]
+    ?.  ?&  ?=(%khan -.sign-arvo)
+            ?=(%arow -.+.sign-arvo)
+        ==
+      (on-arvo:def w sign-arvo)
+    =/  cards=(list card)
+      :_  ~
+      %-  %~  arvo  pass:io
+          /suite-desk-update
+      :^  %k  %lard  q.byk.bowl
+      %+  ~(watch-for-desk-update ziggurat-threads '' %$ ~)
+        make-canonical-distribution-ship:zig-lib
+      q.byk.bowl
+    ?:  ?=(%| -.p.+.sign-arvo)   [cards this]
+    ?.  !<(? q.p.p.+.sign-arvo)  [cards this]
+    :_  this
+    :_  cards
+    %-  update-vase-to-card:zig-lib
+    %~  suite-update-available  make-update-vase:zig-lib
+    ['' %$ %$ ~]
   ::
       [%build-result @ @ ^]
     =*  project-name  i.t.w

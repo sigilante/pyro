@@ -179,6 +179,8 @@
           [%get-dev-desk who=@p]
       ::
           [%set-repo-info =repo-info]
+      ::
+          [%update-suite ~]
       ==
   ==
 ::
@@ -221,6 +223,7 @@
       %deploy-contract
       %linedb
       %state-reset
+      %suite-update-available
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -276,5 +279,6 @@
       [%deploy-contract update-info payload=(data @ux) =path]
       [%linedb update-info payload=(data ~) ~]
       [%state-reset update-info payload=(data ~) ~]
+      [%suite-update-available update-info payload=(data ~) ~]
   ==
 --

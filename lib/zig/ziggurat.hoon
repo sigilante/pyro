@@ -1583,6 +1583,11 @@
     ^-  vase
     !>  ^-  update:zig
     [%deploy-contract update-info [%& contract-id] p]
+  ::
+  ++  suite-update-available
+    ^-  vase
+    !>  ^-  update:zig
+    [%suite-update-available update-info [%& ~] ~]
   --
 ::
 ++  make-error-vase
@@ -1872,6 +1877,9 @@
       ['data' ~]~
     ::
         %state-reset
+      ['data' ~]~
+    ::
+        %suite-update-available
       ['data' ~]~
     ==
   ::
@@ -2296,6 +2304,8 @@
         [%get-dev-desk (se %p)]
     ::
         [%set-repo-info repo-info]
+    ::
+        [%update-suite ul]
     ==
   ::
   ++  repo-info
