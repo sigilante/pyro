@@ -612,6 +612,25 @@
     newest-state(thread-queue existing-queue)
   (pure:m !>(~))
 ::
+++  run-and-wait-on-linedb-action
+  |=  [=action:linedb watch-path=path]
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ~&  %z^%rawola^%0
+  ;<  ~  bind:m
+    %^  watch-our  /done  %linedb
+    [%branch-updates watch-path]
+  ~&  %z^%rawola^%1
+  ;<  ~  bind:m
+    %+  poke-our  %linedb
+    [%linedb-action !>(`action:linedb`action)]
+  ~&  %z^%rawola^%2
+  ;<  done=cage  bind:m  (take-fact /done)
+  ~&  %z^%rawola^%3
+  ;<  ~  bind:m  (leave-our /done %linedb)
+  ?.  ?=(%linedb-update p.done)  !!
+  (pure:m q.done)
+::
 ++  fetch-repo
   |=  $:  repo-host=@p
           repo-name=@tas
@@ -631,7 +650,8 @@
     ;<  ~  bind:m
       %+  poke-our  %linedb
       :-  %linedb-action
-      !>  [%fetch repo-host repo-name branch-name]
+      !>  ^-  action:linedb
+      [%fetch repo-host repo-name branch-name]
     ;<  ~  bind:m  (sleep ~s1)
     ~&  %z^%fr^%self-fetch
     ?~  followup-action  (pure:m !>(~))
@@ -650,19 +670,10 @@
     ?:  ?=(^ repo-local-copy)
       ::  already have repo
       (pure:m !>(~))
-    ;<  ~  bind:m
-      %^  watch-our  /fetch-done  %linedb
-      [%branch-updates branch-path]
-    ;<  ~  bind:m
-      %+  poke-our  %linedb
-      :-  %linedb-action
-      !>  [%fetch repo-host repo-name branch-name]
-    ~&  %z^%fr^%1
-    ;<  fetch-done=cage  bind:m  (take-fact /fetch-done)
-    ~&  %z^%fr^%2
-    ;<  ~  bind:m  (leave-our /fetch-done %linedb)
-    ?.  ?=(%linedb-update p.fetch-done)  !!  ::  TODO
-    =+  !<(=update:linedb q.fetch-done)
+    ;<  update-vase=vase  bind:m
+      %-  run-and-wait-on-linedb-action  :_  branch-path
+      [%fetch repo-host repo-name branch-name]
+    =+  !<(=update:linedb update-vase)
     ?.  ?=(%new-data -.update)           !!
     ?.  =(branch-path path.update)       !!
     (pure:m !>(~))
@@ -674,7 +685,11 @@
   ~&  %z^%fr^%4
   (pure:m !>(~))
 ::
+::  +maybe-branch
+::   Branch if remote or non-head.
+::
 ++  branch-if-remote
+:: ++  maybe-branch
   |=  [project-name=@tas desk-name=@tas]
   =/  m  (strand ,vase)
   ^-  form:m
@@ -682,15 +697,13 @@
   ;<  state=state-0:zig  bind:m  get-state
   ;<  =bowl:strand  bind:m  get-bowl
   =/  =project:zig  (~(got by projects.state) project-name)
-  =/  =desk:zig  (got-desk:zig-lib project desk-name)
+  =/  =desk:zig     (got-desk:zig-lib project desk-name)
   =*  repo-host    repo-host.repo-info.desk
   =*  repo-name    repo-name.repo-info.desk
   =*  branch-name  branch-name.repo-info.desk
   ~&  %z^%bir^%1
   ?:  =(our.bowl repo-host)  (pure:m !>(repo-info.desk))
   ;<  empty-vase=vase  bind:m
-    =*  branch-path=path
-      /(scot %p our.bowl)/[repo-name]/[branch-name]
     ?:  %.  [our.bowl /[repo-name]/[branch-name]]
         %~  has  in
         %-  ~(gas in *(set [@p path]))
@@ -700,22 +713,12 @@
             (scot %da now.bowl)  /noun
         ==
       (pure:m !>(~))
-    ~&  %z^%bir^%2
-    ;<  ~  bind:m
-      %^  watch-our  /branch-done  %linedb
-      [%branch-updates branch-path]
-    ~&  %z^%bir^%3
-    ;<  ~  bind:m
-      %+  poke-our  %linedb
-      :-  %linedb-action
-      !>
+    =*  branch-path=path
+      /(scot %p our.bowl)/[repo-name]/[branch-name]
+    ;<  update-vase=vase  bind:m
+      %-  run-and-wait-on-linedb-action  :_  branch-path
       [%branch repo-host repo-name branch-name branch-name]
-    ~&  %z^%bir^%4
-    ;<  branch-done=cage  bind:m  (take-fact /branch-done)
-    ~&  %z^%bir^%5
-    ;<  ~  bind:m  (leave-our /branch-done %linedb)
-    ?.  ?=(%linedb-update p.branch-done)  !!
-    =+  !<(=update:linedb q.branch-done)
+    =+  !<(=update:linedb update-vase)
     ?.  ?=(%new-data -.update)          !!
     ?.  =(branch-path path.update)      !!
     (pure:m !>(~))
@@ -759,7 +762,7 @@
   ;<  ~  bind:m
     %+  poke-our  %linedb
     :-  %linedb-action
-    !>
+    !>  ^-  action:linedb
     :^  %commit  repo-name  branch-name
     %+  ~(put by snap)  file-path
     ?.  ((sane %t) file-contents)  ~[file-contents]
@@ -769,9 +772,9 @@
 ::
 ::  +watch-for-desk-update
 ::   inspired by kiln-sync, see e.g.,
-::   https://github.com/urbit/urbit/blob/develop/pkg/arvo/lib/hood/kiln.hoon#L1125-L1134
-::   https://github.com/urbit/urbit/blob/develop/pkg/arvo/lib/hood/kiln.hoon#L1176
-::   https://github.com/urbit/urbit/blob/develop/pkg/arvo/lib/hood/kiln.hoon#L1194
+::   https://github.com/urbit/urbit/blob/d363f01080100f485885c15009b13f3a0590f228/pkg/arvo/lib/hood/kiln.hoon#L1125-L1134
+::   https://github.com/urbit/urbit/blob/d363f01080100f485885c15009b13f3a0590f228/pkg/arvo/lib/hood/kiln.hoon#L1176
+::   https://github.com/urbit/urbit/blob/d363f01080100f485885c15009b13f3a0590f228/pkg/arvo/lib/hood/kiln.hoon#L1194
 ::
 ++  watch-for-desk-update
   |=  [who=@p desk-name=@tas]
