@@ -206,10 +206,21 @@
           branch-name=@tas
       ==
   ^-  card
-  =*  path-suffix=path
-    /(scot %p repo-host)/[repo-name]/[branch-name]
-  %+  ~(watch-our pass:io [%linedb project-name path-suffix])
-  %linedb  [%branch-updates path-suffix]
+  %-  ~(poke-self pass:io /make-watch-for-file-changes)
+  %-  make-watch-for-file-changes-cage
+  [project-name repo-host repo-name branch-name]
+::
+++  make-watch-for-file-changes-cage
+  |=  $:  project-name=@tas
+          repo-host=@p
+          repo-name=@tas
+          branch-name=@tas
+      ==
+  ^-  cage
+  :-  %ziggurat-action
+  !>  ^-  action:zig
+  :^  project-name  %$  ~
+  [%watch-for-file-changes repo-host repo-name branch-name]
 ::
 ++  make-cancel-watch-for-file-changes
   |=  $:  project-name=@tas
@@ -218,11 +229,22 @@
           branch-name=@tas
       ==
   ^-  card
-  =*  path-suffix=path
-    /(scot %p repo-host)/[repo-name]/[branch-name]
-  ^-  card
-  %.  %linedb
-  ~(leave-our pass:io [%linedb project-name path-suffix])
+  %-  ~(poke-self pass:io /make-cancel-watch-for-file-changes)
+  %-  make-cancel-watch-for-file-changes-cage
+  [project-name repo-host repo-name branch-name]
+::
+++  make-cancel-watch-for-file-changes-cage
+  |=  $:  project-name=@tas
+          repo-host=@p
+          repo-name=@tas
+          branch-name=@tas
+      ==
+  ^-  cage
+  :-  %ziggurat-action
+  !>  ^-  action:zig
+  :^  project-name  %$  ~
+  :-  %cancel-watch-for-file-changes
+  [repo-host repo-name branch-name]
 ::
 ++  get-most-recent-commit
   |=  [repo-host=@p repo-name=@tas branch-name=@tas]
@@ -1406,6 +1428,36 @@
     `desk-name
   $(desk-names t.desk-names)
 ::
+++  update-linedb-watches
+  |=  $:  old=(pair @tas (list repo-info:zig))
+          new=(pair @tas (list repo-info:zig))
+      ==
+  ^-  (list card)
+  %+  weld
+    %+  turn  q.old
+    |=  [repo-host=@p repo-name=@tas branch-name=@tas *]
+    %-  make-cancel-watch-for-file-changes
+    [p.old repo-host repo-name branch-name]
+  %+  turn  q.new
+  |=  [repo-host=@p repo-name=@tas branch-name=@tas *]
+  %-  make-watch-for-file-changes
+  [p.new repo-host repo-name branch-name]
+::
+++  update-linedb-watches-cages
+  |=  $:  old=(pair @tas (list repo-info:zig))
+          new=(pair @tas (list repo-info:zig))
+      ==
+  ^-  (list cage)
+  %+  weld
+    %+  turn  q.old
+    |=  [repo-host=@p repo-name=@tas branch-name=@tas *]
+    %-  make-cancel-watch-for-file-changes-cage
+    [p.old repo-host repo-name branch-name]
+  %+  turn  q.new
+  |=  [repo-host=@p repo-name=@tas branch-name=@tas *]
+  %-  make-watch-for-file-changes-cage
+  [p.new repo-host repo-name branch-name]
+::
 ++  update-vase-to-card
   |=  v=vase
   ^-  card
@@ -2260,7 +2312,7 @@
         [%add-project-desk (ot ~[[%index ni:dejs-soft:format] [%repo-host (se %p)] [%branch-name (se %tas)] [%commit-hash (se-soft %ux)]])]
         [%delete-project-desk ul]
     ::
-        [%save-file (ot ~[[%file pa] [%contents so]])]  :: TODO: allow non-@t %contents
+        [%save-file (ot ~[[%file pa] [%contents so] [%repo-info repo-info-soft]])]  :: TODO: allow non-@t %contents
         [%delete-file (ot ~[[%file pa]])]
         [%make-configuration-file ul]
     ::
@@ -2307,6 +2359,11 @@
     ::
         [%update-suite ul]
     ==
+  ::
+  ++  repo-info-soft
+    |=  jon=json
+    ^-  (unit repo-info:zig)
+    ?.(?=([%o *] jon) ~ (some (repo-info jon)))
   ::
   ++  repo-info
     ^-  $-(json repo-info:zig)

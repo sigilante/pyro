@@ -132,12 +132,14 @@
           [%send-state-views =state-views]
           [%set-ziggurat-state new-state=state-0]
           [%send-update =update]
+          [%watch-for-file-changes repo-host=@p repo-name=@tas branch-name=@tas]
+          [%cancel-watch-for-file-changes repo-host=@p repo-name=@tas branch-name=@tas]
       ::
           [%change-focus ~]
           [%add-project-desk index=(unit @ud) repo-host=@p branch-name=@tas commit-hash=(unit @ux)]  ::  index=~ -> add to end
           [%delete-project-desk ~]
       ::
-          [%save-file file=path contents=@]  ::  generates new file or overwrites existing
+          [%save-file file=path contents=@ repo-info=(unit repo-info)]  ::  generates new file or overwrites existing
           [%delete-file file=path]
           [%make-configuration-file ~]
       ::

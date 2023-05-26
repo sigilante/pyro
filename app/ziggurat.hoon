@@ -342,6 +342,26 @@
       %-  fact:io  :_  ~[/project]
       [%ziggurat-update !>(`update:zig`update.act)]
     ::
+        %watch-for-file-changes
+      =*  path-suffix=path
+        :-  (scot %p repo-host.act)
+        /[repo-name.act]/[branch-name.act]
+      :_  state
+      :_  ~
+      %.  [%linedb [%branch-updates path-suffix]]
+      %~  watch-our  pass:io
+      [%linedb project-name.act path-suffix]
+    ::
+        %cancel-watch-for-file-changes
+      =*  path-suffix=path
+        :-  (scot %p repo-host.act)
+        /[repo-name.act]/[branch-name.act]
+      :_  state
+      :_  ~
+      %.  %linedb
+      %~  leave-our  pass:io
+      [%linedb project-name.act path-suffix]
+    ::
         %change-focus
       |^
       =/  old=@t  focused-project
@@ -367,7 +387,9 @@
               new-project(saved-thread-queue ~)
             ==
         %+  weld  cards
-        %+  update-linedb-watches  ~
+        %+  update-linedb-watches:zig-lib
+          [focused-project ~]
+        :-  project-name.act
         (project-to-repo-infos:zig-lib new-project)
       =/  old-project=project:zig  (~(got by projects) old)
       =/  old-snap-path=path
@@ -383,27 +405,16 @@
             ~
           ==
       :_  %+  weld  cards
-          %+  update-linedb-watches
+          %+  update-linedb-watches:zig-lib
+            :-  focused-project
             (project-to-repo-infos:zig-lib old-project)
+          :-  project-name.act
           (project-to-repo-infos:zig-lib new-project)
       %+  ~(poke-our pass:io /pyro-wire)  %pyro
       :-  %pyro-action
       !>  ^-  action:pyro
       :+  %snap-ships  old-snap-path
       pyro-ships.old-project
-    ::
-    ++  update-linedb-watches
-      |=  [old=(list repo-info:zig) new=(list repo-info:zig)]
-      ^-  (list card)
-      %+  weld
-        %+  turn  old
-        |=  [repo-host=@p repo-name=@tas branch-name=@tas *]
-        %-  make-cancel-watch-for-file-changes:zig-lib
-        [focused-project repo-host repo-name branch-name]
-      %+  turn  new
-      |=  [repo-host=@p repo-name=@tas branch-name=@tas *]
-      %-  make-watch-for-file-changes:zig-lib
-      [project-name.act repo-host repo-name branch-name]
     ::
     ++  sync-out-of-date-desks
       |=  desks=(list desk:zig)
@@ -518,6 +529,8 @@
       ==
     ::
         %save-file
+      ~&  %z^%save-file^project-name.act
+      ?>  =(focused-project project-name.act)  ::  TODO
       =/  =project:zig  (~(got by projects) project-name.act)
       =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
       =.  project
@@ -531,22 +544,23 @@
       %-  %~  arvo  pass:io
           [%save [project-name desk-name file]:act]
       :^  %k  %lard  q.byk.bowl
-      (save-file:zig-threads [file contents]:act)
+      (save-file:zig-threads [file contents repo-info]:act)
     ::
         %delete-file
-      ::  should show warning
-      =/  =project:zig  (~(got by projects) project-name.act)
-      =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
-      =.  project
-        %^  put-desk:zig-lib  project  desk-name.act
-        %=  desk
-            user-files  (~(del in user-files.desk) file.act)
-            to-compile  (~(del in to-compile.desk) file.act)
-        ==
-      :_  state(projects (~(put by projects) project-name.act project))
-      :_  ~
-      %-  ~(arvo pass:io /del-wire)
-      [%c %info desk-name.act %& [file.act %del ~]~]
+      !!  ::  TODO
+      :: ::  should show warning
+      :: =/  =project:zig  (~(got by projects) project-name.act)
+      :: =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
+      :: =.  project
+      ::   %^  put-desk:zig-lib  project  desk-name.act
+      ::   %=  desk
+      ::       user-files  (~(del in user-files.desk) file.act)
+      ::       to-compile  (~(del in to-compile.desk) file.act)
+      ::   ==
+      :: :_  state(projects (~(put by projects) project-name.act project))
+      :: :_  ~
+      :: %-  ~(arvo pass:io /del-wire)
+      :: [%c %info desk-name.act %& [file.act %del ~]~]
     ::
         %make-configuration-file
       =/  =project:zig  (~(got by projects) project-name.act)
@@ -562,8 +576,8 @@
       =^  cards=(list card)  state
         %-  handle-poke
         :^  project-name.act  desk-name.act  request-id.act
-        :+  %save-file  configuration-file-path
-        configuration-file-text
+        :^  %save-file  configuration-file-path
+        configuration-file-text  ~
       [cards state]
     ::
         %add-config
@@ -865,7 +879,7 @@
       %-  %~  arvo  pass:io
           /save-thread/[project-name.act]/[thread-name.act]
       :^  %k  %lard  q.byk.bowl
-      (save-file:zig-threads thread-path thread-text)
+      (save-file:zig-threads thread-path thread-text ~)
     ::
         %delete-thread
       =/  =project:zig  (~(got by projects) project-name.act)
@@ -1035,7 +1049,7 @@
         %-  %~  arvo  pass:io
             [%save project-name.act desk-name.act /desk/bill]
         :^  %k  %lard  q.byk.bowl
-        (save-file:zig-threads /desk/bill '~')
+        (save-file:zig-threads /desk/bill '~' ~)
       ::  make desk.ship if it does not exist
       =/  desk-ship-current-contents=(unit @t)
         .^((unit @t) %gx (weld scry-prefix /desk/ship/noun))
@@ -1044,8 +1058,8 @@
         %-  %~  arvo  pass:io
             [%save project-name.act desk-name.act /desk/ship]
         :^  %k  %lard  q.byk.bowl
-        %+  save-file:zig-threads  /desk/ship
-        (crip "{<our.bowl>}")
+        %^  save-file:zig-threads  /desk/ship
+        (crip "{<our.bowl>}")  ~
       ::  make docket if it does not exist
       =/  desk-docket-current-contents=(unit @t)
         .^((unit @t) %gx (weld scry-prefix /desk/docket-0/noun))
@@ -1055,7 +1069,7 @@
             :^  %save  project-name.act  desk-name.act
             /desk/docket-0
         :^  %k  %lard  q.byk.bowl
-        %+  save-file:zig-threads  /desk/docket-0
+        %^  save-file:zig-threads  /desk/docket-0
         %-  crip
         """
         :~  title+{<title.act>}
@@ -1069,6 +1083,7 @@
             license+{<license.act>}
         ==
         """
+        ~
       ::  put files into our clay
       =.  cards
         :_  cards

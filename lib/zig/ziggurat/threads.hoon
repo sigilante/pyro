@@ -9,7 +9,6 @@
     zig-lib=zig-ziggurat
 ::
 =*  strand          strand:spider
-=*  build-file      build-file:strandio
 =*  get-bowl        get-bowl:strandio
 =*  get-time        get-time:strandio
 =*  leave-our       leave-our:strandio
@@ -18,10 +17,7 @@
 =*  send-raw-card   send-raw-card:strandio
 =*  sleep           sleep:strandio
 =*  take-fact       take-fact:strandio
-=*  take-kick       take-kick:strandio
 =*  take-poke       take-poke:strandio
-=*  take-poke-ack   take-poke-ack:strandio
-=*  take-sign-arvo  take-sign-arvo:strandio
 =*  wait            wait:strandio
 =*  warp            warp:strandio
 =*  watch-our       watch-our:strandio
@@ -685,24 +681,17 @@
   ~&  %z^%fr^%4
   (pure:m !>(~))
 ::
-::  +maybe-branch
-::   Branch if remote or non-head.
-::
 ++  branch-if-remote
-:: ++  maybe-branch
-  |=  [project-name=@tas desk-name=@tas]
+  |=  =repo-info:zig
   =/  m  (strand ,vase)
   ^-  form:m
   ~&  %z^%bir^%0
-  ;<  state=state-0:zig  bind:m  get-state
   ;<  =bowl:strand  bind:m  get-bowl
-  =/  =project:zig  (~(got by projects.state) project-name)
-  =/  =desk:zig     (got-desk:zig-lib project desk-name)
-  =*  repo-host    repo-host.repo-info.desk
-  =*  repo-name    repo-name.repo-info.desk
-  =*  branch-name  branch-name.repo-info.desk
+  =*  repo-host    repo-host.repo-info
+  =*  repo-name    repo-name.repo-info
+  =*  branch-name  branch-name.repo-info
   ~&  %z^%bir^%1
-  ?:  =(our.bowl repo-host)  (pure:m !>(repo-info.desk))
+  ?:  =(our.bowl repo-host)  (pure:m !>(repo-info))
   ;<  empty-vase=vase  bind:m
     ?:  %.  [our.bowl /[repo-name]/[branch-name]]
         %~  has  in
@@ -719,14 +708,93 @@
       %-  run-and-wait-on-linedb-action  :_  branch-path
       [%branch repo-host repo-name branch-name branch-name]
     =+  !<(=update:linedb update-vase)
-    ?.  ?=(%new-data -.update)          !!
-    ?.  =(branch-path path.update)      !!
+    ?.  ?=(%new-data -.update)      !!
+    ?.  =(branch-path path.update)  !!
     (pure:m !>(~))
-  =.  repo-host.repo-info.desk  our.bowl
-  ~&  %z^%bir^%6
+  =.  repo-host.repo-info  our.bowl
+  ~&  %z^%bir^%2
   ;<  empty-vase=vase  bind:m
     (fetch-repo our.bowl repo-name branch-name ~ ~)
-  ~&  %z^%bir^%7
+  ~&  %z^%bir^%3
+  (pure:m !>(repo-info))
+::
+++  branch-if-non-head
+  |=  =repo-info:zig
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ~&  %z^%binh^%0
+  ;<  =bowl:strand  bind:m  get-bowl
+  =*  repo-host    repo-host.repo-info
+  =*  repo-name    repo-name.repo-info
+  =*  branch-name  branch-name.repo-info
+  =/  commit-hash=(unit @ux)  commit-hash.repo-info
+  ~&  %z^%binh^%1
+  ?~  commit-hash  (pure:m !>(repo-info))
+  =/  new-branch-name=@tas
+    =/  repos=(set [@p path])
+      %-  ~(gas in *(set [@p path]))
+      .^  (list [@p path])
+          %gx
+          :^  (scot %p our.bowl)  %linedb
+          (scot %da now.bowl)  /noun
+      ==
+    =/  index=@ud  0
+    |-
+    =*  proposed-branch-name=@tas
+      (cat 3 'branch-' (scot %ud index))
+    ?:  %-  ~(has in repos)
+        [our.bowl /[repo-name]/[proposed-branch-name]]
+      $(index +(index))
+    proposed-branch-name
+  ~&  %z^%binh^%2
+  ;<  ~  bind:m
+    %+  poke-our  %linedb
+    :-  %linedb-action
+    !>  ^-  action:linedb
+    [%branch repo-host repo-name branch-name new-branch-name]
+  ;<  ~  bind:m  (sleep ~s1)  ::  TODO: necessary?
+  ~&  %z^%binh^%3
+  ;<  ~  bind:m
+    %+  poke-our  %linedb
+    :-  %linedb-action
+    !>  ^-  action:linedb
+    [%reset repo-name new-branch-name u.commit-hash]
+  ;<  ~  bind:m  (sleep ~s1)  ::  TODO: necessary?
+  ~&  %z^%binh^%4
+  =.  repo-info
+    repo-info(branch-name new-branch-name, commit-hash ~)
+  ~&  %z^%binh^%5
+  ;<  empty-vase=vase  bind:m
+    (fetch-repo our.bowl repo-name branch-name ~ ~)
+  ~&  %z^%binh^%6
+  (pure:m !>(repo-info))
+::
+++  save-file
+  |=  $:  file-path=path
+          file-contents=@
+          maybe-repo-info=(unit repo-info:zig)
+      ==
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ~&  %z^%sf^%0
+  ;<  state=state-0:zig  bind:m  get-state
+  ;<  =bowl:strand  bind:m  get-bowl
+  =/  old-project=project:zig
+    (~(got by projects.state) project-name)
+  =/  =desk:zig  (got-desk:zig-lib old-project desk-name)
+  ~&  %z^%sf^%1^repo-info.desk
+  ;<  repo-info-vase=vase  bind:m
+    %-  branch-if-remote
+    ?~(maybe-repo-info repo-info.desk u.maybe-repo-info)
+  ~&  %z^%sf^%2
+  =+  !<(=repo-info:zig repo-info-vase)
+  ;<  repo-info-vase=vase  bind:m
+    (branch-if-non-head repo-info)
+  =+  !<(=repo-info:zig repo-info-vase)
+  ~&  %z^%sf^%3^repo-info
+  =/  new-project=project:zig
+    %^  put-desk:zig-lib  old-project  desk-name
+    desk(repo-info repo-info)
   ;<  ~  bind:m
     %+  poke-our  %ziggurat
     :-  %ziggurat-action
@@ -735,20 +803,20 @@
     :-  %set-ziggurat-state
     %=  state
         projects
-      %+  ~(put by projects.state)  project-name
-      (put-desk:zig-lib project desk-name desk)
+      (~(put by projects.state) project-name new-project)
     ==
-  (pure:m !>(repo-info.desk))
-::
-++  save-file
-  |=  [file-path=path file-contents=@]
-  =/  m  (strand ,vase)
-  ^-  form:m
-  ~&  %z^%sf^%0
-  ;<  repo-info-vase=vase  bind:m
-    (branch-if-remote project-name desk-name)
-  ~&  %z^%sf^%1
-  =+  !<(=repo-info:zig repo-info-vase)
+  ;<  empty-vase=vase  bind:m
+    =/  cages=(list cage)
+      %+  update-linedb-watches-cages:zig-lib
+        :-  project-name
+        (project-to-repo-infos:zig-lib old-project)
+      :-  project-name
+      (project-to-repo-infos:zig-lib new-project)
+    |-
+    ?~  cages  (pure:m !>(~))
+    ;<  ~  bind:m  (poke-our %ziggurat i.cages)
+    $(cages t.cages)
+  ;<  ~  bind:m  (sleep ~s1)  ::  TODO: necessary?
   =*  repo-host    (scot %p repo-host.repo-info)
   =*  repo-name    repo-name.repo-info
   =*  branch-name  branch-name.repo-info
@@ -767,7 +835,7 @@
     %+  ~(put by snap)  file-path
     ?.  ((sane %t) file-contents)  ~[file-contents]
     (to-wain:format file-contents)
-  ~&  %z^%sf^%2
+  ~&  %z^%sf^%4
   (pure:m !>(~))
 ::
 ::  +watch-for-desk-update
@@ -800,10 +868,11 @@
 ++  update-pyro-desks-to-repo
   =/  m  (strand ,vase)
   ^-  form:m
+  ~&  %z^%updtr^%0
+  =*  repo-name  desk-name
   ;<  state=state-0:zig  bind:m  get-state
   =/  =project:zig  (~(got by projects.state) project-name)
-  =*  repo-name    desk-name
-  =/  =desk:zig  (got-desk:zig-lib project repo-name)
+  =/  =desk:zig     (got-desk:zig-lib project repo-name)
   =*  repo-host    repo-host.repo-info.desk
   =*  branch-name  branch-name.repo-info.desk
   =*  commit-hash  commit-hash.repo-info.desk
@@ -814,6 +883,7 @@
   ::  dependency desk is set to %head
   ::   -> do update
   ::
+  ~&  %z^%updtr^%1
   =*  sync-desk-to-vship  sync-desk-to-vship.project
   =*  whos=(list @p)
     ~(tap in (~(get ju sync-desk-to-vship) repo-name))
