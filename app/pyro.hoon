@@ -54,7 +54,7 @@
           scry-time=@da
           namespace=(map path (list yowl:ames))
       ==
-    +$  card  card:agent:gall
+    +$  card  $+(card card:agent:gall)
     --
 ::
 =|  state-0
@@ -109,7 +109,7 @@
     [cards this]
   ::
   ++  on-peek
-    |=  =path
+    |=  =path :: TODO (pole knot) faceless path
     ^-  (unit (unit cage))
     ?+    path  ~
         [%x %snaps ~]
@@ -134,6 +134,12 @@
       =/  who  (slav %p i.t.t.path)
       =*  paf  t.t.t.path
       (scry:(pe who) paf)
+    ::  remote-scry into running virtual ships
+    ::  NOTE: requires a double mark at the end
+    ::
+        [%x %r @ @ @ @ta @ta *]  :: TODO [%x %r @ ^]
+      =/  who  (slav %p i.t.t.path)
+      (remote-scry:(pe who) [%fine %hunk '1' '13' t.t.path]) :: TODO 1.000.000
     ::  convenience scry for a virtual ship's running gall app
     ::  ship, app, path
     ::
@@ -272,11 +278,12 @@
     ``[p.u.u.res !<(vase [-:!>(*vase) q.u.u.res])]
   ::
   ++  remote-scry
-    |=  [=view =desk =spur]
+    |=  =spur
+    ^-  (unit (unit cage))
     =/  res
       %-  ~(peek le:part:snap [[pit vil] sol]:snap)
-      [[~ ~] view [who desk da/scry-time.pier-data] spur]
-    ?~  res    res
+      [[~ ~] %ax [who %$ da+scry-time:pier-data] spur]
+    ?~    res  res
     ?~  u.res  res
     ``[p.u.u.res !<(vase [-:!>(*vase) q.u.u.res])]
   ::

@@ -123,18 +123,34 @@
         %&  p.lan
         %|  `ship``@`p.lan
       ==
-    =/  hear-lane  %|^`address``@`sndr
     =/  =shot  (sift-shot pac)
-    ~&  >>  shot
-    ?:  &(!sam.shot req.shot) :: TODO I beleive this is right
-      =/  =peep  +:(sift-wail `@ux`content.shot)
-      :: now remote-scry this from pyro
-      :: then inject it back as an event into sndr
-      ~&  >  peep
-      ~
-    :_  ~
+    ?.  &(!sam.shot req.shot) :: TODO I beleive this is right
+      ::  normal packet
+      ::
+      :_  ~
+      :*  %pass  /pyro-events  %agent  [our.bowl %pyro]  %poke
+          %pyro-events  !>([rcvr /a/newt/0v1n.2m9vh %hear %|^`address``@`sndr pac]~)
+      ==
+    ::  remote scry packet
+    ::
+    =/  =peep  +:(sift-wail `@ux`content.shot)
+    :: unpack path.peep
+    =+  bal=(de-path:balk path.peep)
+    =+  .^  pacs=(list yowl)  %gx
+            ;:  weld
+              /(scot %p our.bowl)/pyro/(scot %da now.bowl)/r            ::  /=pyro=/r
+              /(scot %p her.bal)/(scot %ud rif.bal)/(scot %ud lyf.bal)  ::  /~wes/0/1/
+              /[van.bal]/[car.bal]/(scot cas.bal)                       ::  /c/x/1
+              spr.bal                                                   ::  /kids/ted/keen/hoon
+              /noun :: TODO swap out for noun or something else
+        ==  ==
+    %+  turn  pacs
+    |=  =yowl
     :*  %pass  /pyro-events  %agent  [our.bowl %pyro]  %poke
-        %pyro-events  !>([rcvr /a/newt/0v1n.2m9vh %hear hear-lane pac]~)
+        %pyro-events
+        :: =+  shot=(sift-shot `@`yowl)
+        :: =/  asdf  (etch-shot shot(sndr sndr, rcvr rcvr))
+        !>([sndr /a/newt/0v1n.2m9vh %hear %|^`address``@`rcvr `blob``@`yowl]~)
     ==
   --
 ::
