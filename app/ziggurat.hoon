@@ -544,23 +544,26 @@
       %-  %~  arvo  pass:io
           [%save [project-name desk-name file]:act]
       :^  %k  %lard  q.byk.bowl
-      (save-file:zig-threads [file contents repo-info]:act)
+      %-  modify-file:zig-threads
+      [file `contents repo-info]:act
     ::
         %delete-file
-      !!  ::  TODO
-      :: ::  should show warning
-      :: =/  =project:zig  (~(got by projects) project-name.act)
-      :: =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
-      :: =.  project
-      ::   %^  put-desk:zig-lib  project  desk-name.act
-      ::   %=  desk
-      ::       user-files  (~(del in user-files.desk) file.act)
-      ::       to-compile  (~(del in to-compile.desk) file.act)
-      ::   ==
-      :: :_  state(projects (~(put by projects) project-name.act project))
-      :: :_  ~
-      :: %-  ~(arvo pass:io /del-wire)
-      :: [%c %info desk-name.act %& [file.act %del ~]~]
+      ::  should show warning
+      ?>  =(focused-project project-name.act)  ::  TODO
+      =/  =project:zig  (~(got by projects) project-name.act)
+      =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
+      =.  project
+        %^  put-desk:zig-lib  project  desk-name.act
+        %=  desk
+            user-files  (~(del in user-files.desk) file.act)
+            to-compile  (~(del in to-compile.desk) file.act)
+        ==
+      :_  state(projects (~(put by projects) project-name.act project))
+      :_  ~
+      %-  %~  arvo  pass:io
+          [%delete [project-name desk-name file]:act]
+      :^  %k  %lard  q.byk.bowl
+      (modify-file:zig-threads [file ~ repo-info]:act)
     ::
         %make-configuration-file
       =/  =project:zig  (~(got by projects) project-name.act)
@@ -879,7 +882,7 @@
       %-  %~  arvo  pass:io
           /save-thread/[project-name.act]/[thread-name.act]
       :^  %k  %lard  q.byk.bowl
-      (save-file:zig-threads thread-path thread-text ~)
+      (modify-file:zig-threads thread-path `thread-text ~)
     ::
         %delete-thread
       =/  =project:zig  (~(got by projects) project-name.act)
@@ -890,7 +893,7 @@
       =^  cards=(list card)  state
         %-  handle-poke
         :^  project-name.act  desk-name.act  request-id.act
-        [%delete-file thread-path]
+        [%delete-file thread-path ~]
       :-  cards
       %=  state
           projects
@@ -1049,7 +1052,7 @@
         %-  %~  arvo  pass:io
             [%save project-name.act desk-name.act /desk/bill]
         :^  %k  %lard  q.byk.bowl
-        (save-file:zig-threads /desk/bill '~' ~)
+        (modify-file:zig-threads /desk/bill `'~' ~)
       ::  make desk.ship if it does not exist
       =/  desk-ship-current-contents=(unit @t)
         .^((unit @t) %gx (weld scry-prefix /desk/ship/noun))
@@ -1058,8 +1061,8 @@
         %-  %~  arvo  pass:io
             [%save project-name.act desk-name.act /desk/ship]
         :^  %k  %lard  q.byk.bowl
-        %^  save-file:zig-threads  /desk/ship
-        (crip "{<our.bowl>}")  ~
+        %^  modify-file:zig-threads  /desk/ship
+        `(crip "{<our.bowl>}")  ~
       ::  make docket if it does not exist
       =/  desk-docket-current-contents=(unit @t)
         .^((unit @t) %gx (weld scry-prefix /desk/docket-0/noun))
@@ -1069,7 +1072,8 @@
             :^  %save  project-name.act  desk-name.act
             /desk/docket-0
         :^  %k  %lard  q.byk.bowl
-        %^  save-file:zig-threads  /desk/docket-0
+        %^  modify-file:zig-threads  /desk/docket-0
+        :-  ~
         %-  crip
         """
         :~  title+{<title.act>}
@@ -1552,6 +1556,8 @@
       [%setup-project-desk @ ~]       `this
       [%update-suite ~]               `this
       [%save @ @ ^]                   ::`this
+    ~&  sign-arvo  `this
+      [%delete @ @ ^]                 ::`this
     ~&  sign-arvo  `this
   ::
       [%on-init-zig-setup ~]

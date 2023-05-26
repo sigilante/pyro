@@ -769,9 +769,9 @@
   ~&  %z^%binh^%6
   (pure:m !>(repo-info))
 ::
-++  save-file
+++  modify-file
   |=  $:  file-path=path
-          file-contents=@
+          file-contents=(unit @)  ::  ~ -> delet
           maybe-repo-info=(unit repo-info:zig)
       ==
   =/  m  (strand ,vase)
@@ -832,9 +832,10 @@
     :-  %linedb-action
     !>  ^-  action:linedb
     :^  %commit  repo-name  branch-name
+    ?~  file-contents  (~(del by snap) file-path)
     %+  ~(put by snap)  file-path
-    ?.  ((sane %t) file-contents)  ~[file-contents]
-    (to-wain:format file-contents)
+    ?.  ((sane %t) u.file-contents)  ~[u.file-contents]
+    (to-wain:format u.file-contents)
   ~&  %z^%sf^%4
   (pure:m !>(~))
 ::

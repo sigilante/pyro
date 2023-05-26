@@ -2313,7 +2313,7 @@
         [%delete-project-desk ul]
     ::
         [%save-file (ot ~[[%file pa] [%contents so] [%repo-info repo-info-soft]])]  :: TODO: allow non-@t %contents
-        [%delete-file (ot ~[[%file pa]])]
+        [%delete-file (ot ~[[%file pa] [%repo-info repo-info-soft]])]
         [%make-configuration-file ul]
     ::
         [%add-config (ot ~[[%who (se %p)] [%what (se %tas)] [%item ni]])]

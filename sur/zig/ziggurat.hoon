@@ -140,7 +140,7 @@
           [%delete-project-desk ~]
       ::
           [%save-file file=path contents=@ repo-info=(unit repo-info)]  ::  generates new file or overwrites existing
-          [%delete-file file=path]
+          [%delete-file file=path repo-info=(unit repo-info)]
           [%make-configuration-file ~]
       ::
           [%add-config who=@p what=@tas item=@]
