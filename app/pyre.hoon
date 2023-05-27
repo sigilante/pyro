@@ -144,14 +144,22 @@
               spr.bal                                                   ::  /kids/ted/keen/hoon
               /noun :: TODO swap out for noun or something else
         ==  ==
-    %+  turn  pacs
-    |=  =yowl
+    :_  ~
     :*  %pass  /pyro-events  %agent  [our.bowl %pyro]  %poke
         %pyro-events
-        :: =+  shot=(sift-shot `@`yowl)
-        :: =/  asdf  (etch-shot shot(sndr sndr, rcvr rcvr))
-        !>([sndr /a/newt/0v1n.2m9vh %hear %|^`address``@`rcvr `blob``@`yowl]~)
-    ==
+        !>
+        %+  turn  pacs
+        |=  =yowl
+        :+  sndr  /a/pyro/fine-response
+        :+  %hear  %|^`address``@`sndr
+        %-  etch-shot
+        :*  [sndr=rcvr rcvr=sndr]
+            req=|  sam=|
+            sndr-tick=`@ubC`1
+            rcvr-tick=`@ubC`1
+            origin=~
+            content=`@ux`yowl
+    ==  ==
   --
 ::
 ++  behn
