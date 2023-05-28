@@ -144,6 +144,17 @@
               spr.bal                                                   ::  /kids/ted/keen/hoon
               /noun :: TODO swap out for noun or something else
         ==  ==
+    =.  pacs
+      ::  add request to each response packet payload
+      ::
+      =+  pat=(spat path.peep)
+      =+  wid=(met 3 pat)
+      %-  flop  =<  blobs
+      %+  roll  pacs
+      |=  [=yowl num=_1 blobs=(list @ux)]
+      :-  +(num)
+      :_  blobs
+      (can 3 4^num 2^wid wid^`@`pat (met 3 yowl)^yowl ~)
     :_  ~
     :*  %pass  /pyro-events  %agent  [our.bowl %pyro]  %poke
         %pyro-events
