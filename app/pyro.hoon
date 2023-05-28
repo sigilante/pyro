@@ -52,7 +52,6 @@
           next-events=(qeu unix-event)
           paused=?
           scry-time=@da
-          namespace=(map path (list yowl:ames))
       ==
     +$  card  $+(card card:agent:gall)
     --
