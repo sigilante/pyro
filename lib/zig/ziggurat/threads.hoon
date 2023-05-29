@@ -440,8 +440,9 @@
   ::
   ++  ignored-virtualship-timer-prefixes
     ^-  (list path)
-    :_  ~
-    /ames/pump
+    :+  /ames/fine/behn/wake
+      /ames/pump
+    ~
   ::
   ++  ignored-realship-timer-prefixes
     ^-  (list path)
