@@ -1,4 +1,5 @@
 /-  *zig-pyro,
+    linedb,
     spider
 /+  *strandio,
     dill
@@ -104,10 +105,10 @@
   (poke who who %subscriber %subscriber-action [%sub to app path])
 ::
 ++  park
-  |=  [=ship =desk =case]
+  |=  [our=ship =desk =case]
   ^-  $>(%park task:clay)
   ::
-  =/  desk-path=path  /(scot %p ship)/[desk]/(scot case)
+  =/  desk-path=path  /(scot %p our)/[desk]/(scot case)
   =/  =domo:clay  .^(domo:clay %cv desk-path)
   =*  tako=tako:clay  (~(got by hit.domo) let.domo)
   =*  path-to-lobe
@@ -118,15 +119,41 @@
     %-  ~(urn by path-to-lobe)
     |=([=path =lobe:clay] %|^lobe)
   =*  rang
-    .^(rang:clay %cx /(scot %p ship)//(scot case)/rang)
+    .^(rang:clay %cx /(scot %p our)//(scot case)/rang)
   ::
-  [%park desk yoki rang]  
+  [%park desk yoki rang]
 ::
 ++  commit
-  |=  [hers=(list ship) =ship =desk =case]
+  |=  [hers=(list ship) our=ship =desk =case]
   %-  send-events
   %+  ue-to-pes  hers
-  [/c/commit (park ship desk case)]
+  [/c/commit (park our desk case)]
+::
+++  commit-from-linedb
+  |=  $:  hers=(list ship)
+          repo-host=ship
+          repo=@tas
+          branch=@tas
+          commit-hash=(unit @ux)
+      ==
+  =/  m  (strand ,~)
+  ^-  form:m
+  ;<  =bowl:strand  bind:m  get-bowl
+  ;<  ~  bind:m
+    %+  poke-our  %linedb
+    :-  %linedb-action
+    !>  ^-  action:linedb
+    :^  %make-install-args  repo-host  repo
+    [branch commit-hash [%ted tid.bowl]]
+  ;<  install-args-result=vase  bind:m
+    (take-poke %linedb-update)
+  =+  !<(=update:linedb install-args-result)
+  ?.  ?=(%make-install-args -.update)  !!  ::  TODO
+  ?:  ?=(%| -.result.update)           !!  ::  TODO
+  =*  park-args  p.result.update
+  %-  send-events
+  %+  ue-to-pes  hers
+  [/c/commit %park park-args]
 ::
 ++  enjs
   =,  enjs:format

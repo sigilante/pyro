@@ -29,8 +29,8 @@
   (pure:m ~)
 ++  ted
   ^-  form:m
-  =/  commit-desk-names=(list @tas)  ~[%suite %zig %zig-dev]
-  =/  install-desk-names=(list @tas)  ~[%suite]
+  =/  commit-desk-names=(list @tas)  ~[%linedb %suite]
+  =/  install-desk-names=(list @tas)  ~[%linedb]
   ;<  ~  bind:m
     (iterate-over-desks commit-desk-names commit-desk)
   ;<  ~  bind:m  (sleep (mul ~s1 (lent commit-desk-names)))
