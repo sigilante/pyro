@@ -42,6 +42,7 @@
     zig-lib  ~(. ziggurat-lib bowl settings)
 ::
 ++  on-init
+  ^-  (quip card _this)
   =*  scry-prefix=path
     :^  (scot %p our.bowl)  q.byk.bowl  (scot %da now.bowl)
     /lib/zig/sys
@@ -67,9 +68,11 @@
   =*  wes-address
     0x5da4.4219.e382.ad70.db07.0a82.12d2.0559.cf8c.b44d
   ~&  %z^%on-init
-  :-  :_  ~
-      %.  (add now.bowl ~s5)
-      ~(wait pass:io /on-init-zig-setup)
+  :-  :+  %.  [%pyro /load-failed]
+          ~(watch-our pass:io /pyro-load-failed)
+        %.  (add now.bowl ~s5)
+        ~(wait pass:io /on-init-zig-setup)
+      ~
   %_    this
       state
     :_  [eng smart-lib]
@@ -95,6 +98,7 @@
 ::
 ++  on-load
   |=  =old=vase
+  ^-  (quip card _this)
   ::  on-load: pre-cue our compiled smart contract library
   =*  scry-prefix=path
     :^  (scot %p our.bowl)  q.byk.bowl  (scot %da now.bowl)
@@ -1358,7 +1362,7 @@
             %-  send-long-operation-update:zig-threads
             ?~  long-operation-info  ~
             %=  long-operation-info
-                current-step.u  `%uild-configuration-thread
+                current-step.u  `%build-configuration-thread
             ==
           ;<  configuration-thread-vase=vase  bind:m
             %-  build:zig-threads  :_  config-file-path
@@ -1464,6 +1468,18 @@
   |=  [w=wire =sign:agent:gall]
   ^-  (quip card _this)
   ?+    w  (on-agent:def w sign)
+      [%pyro-load-failed ~]
+    ?:  ?=(%watch-ack -.sign)  `this
+    ?>  ?=([%fact %noun ^] sign)
+    =^  cards=(list card)  this  on-init
+    :_  this
+    :+  (~(leave-our pass:io w) %pyro)
+      %-  update-vase-to-card:zig-lib
+      %.  'resetting %ziggurat state to factory settings due to %pyro state wipe upon arvo change'
+      %~  state-reset  make-error-vase:zig-lib
+      [['' %$ %pyro-load-failed ~] %error]
+    cards
+  ::
       [%linedb @ @ @ @ ~]
     ?:  ?=(%watch-ack -.sign)  `this
     ?>  ?=([%fact %linedb-update ^] sign)

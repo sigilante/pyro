@@ -1682,6 +1682,12 @@
     ^-  vase
     !>  ^-  update:zig
     [%linedb update-info [%| level message] ~]
+  ::
+  ++  state-reset
+    |=  message=@t
+    ^-  vase
+    !>  ^-  update:zig
+    [%state-reset update-info [%| level message] ~]
   --
 ::
 ::  json
@@ -1863,6 +1869,9 @@
       ['data' ~]~
     ::
         %linedb
+      ['data' ~]~
+    ::
+        %state-reset
       ['data' ~]~
     ==
   ::
