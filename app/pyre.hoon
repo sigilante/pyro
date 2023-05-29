@@ -33,13 +33,13 @@
   ::
       %pyro-effect
     =+  ef=!<([pyro-effect] vase)
-    ?-    -.q.ufs.ef
+    ?-    -.q.uf.ef
     ::  ames
-        %send  [(send:ames:hc now.bowl who.ef ufs.ef) this]
+        %send  [(send:ames:hc who.ef uf.ef) this]
     ::  behn
         %doze
       =^  cards  behn-piers
-        abet:(doze:(behn:hc who.ef) ufs.ef)
+        abet:(doze:(behn:hc who.ef) uf.ef)
       [cards this]
     ::  clay
         %ergo  `this
@@ -52,12 +52,12 @@
         %thus  `this
         %response
       =^  cards  eyre-piers
-        abet:(handle-response:(eyre who.ef) ufs.ef)
+        abet:(handle-response:(eyre who.ef) uf.ef)
       [cards this]
     ::  iris
         %request
       =^  cards  iris-piers
-        abet:(request:(iris:hc who.ef) ufs.ef)
+        abet:(request:(iris:hc who.ef) uf.ef)
       [cards this]
     ::  gall
         %poke-ack  `this
@@ -115,18 +115,62 @@
 ++  ames
   |%
   ++  send
-    |=  [now=@da sndr=@p way=wire %send lan=lane:^ames pac=@]
+    =,  ^ames
+    |=  [sndr=@p way=wire %send lan=lane pac=@]
     ^-  (list card:agent:gall)
     =/  rcvr=ship
       ?-  -.lan
         %&  p.lan
         %|  `ship``@`p.lan
       ==
-    =/  hear-lane  %|^`address:^ames``@`sndr
+    =/  =shot  (sift-shot pac)
+    ?.  &(!sam.shot req.shot) :: TODO I beleive this is right
+      ::  normal packet
+      ::
+      :_  ~
+      :*  %pass  /pyro-events  %agent  [our.bowl %pyro]  %poke
+          %pyro-events  !>([rcvr /a/newt/0v1n.2m9vh %hear %|^`address``@`sndr pac]~)
+      ==
+    ::  remote scry packet
+    ::
+    =/  =peep  +:(sift-wail `@ux`content.shot)
+    :: unpack path.peep
+    =+  bal=(de-path:balk path.peep)
+    =+  .^  pacs=(list yowl)  %gx
+            ;:  weld
+              /(scot %p our.bowl)/pyro/(scot %da now.bowl)/r            ::  /=pyro=/r
+              /(scot %p her.bal)/(scot %ud rif.bal)/(scot %ud lyf.bal)  ::  /~wes/0/1/
+              /[van.bal]/[car.bal]/(scot cas.bal)                       ::  /c/x/1
+              spr.bal                                                   ::  /kids/ted/keen/hoon
+              /noun :: TODO swap out for noun or something else
+        ==  ==
+    =.  pacs
+      ::  add request to each response packet payload
+      ::
+      =+  pat=(spat path.peep)
+      =+  wid=(met 3 pat)
+      %-  flop  =<  blobs
+      %+  roll  pacs
+      |=  [=yowl num=_1 blobs=(list @ux)]
+      :-  +(num)
+      :_  blobs
+      (can 3 4^num 2^wid wid^`@`pat (met 3 yowl)^yowl ~)
     :_  ~
     :*  %pass  /pyro-events  %agent  [our.bowl %pyro]  %poke
-        %pyro-events  !>([rcvr /a/newt/0v1n.2m9vh %hear hear-lane pac]~)
-    ==
+        %pyro-events
+        !>
+        %+  turn  pacs
+        |=  =yowl
+        :+  sndr  /a/pyro/fine-response
+        :+  %hear  %|^`address``@`sndr
+        %-  etch-shot
+        :*  [sndr=rcvr rcvr=sndr]
+            req=|  sam=|
+            sndr-tick=`@ubC`1
+            rcvr-tick=`@ubC`1
+            origin=~
+            content=`@ux`yowl
+    ==  ==
   --
 ::
 ++  behn
