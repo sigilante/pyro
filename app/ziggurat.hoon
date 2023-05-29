@@ -57,10 +57,7 @@
         (weld scry-prefix /hash-cache/noun)
     ==
   =/  smart-lib=vase  ;;(vase (cue +.+:;;([* * @] smart-lib-noun)))
-  =/  =eng:zig
-    %~  engine  engine
-    ::  sigs off, hints off
-    [smart-lib ;;((map * @) (cue +.+:;;([* * @] zink-cax-noun))) jets:zink %.y %.n]
+  =/  =eng:zig  ~(engine engine smart-lib jets:zink %.y)
   =*  nec-address
     0x7a9a.97e0.ca10.8e1e.273f.0000.8dca.2b04.fc15.9f70
   =*  bud-address
@@ -114,10 +111,7 @@
         (weld scry-prefix /hash-cache/noun)
     ==
   =/  smart-lib=vase  ;;(vase (cue +.+:;;([* * @] smart-lib-noun)))
-  =/  =eng:zig
-    %~  engine  engine
-    ::  sigs off, hints off
-    [smart-lib ;;((map * @) (cue +.+:;;([* * @] zink-cax-noun))) jets:zink %.y %.n]
+  =/  =eng:zig  ~(engine engine smart-lib jets:zink %.y)
   `this(state [!<(state-0:zig old-vase) eng smart-lib])
 ::
 ++  on-watch
@@ -689,7 +683,7 @@
             ^-  path
             :^  %build-result  project-name.act  desk-name.act
             path.act
-        :^  %k  %fard  %suite
+        :^  %k  %fard  q.byk.bowl
         :-  %ziggurat-build
         :-  %noun
         !>  :-  ~
@@ -802,8 +796,9 @@
           :-  %send-update
           !<  update:zig
           %+  queue-thread-error
+            ^-  @t
             %^  cat  3
-            '\0afailed to build thread\0a'  :: TODO: remove one \0a
+              (crip "\0afailed to build thread\0a{<ri>}\0a")  :: TODO: remove one \0a
             (reformat-compiler-error:zig-lib p.thread)
           thread-name.act
         (pure:m !>(~))
@@ -1001,7 +996,7 @@
           [%snap-ships snap-path pyro-ships.project]
       %=  state
           projects
-        ?^  update-project-snaps.act  projects
+        ?~  update-project-snaps.act  projects
         %+  ~(put by projects)  project-name.act
         project(most-recent-snap snap-path)
       ==
@@ -1254,7 +1249,9 @@
         %set-repo-info
       =/  =project:zig  (~(got by projects) project-name.act)
       =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
-      :-  ~
+      :-  :_  ~
+          %-  make-read-repo:zig-lib
+          [project-name desk-name request-id]:act
       %=  state
           projects
         %+  ~(put by projects)  project-name.act
@@ -1275,6 +1272,9 @@
       ?:  ?=(%| -.subject)
         %-  pure:m
         :-  %|
+        ^-  @t
+        %^  cat  3
+          (crip "\0a{<repo-infos>}\0a")
         (reformat-compiler-error:zig-lib p.subject)
       %-  pure:m
       :-  %&
@@ -1378,8 +1378,10 @@
               :-  %send-update
               !<  update:zig
               %-  new-project-error
+              ^-  @t
               %^  cat  3
-              '\0afailed to build configuration file\0a'
+                %-  crip
+                "\0afailed to build configuration file\0a{<repo-host>} {<desk-name>} {<branch-name>} {<commit>}\0a"
               %-  reformat-compiler-error:zig-lib
               p.configuration-thread
             (pure:m !>(~))
@@ -1542,6 +1544,8 @@
         ==
       (on-arvo:def w sign-arvo)
     =*  update-info  [project-name desk-name %build-result ~]
+    =/  =project:zig  (~(got by projects) project-name)
+    =/  =desk:zig  (got-desk:zig-lib project desk-name)
     =/  build-error
       %~  build-result  make-error-vase:zig-lib
       [update-info %error]
@@ -1550,6 +1554,8 @@
       :_  ~
       %-  update-vase-to-card:zig-lib
       %-  build-error
+      ^-  @t
+      %^  cat  3  (crip "\0a{<repo-info.desk>}\0a")
       (reformat-compiler-error:zig-lib p.p.+.sign-arvo)
     =+  !<(result=(each vase tang) q.p.p.+.sign-arvo)
     :_  ~
@@ -1558,6 +1564,8 @@
       %.  file-path
       ~(build-result make-update-vase:zig-lib update-info)
     %-  build-error
+    ^-  @t
+    %^  cat  3  (crip "\0a{<repo-info.desk>}\0a")
     (reformat-compiler-error:zig-lib p.result)
   ::
       [%thread-result @ @ @ ~]
@@ -1571,7 +1579,17 @@
     ~&  %z^%thread-result^thread-name
     =.  status  [%ready ~]
     ?:  ?=(%| -.p.+.sign-arvo)
-      =*  error-message  (reformat-compiler-error:zig-lib p.p.+.sign-arvo)
+      =/  =project:zig  (~(got by projects) project-name)
+      =/  =desk:zig  (got-desk:zig-lib project desk-name)
+      =*  from-compiler
+        (reformat-compiler-error:zig-lib p.p.+.sign-arvo)
+      =/  error-message=@t
+        ?:  ?=(~ (find "cancelled" (trip from-compiler)))
+          %^  cat  3  from-compiler
+          (crip "\0a{<repo-info.desk>}\0a")
+        %+  rap  3
+        :^  from-compiler  'see dojo for error details'
+        (crip "\0a{<repo-info.desk>}\0a")  ~
       ~&  %thread-result^w^error-message
       =*  update-info
         [project-name desk-name %thread-result ~]
@@ -1696,14 +1714,16 @@
     %~  settings  make-update-vase:zig-lib
     ['' %$ %settings ~]
   ::
-      [%state-views @ @ ~]  ::  TODO: generalize from [%master ~]
+      [%state-views @ @ @ ~]
     =*  repo-host          (slav %p i.t.t.p)
     =*  project-desk-name  i.t.t.t.p
+    =*  commit-hash=(unit @ux)
+      ?:  ?=(%head i.t.t.t.t.p)  ~  `(slav %ux i.t.t.t.t.p)
     =*  update-info
       [project-desk-name project-desk-name %state-views ~]
     =/  state-views=(unit state-views:zig)
       %-  make-state-views:zig-lib
-      [repo-host project-desk-name %master ~]
+      [repo-host project-desk-name %master commit-hash]
     ?~  state-views  ``json+!>(~)
     :^  ~  ~  %json
     !>  ^-  json

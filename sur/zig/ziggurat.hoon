@@ -21,7 +21,7 @@
       =eng
       smart-lib-vase=vase
   ==
-+$  eng  $_  ~(engine engine-lib !>(0) *(map * @) jets:zink %.y %.n)  ::  sigs off, hints off
++$  eng  $_  ~(engine engine-lib !>(0) jets:zink %.y)
 ::
 +$  thread-queue
   (qeu thread-queue-item)

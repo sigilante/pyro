@@ -139,18 +139,22 @@
   =/  m  (strand ,~)
   ^-  form:m
   ;<  =bowl:strand  bind:m  get-bowl
+  ~&  %p^%cfldb^%0
   ;<  ~  bind:m
     %+  poke-our  %linedb
     :-  %linedb-action
     !>  ^-  action:linedb
     :^  %make-install-args  repo-host  repo
     [branch commit-hash [%ted tid.bowl]]
+  ~&  %p^%cfldb^%1
   ;<  install-args-result=vase  bind:m
     (take-poke %linedb-update)
+  ~&  %p^%cfldb^%2
   =+  !<(=update:linedb install-args-result)
   ?.  ?=(%make-install-args -.update)  !!  ::  TODO
   ?:  ?=(%| -.result.update)           !!  ::  TODO
   =*  park-args  p.result.update
+  ~&  %p^%cfldb^%3
   %-  send-events
   %+  ue-to-pes  hers
   [/c/commit %park park-args]
