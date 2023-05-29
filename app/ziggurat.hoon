@@ -1280,9 +1280,13 @@
         %set-repo-info
       =/  =project:zig  (~(got by projects) project-name.act)
       =/  =desk:zig  (got-desk:zig-lib project desk-name.act)
-      :-  :_  ~
-          %-  make-read-repo:zig-lib
-          [project-name desk-name request-id]:act
+      :-  :+  %-  make-read-repo:zig-lib
+              [project-name desk-name request-id]:act
+            %-  update-vase-to-card:zig-lib
+            %.  repo-info.act
+            %~  repo-info  make-update-vase:zig-lib
+            update-info
+          ~
       %=  state
           projects
         %+  ~(put by projects)  project-name.act

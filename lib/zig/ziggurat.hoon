@@ -1640,6 +1640,12 @@
     ^-  vase
     !>  ^-  update:zig
     [%suite-update-available update-info [%& ~] ~]
+  ::
+  ++  repo-info
+    |=  =repo-info:zig
+    ^-  vase
+    !>  ^-  update:zig
+    [%repo-info update-info [%& repo-info] ~]
   --
 ::
 ++  make-error-vase
@@ -1933,6 +1939,9 @@
     ::
         %suite-update-available
       ['data' ~]~
+    ::
+        %repo-info
+      ['data' (repo-info p.payload.update)]~
     ==
   ::
   ++  long-operation-info-body

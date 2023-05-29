@@ -782,7 +782,8 @@
   =/  old-project=project:zig
     (~(got by projects.state) project-name)
   =/  =desk:zig  (got-desk:zig-lib old-project desk-name)
-  ~&  %z^%sf^%1^repo-info.desk
+  =/  old-repo-info=repo-info:zig  repo-info.desk
+  ~&  %z^%sf^%1^old-repo-info
   ;<  repo-info-vase=vase  bind:m
     %-  branch-if-remote
     ?~(maybe-repo-info repo-info.desk u.maybe-repo-info)
@@ -837,6 +838,20 @@
     ?.  ((sane %t) u.file-contents)  ~[u.file-contents]
     (to-wain:format u.file-contents)
   ~&  %z^%sf^%4
+  ;<  empty-vase=vase  bind:m
+    ?:  =(old-repo-info repo-info)  (pure:m !>(~))
+    ;<  ~  bind:m
+      %+  poke-our  %ziggurat
+      :-  %ziggurat-action
+      !>  ^-  action:zig
+      :^  project-name  desk-name  ~
+      :-  %send-update
+      !<  update:zig
+      %.  repo-info
+      %~  repo-info  make-update-vase:zig-lib
+      [project-name desk-name %modify-file ~]
+    (pure:m !>(~))
+  ~&  %z^%sf^%5
   (pure:m !>(~))
 ::
 ::  +watch-for-desk-update

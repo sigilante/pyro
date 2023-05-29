@@ -226,6 +226,7 @@
       %linedb
       %state-reset
       %suite-update-available
+      %repo-info
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -282,5 +283,6 @@
       [%linedb update-info payload=(data ~) ~]
       [%state-reset update-info payload=(data ~) ~]
       [%suite-update-available update-info payload=(data ~) ~]
+      [%repo-info update-info payload=(data repo-info) ~]
   ==
 --
