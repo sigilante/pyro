@@ -767,6 +767,33 @@
   ~&  %z^%sf^%2
   (pure:m !>(~))
 ::
+::  +watch-for-desk-update
+::   inspired by kiln-sync, see e.g.,
+::   https://github.com/urbit/urbit/blob/develop/pkg/arvo/lib/hood/kiln.hoon#L1125-L1134
+::   https://github.com/urbit/urbit/blob/develop/pkg/arvo/lib/hood/kiln.hoon#L1176
+::   https://github.com/urbit/urbit/blob/develop/pkg/arvo/lib/hood/kiln.hoon#L1194
+::
+++  watch-for-desk-update
+  |=  [who=@p desk-name=@tas]
+  =/  m  (strand ,vase)
+  ^-  form:m
+  ;<  now=@da  bind:m  get-time
+  ;<  =riot:clay  bind:m
+    (warp who desk-name ~ %sing %w da+now /)
+  ?~  riot  (pure:m !>(%.n))
+  ?.  ?=(%cass p.r.u.riot)  (pure:m !>(%.n))
+  =/  [current-revision-number=@ @]  !<([@ud @] q.r.u.riot)
+  =/  next-revision-number=@ud  +(current-revision-number)
+  ;<  =riot:clay  bind:m
+    %^  warp  who  desk-name
+    [~ %sing %w ud+next-revision-number /]
+  ?~  riot  (pure:m !>(%.n))
+  ;<  =riot:clay  bind:m
+    %^  warp  who  desk-name
+    [~ %sing %v ud+next-revision-number /]
+  ?~  riot  (pure:m !>(%.n))
+  (pure:m !>(%.y))
+::
 ++  update-pyro-desks-to-repo
   =/  m  (strand ,vase)
   ^-  form:m
