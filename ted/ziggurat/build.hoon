@@ -119,7 +119,8 @@
   =*  jam-path
     (need (convert-contract-hoon-to-jam:zig-lib file-path))
   ;<  empty-vase=vase  bind:m
-    (save-file:zig-threads jam-path (jam p.build-result))
+    %^  modify-file:zig-threads  jam-path
+    `(jam p.build-result)  ~
   ;<  ~  bind:m
     %^  watch-our  /save-done  %linedb
     [%branch-updates (snip path-prefix)]
