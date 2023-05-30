@@ -457,6 +457,7 @@
         /gall/use/linedb
         /gall/use/notify
         /gall/use/ping
+        /gall/use/portal-graph
         /gall/use/portal-store
         /gall/use/pyre
         /gall/use/spider
@@ -534,7 +535,7 @@
 ++  send-long-operation-update
   |=  =long-operation-info:zig
   =/  m  (strand ,vase)
-  ~&  %z^%slou^long-operation-info
+  ~&  %z^%slou^%start^long-operation-info
   ^-  form:m
   ?~  long-operation-info  (pure:m !>(~))
   ;<  ~  bind:m
@@ -564,6 +565,8 @@
     ~&  %ziggurat^%send-long-operation-update^%unexpected-content
     !!
   ;<  ~  bind:m  (leave-our /update-done %ziggurat)
+  ;<  ~  bind:m  (sleep ~s2)
+  ~&  %z^%slou^%done^long-operation-info
   (pure:m !>(~))
 ::
 ++  skip-queue
