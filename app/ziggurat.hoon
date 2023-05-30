@@ -175,12 +175,15 @@
       =*  commit=@ta
         ?~  commit-hash.act  %head
         (scot %ux u.commit-hash.act)
-      =*  repo-path-prefix=path
+      =/  repo-path-prefix=path
         :-  (scot %p repo-host.act)
         /[desk-name.act]/[branch-name.act]/[commit]
-      =*  have-commit-locally
-        (is-linedb-path-populated:zig-lib repo-path-prefix)
-      ?.  have-commit-locally
+      ?.  ?|  %-  is-linedb-path-populated:zig-lib
+              repo-path-prefix
+          ::
+              %-  is-linedb-path-populated:zig-lib
+              [(scot %p our.bowl) +.repo-path-prefix]
+          ==
         :_  state
         :_  ~
         %-  %~  arvo  pass:io
