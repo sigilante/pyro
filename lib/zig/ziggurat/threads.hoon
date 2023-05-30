@@ -610,7 +610,7 @@
   (pure:m !>(~))
 ::
 ++  run-and-wait-on-linedb-action
-  |=  [=action:linedb watch-path=path]
+  |=  [=action:linedb watch-path=path number-facts=@ud]
   =/  m  (strand ,vase)
   ^-  form:m
   ~&  %z^%rawola^%0
@@ -622,11 +622,16 @@
     %+  poke-our  %linedb
     [%linedb-action !>(`action:linedb`action)]
   ~&  %z^%rawola^%2
-  ;<  done=cage  bind:m  (take-fact /done)
-  ~&  %z^%rawola^%3
+  ;<  empty-vase=vase  bind:m
+    |-
+    ~&  %z^%rawola^%3^number-facts
+    ?:  =(0 number-facts)  (pure:m !>(~))
+    ;<  fact=cage  bind:m  (take-fact /done)
+    ?.  ?=(%linedb-update p.fact)  !!
+    $(number-facts (dec number-facts))
+  ~&  %z^%rawola^%4
   ;<  ~  bind:m  (leave-our /done %linedb)
-  ?.  ?=(%linedb-update p.done)  !!
-  (pure:m q.done)
+  (pure:m !>(~))
 ::
 ++  fetch-repo
   |=  $:  repo-host=@p
@@ -649,7 +654,9 @@
       :-  %linedb-action
       !>  ^-  action:linedb
       [%fetch repo-host repo-name branch-name]
+    ~&  %z^%fr^%prs
     ;<  ~  bind:m  (sleep ~s1)
+    ~&  %z^%fr^%ps
     ~&  %z^%fr^%self-fetch
     ?~  followup-action  (pure:m !>(~))
     ;<  ~  bind:m
@@ -668,56 +675,43 @@
       ::  already have repo
       (pure:m !>(~))
     ;<  update-vase=vase  bind:m
-      %-  run-and-wait-on-linedb-action  :_  branch-path
+      %-  run-and-wait-on-linedb-action  :_  [branch-path 2]
       [%fetch repo-host repo-name branch-name]
-    =+  !<(=update:linedb update-vase)
-    ?.  ?=(%new-data -.update)           !!
-    ?.  =(branch-path path.update)       !!
     (pure:m !>(~))
   ~&  %z^%fr^%3
+  ;<  empty-vase=vase  bind:m
+    ?:  =(our.bowl repo-host)  (pure:m !>(~))
+    ;<  =bowl:strand  bind:m  get-bowl
+    =*  repo-local-copy
+      .^  *
+          %gx
+          :^  (scot %p our.bowl)  %linedb
+            (scot %da now.bowl)
+          /(scot %p our.bowl)/[repo-name]/[branch-name]/noun
+      ==
+    ?:  ?=(^ repo-local-copy)  (pure:m !>(~))
+    ~&  %z^%fr^%35
+    ;<  ~  bind:m
+      %+  poke-our  %linedb
+      :-  %linedb-action
+      !>  ^-  action:linedb
+      [%branch repo-host repo-name branch-name branch-name]
+    ~&  %z^%fr^%36
+    ~&  %z^%fr^%prs
+    ;<  ~  bind:m  (sleep ~s1)
+    ~&  %z^%fr^%ps
+    ;<  update-vase=vase  bind:m
+      %^  run-and-wait-on-linedb-action
+        [%fetch our.bowl repo-name branch-name]
+      [(scot %p our.bowl) +.branch-path]  1
+    (pure:m !>(~))
+  ~&  %z^%fr^%4
   ?~  followup-action  (pure:m !>(~))
   ;<  ~  bind:m
     %+  poke-our  %ziggurat
     [%ziggurat-action u.followup-action]
-  ~&  %z^%fr^%4
+  ~&  %z^%fr^%5
   (pure:m !>(~))
-::
-++  branch-if-remote
-  |=  =repo-info:zig
-  =/  m  (strand ,vase)
-  ^-  form:m
-  ~&  %z^%bir^%0
-  ;<  =bowl:strand  bind:m  get-bowl
-  =*  repo-host    repo-host.repo-info
-  =*  repo-name    repo-name.repo-info
-  =*  branch-name  branch-name.repo-info
-  ~&  %z^%bir^%1
-  ?:  =(our.bowl repo-host)  (pure:m !>(repo-info))
-  ;<  empty-vase=vase  bind:m
-    ?:  %.  [our.bowl /[repo-name]/[branch-name]]
-        %~  has  in
-        %-  ~(gas in *(set [@p path]))
-        .^  (list [@p path])
-            %gx
-            :^  (scot %p our.bowl)  %linedb
-            (scot %da now.bowl)  /noun
-        ==
-      (pure:m !>(~))
-    =*  branch-path=path
-      /(scot %p our.bowl)/[repo-name]/[branch-name]
-    ;<  update-vase=vase  bind:m
-      %-  run-and-wait-on-linedb-action  :_  branch-path
-      [%branch repo-host repo-name branch-name branch-name]
-    =+  !<(=update:linedb update-vase)
-    ?.  ?=(%new-data -.update)      !!
-    ?.  =(branch-path path.update)  !!
-    (pure:m !>(~))
-  =.  repo-host.repo-info  our.bowl
-  ~&  %z^%bir^%2
-  ;<  empty-vase=vase  bind:m
-    (fetch-repo our.bowl repo-name branch-name ~ ~)
-  ~&  %z^%bir^%3
-  (pure:m !>(repo-info))
 ::
 ++  branch-if-non-head
   |=  =repo-info:zig
@@ -786,12 +780,8 @@
   =/  old-repo-info=repo-info:zig  repo-info.desk
   ~&  %z^%sf^%1^old-repo-info
   ;<  repo-info-vase=vase  bind:m
-    %-  branch-if-remote
+    %-  branch-if-non-head
     ?~(maybe-repo-info repo-info.desk u.maybe-repo-info)
-  ~&  %z^%sf^%2
-  =+  !<(=repo-info:zig repo-info-vase)
-  ;<  repo-info-vase=vase  bind:m
-    (branch-if-non-head repo-info)
   =+  !<(=repo-info:zig repo-info-vase)
   ~&  %z^%sf^%3^repo-info
   =/  new-project=project:zig
@@ -1165,7 +1155,7 @@
         projects
       (~(put by projects.state) project-name project)
     ==
-  ~&  %cis^%1
+  ~&  %cis^%1^repo-dependencies
   =*  desk-names=(list @tas)
     %+  turn  repo-dependencies
     |=([@ desk-name=@tas *] desk-name)
@@ -1313,7 +1303,9 @@
     [repo-host project-name %master ~]  ::  TODO: generalize from [%master ~]
   ;<  empty-vase=vase  bind:m
     (send-long-operation-update long-operation-info)
+  ~&  %sp^%10
   ;<  state=state-0:zig  bind:m  get-state
+  ~&  %sp^%11
   =/  old-focused-project=@tas  focused-project.state
   |^
   ?:  =('global' project-name)
@@ -1329,6 +1321,10 @@
   ;<  =bowl:strand  bind:m  get-bowl
   ;<  empty-vase=vase  bind:m
     (iterate-over-desks repo-dependencies make-read-repo)
+  =.  repo-dependencies
+    %+  turn  repo-dependencies
+    |=  [@ rn=@tas bn=@tas ch=(unit @ux)]
+    [our.bowl rn bn ch]
   ;<  empty-vase=vase  bind:m
     (iterate-over-desks repo-dependencies make-watch-repo)
   ;<  empty-vase=vase  bind:m
@@ -1441,12 +1437,13 @@
       |=  =repo-info:zig
       =|  =desk:zig
       :-  repo-name.repo-info
-      desk(name repo-name.repo-info, repo-info repo-info)
+      %=  desk
+          name       repo-name.repo-info
+          repo-info  repo-info(repo-host our.bowl)  ::  will %branch foreign-hosted repos
+      ==
     =.  start-apps.project  start-apps
     =.  state
       %=  state
-          :: focused-project  project-name
-      ::
           projects
         %+  ~(put by projects.state)  project-name
         project(sync-desk-to-vship make-sync-desk-to-vship)
