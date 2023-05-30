@@ -54,7 +54,7 @@
   (pure:m ~)
 ++  ted
   ^-  form:m
-  =/  desk-names=(list @tas)  ~[%suite %zig %zig-dev]
+  =/  desk-names=(list @tas)  ~[%linedb %suite]
   ;<  ~  bind:m
     (iterate-over-desks desk-names make-new-desk)
   ;<  ~  bind:m  (sleep ~s1)

@@ -120,6 +120,7 @@ As such, `%ziggurat` is the premier development environment for integrated on- a
    git clone https://github.com/urbit/urbit.git
    cd ${REPO_DIR}/urbit/pkg
 
+   git submodule add git@github.com:uqbar-dao/linedb.git
    git submodule add git@github.com:uqbar-dao/dev-suite.git
    git submodule add git@github.com:uqbar-dao/uqbar-core.git
    git submodule add git@github.com:uqbar-dao/zig-dev.git
@@ -132,29 +133,39 @@ As such, `%ziggurat` is the premier development environment for integrated on- a
      cd dev-suite
      git checkout next/suite
      cd ..
+     cd linedb
+     git checkout hf/linedb-update-script
+     cd ..
      ```
 5. On the fake `~zod`, create and mount appropriate desks.
    ```hoon
+   |new-desk %linedb
    |new-desk %suite
-   |new-desk %zig
-   |new-desk %zig-dev
+   |mount %linedb
    |mount %suite
-   |mount %zig
-   |mount %zig-dev
    ```
 6. Copy submodule contents into the appropriate desks.
    ```bash
-   rm -rf ${SHIP_DIR}/nec/suite/* && cp -RL ${REPO_DIR}/urbit/pkg/dev-suite ${SHIP_DIR}/nec/suite
-   rm -rf ${SHIP_DIR}/nec/zig/* && cp -RL ${REPO_DIR}/urbit/pkg/uqbar-core ${SHIP_DIR}/nec/zig
-   rm -rf ${SHIP_DIR}/nec/zig-dev/* && cp -RL ${REPO_DIR}/urbit/pkg/zig-dev ${SHIP_DIR}/nec/zig-dev
+   rm -rf ${SHIP_DIR}/zod/linedb/* && cp -RL ${REPO_DIR}/urbit/pkg/dev-suite ${SHIP_DIR}/zod/linedb
+   rm -rf ${SHIP_DIR}/zod/suite/* && cp -RL ${REPO_DIR}/urbit/pkg/dev-suite ${SHIP_DIR}/zod/suite
    ```
 7. On the fake `~zod`, commit the files.
    ```hoon
+   |commit %linedb
    |commit %suite
-   |commit %zig
-   |commit %zig-dev
    ```
-8. Install `%suite`.
+8. Install `%linedb`.
+   ```hoon
+   |install our linedb
+   ```
+9. Copy files into %linedb.
+   Substitute arguments as appropriate (i.e. `+code` for `password`, `url_base` for where your ship is exposed...).
+   Also use this script to copy in, e.g., %pokur and %pokur-dev files in a similar manner.
+   ```bash
+   python3 linedb/scripts/linedb-load-files-from-directory.py zig master uqbar-core --ship zod --password lidlut-tabwed-pillex-ridrup --url_base http://localhost:8080
+   python3 linedb/scripts/linedb-load-files-from-directory.py zig-dev master zig-dev --ship zod --password lidlut-tabwed-pillex-ridrup --url_base http://localhost:8080
+   ```
+10. Install `%suite`.
    As a part of installation, `%pyro` will start three virtualized ships (`~nec`, `~bud`, and `~wes`) and the `%zig-dev` project will be initialized, installing the `%zig` desk on each `%pyro` ship and starting a testnet, hosted by `~nec`, the same as if these instructions had been followed: https://github.com/uqbar-dao/uqbar-core#starting-a-fakeship-testnet
    ```hoon
    |install our %suite

@@ -20,10 +20,8 @@
   $:  state-0
       =eng
       smart-lib-vase=vase
-      =ca-scry-cache
   ==
-+$  ca-scry-cache  (map [@tas path] (pair @ux vase))
-+$  eng  $_  ~(engine engine-lib !>(0) *(map * @) jets:zink %.y %.n)  ::  sigs off, hints off
++$  eng  $_  ~(engine engine-lib !>(0) jets:zink %.y)
 ::
 +$  thread-queue
   (qeu thread-queue-item)
@@ -70,20 +68,28 @@
       =sync-desk-to-vship
       most-recent-snap=path
       saved-thread-queue=thread-queue
+      start-apps=(map @tas (list @tas))
   ==
 +$  desk
   $:  name=@tas
+      =repo-info
+      most-recently-seen-commit=@ux
       dir=(list path)
       user-files=(set path)
       to-compile=(set path)
       saved-test-steps=(map thread-name=@tas [test-imports=imports =test-steps])
   ==
++$  repo-info
+  ::  commit-hash=~ -> most recent commit
+  $:  repo-host=@p
+      repo-name=@tas
+      branch-name=@tas
+      commit-hash=(unit @ux)
+  ==
 ::
 +$  build-result  (each [bat=* pay=*] @t)
 ::
-+$  desk-dependencies
-  %-  list
-  [who=@p desk-name=@tas =case commit-hash=(unit @ux)]
++$  repo-dependencies  (list repo-info)
 ::
 +$  configs  (mip:mip project-name=@t [who=@p what=@tas] @)
 +$  config   (map [who=@p what=@tas] @)
@@ -113,10 +119,11 @@
   (list [who=@p app=(unit @tas) file=path])
 ::
 +$  action
+  $+  ziggurat-action
   $:  project-name=@t
       desk-name=@tas
       request-id=(unit @t)
-      $%  [%new-project fetch-desk-from-remote-ship=(unit @p) special-configuration-args=vase]
+      $%  [%new-project repo-host=@p branch-name=@tas commit-hash=(unit @ux) special-configuration-args=vase]
           [%delete-project ~]
       ::
           [%add-sync-desk-vships ships=(list @p) install=(list @p) start-apps=(list @tas)]
@@ -125,13 +132,15 @@
           [%send-state-views =state-views]
           [%set-ziggurat-state new-state=state-0]
           [%send-update =update]
+          [%watch-for-file-changes repo-host=@p repo-name=@tas branch-name=@tas]
+          [%cancel-watch-for-file-changes repo-host=@p repo-name=@tas branch-name=@tas]
       ::
           [%change-focus ~]
-          [%add-project-desk index=(unit @ud) fetch-desk-from-remote-ship=(unit @p)]  ::  index=~ -> add to end
+          [%add-project-desk index=(unit @ud) repo-host=@p branch-name=@tas commit-hash=(unit @ux)]  ::  index=~ -> add to end
           [%delete-project-desk ~]
       ::
-          [%save-file file=path text=@t]  ::  generates new file or overwrites existing
-          [%delete-file file=path]
+          [%save-file file=path contents=@ repo-info=(unit repo-info)]  ::  generates new file or overwrites existing
+          [%delete-file file=path repo-info=(unit repo-info)]
           [%make-configuration-file ~]
       ::
           [%add-config who=@p what=@tas item=@]
@@ -139,14 +148,16 @@
       ::
           [%register-for-compilation file=path]
           [%unregister-for-compilation file=path]
-          [%deploy-contract who=(unit @p) town-id=@ux contract-jam-path=path]
+          [%deploy-contract-virtualnet who=(unit @p) town-id=@ux contract-jam-path=path]
+          [%deploy-contract-livenet from=@ux town-id=@ux contract-jam-path=path]
       ::
           [%build-file =path]
-          [%read-desk ~]
+          [%watch-repo-for-changes ~]
+          [%read-repo ~]
       ::
           [%queue-thread thread-name=@tas payload=thread-queue-payload]
-          [%save-thread thread-name=@tas test-imports=imports =test-steps] :: TODO; take in test-steps(?) and convert to thread
-          [%delete-thread thread-name=@tas] :: TODO; take in test-steps(?) and convert to thread
+          [%save-thread thread-name=@tas test-imports=imports =test-steps]
+          [%delete-thread thread-name=@tas]
           [%run-queue ~]
           [%clear-queue ~]
       ::
@@ -168,7 +179,10 @@
           [%change-settings =settings]
       ::
           [%get-dev-desk who=@p]
-          [%suspend-uninstall-to-make-dev-desk ~]
+      ::
+          [%set-repo-info =repo-info]
+      ::
+          [%update-suite ~]
       ==
   ==
 ::
@@ -202,11 +216,17 @@
       %add-project-desk
       %delete-project-desk
       %get-dev-desk
-      %suspend-uninstall-to-make-dev-desk
       %ziggurat-state
       %configs
       %ship-to-address-map
       %build-result
+      %long-operation-on-step
+      %thread-result
+      %deploy-contract
+      %linedb
+      %state-reset
+      %suite-update-available
+      %repo-info
   ==
 +$  update-level  ?(%success error-level)
 +$  error-level   ?(%info %warning %error)
@@ -219,6 +239,11 @@
 ::
 ++  data  |$(this (each this [level=error-level message=@t]))
 ::
++$  long-operation-info
+  (unit long-operation-info-body)
++$  long-operation-info-body
+  [name=@tas steps=(list @tas) current-step=(unit @tas)]
+::
 +$  update
   $@  ~
   $%  [%focused-project update-info payload=(data @t) ~]
@@ -228,7 +253,7 @@
       [%new-project update-info payload=(data =sync-desk-to-vship) ~]
       [%add-config update-info payload=(data [who=@p what=@tas item=@]) ~]
       [%delete-config update-info payload=(data [who=@p what=@tas]) ~]
-      [%queue-thread update-info payload=(data @tas) ~]
+      [%queue-thread update-info payload=(data @tas) thread-name=@tas]
       [%run-queue update-info payload=(data ~) ~]
       [%add-user-file update-info payload=(data ~) file=path]
       [%delete-user-file update-info payload=(data ~) file=path]
@@ -248,10 +273,16 @@
       [%add-project-desk update-info payload=(data ~) ~]
       [%delete-project-desk update-info payload=(data ~) ~]
       [%get-dev-desk update-info payload=(data ~) ~]
-      [%suspend-uninstall-to-make-dev-desk update-info payload=(data ~) ~]
       [%ziggurat-state update-info payload=(data state-0) ~]
       [%configs update-info payload=(data configs) ~]
       [%ship-to-address-map update-info payload=(data (map @p @ux)) ~]
       [%build-result update-info payload=(data ~) =path]
+      [%long-operation-current-step update-info payload=(data long-operation-info-body) ~]
+      [%thread-result update-info payload=(data ~) thread-name=@tas]
+      [%deploy-contract update-info payload=(data @ux) =path]
+      [%linedb update-info payload=(data ~) ~]
+      [%state-reset update-info payload=(data ~) ~]
+      [%suite-update-available update-info payload=(data ~) ~]
+      [%repo-info update-info payload=(data repo-info) ~]
   ==
 --

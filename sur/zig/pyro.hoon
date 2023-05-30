@@ -49,7 +49,7 @@
 +$  pyro-event    [who=ship ue=unix-event]
 +$  pyro-events   [who=ship utes=(list unix-timed-event)]
 +$  pyro-effects  [who=ship ufs=(list unix-effect)]
-+$  pyro-effect   [who=ship ufs=unix-effect]
++$  pyro-effect   [who=ship uf=unix-effect]
 +$  pyro-boths    [who=ship ub=(list unix-both)]
 ::
 +$  action
