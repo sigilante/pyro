@@ -785,7 +785,7 @@
   =/  old-repo-info=repo-info:zig  repo-info.desk
   ~&  %z^%sf^%1^old-repo-info
   ;<  repo-info-vase=vase  bind:m
-    %+  branch-if-non-head  most-recently-seen-commit
+    %+  branch-if-non-head  most-recently-seen-commit.desk
     ?~(maybe-repo-info repo-info.desk u.maybe-repo-info)
   =+  !<(=repo-info:zig repo-info-vase)
   ~&  %z^%sf^%3^repo-info
