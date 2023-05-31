@@ -717,7 +717,7 @@
   (pure:m !>(~))
 ::
 ++  branch-if-non-head
-  |=  =repo-info:zig
+  |=  [most-recently-seen-commit=@ux =repo-info:zig]
   =/  m  (strand ,vase)
   ^-  form:m
   ~&  %z^%binh^%0
@@ -728,6 +728,8 @@
   =/  commit-hash=(unit @ux)  commit-hash.repo-info
   ~&  %z^%binh^%1
   ?~  commit-hash  (pure:m !>(repo-info))
+  ?:  =(most-recently-seen-commit u.commit-hash)
+    (pure:m !>(repo-info))
   =/  new-branch-name=@tas
     =/  repos=(set [@p path])
       %-  ~(gas in *(set [@p path]))
@@ -783,7 +785,7 @@
   =/  old-repo-info=repo-info:zig  repo-info.desk
   ~&  %z^%sf^%1^old-repo-info
   ;<  repo-info-vase=vase  bind:m
-    %-  branch-if-non-head
+    %+  branch-if-non-head  most-recently-seen-commit
     ?~(maybe-repo-info repo-info.desk u.maybe-repo-info)
   =+  !<(=repo-info:zig repo-info-vase)
   ~&  %z^%sf^%3^repo-info
