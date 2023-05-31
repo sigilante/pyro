@@ -763,7 +763,7 @@
     repo-info(branch-name new-branch-name, commit-hash ~)
   ~&  %z^%binh^%5
   ;<  empty-vase=vase  bind:m
-    (fetch-repo our.bowl repo-name branch-name ~ ~)
+    (fetch-repo our.bowl repo-name new-branch-name ~ ~)
   ~&  %z^%binh^%6
   (pure:m !>(repo-info))
 ::
@@ -774,7 +774,7 @@
       ==
   =/  m  (strand ,vase)
   ^-  form:m
-  ~&  %z^%sf^%0
+  ~&  %z^%sf^%0^[file-path ?=(^ file-contents) maybe-repo-info]
   ;<  state=state-0:zig  bind:m  get-state
   ;<  =bowl:strand  bind:m  get-bowl
   =/  old-project=project:zig
@@ -1170,6 +1170,7 @@
     :^  ~  name.u.long-operation-info
       steps.u.long-operation-info
     `%install-and-start-apps-on-pyro-ships
+  ;<  ~  bind:m  (sleep ~s1)
   ?:  ?|  =(0 ~(wyt by install))
           (~(all by install) |=(a=(list @) ?=(~ a)))
       ==
@@ -1324,12 +1325,6 @@
   ;<  =bowl:strand  bind:m  get-bowl
   ;<  empty-vase=vase  bind:m
     (iterate-over-desks repo-dependencies make-read-repo)
-  =.  repo-dependencies
-    %+  turn  repo-dependencies
-    |=  [@ rn=@tas bn=@tas ch=(unit @ux)]
-    [our.bowl rn bn ch]
-  ;<  empty-vase=vase  bind:m
-    (iterate-over-desks repo-dependencies make-watch-repo)
   ;<  empty-vase=vase  bind:m
     %-  send-long-operation-update
     ?~  long-operation-info  ~
@@ -1339,6 +1334,10 @@
   ;<  ~  bind:m  send-new-project-update
   ~&  %sp^%4
   ;<  ~  bind:m  send-state-views
+  =.  repo-dependencies
+    %+  turn  repo-dependencies
+    |=  [@ rn=@tas bn=@tas ch=(unit @ux)]
+    [our.bowl rn bn ch]
   ~&  %sp^%5^repo-dependencies
   ;<  empty-vase=vase  bind:m
     %^  commit-install-start  whos  repo-dependencies
@@ -1467,6 +1466,7 @@
       :-  %ziggurat-action
       !>  ^-  action:zig
       [project-name project-name request-id %change-focus ~]
+    ;<  ~  bind:m  (sleep ~s1)
     (pure:m state)
   ::
   ++  make-watch-repo
