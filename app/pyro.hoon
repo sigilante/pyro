@@ -33,19 +33,6 @@
     ++  arvo-adult  ..^load:+>.arvo-core
     ++  clay-types  (clay-core *ship)
     ++  gall-type   (tail (gall-core *ship))
-    +$  versioned-state  $%(state-0)
-    +$  state-0
-      $:  %0
-          piers=fleet
-          fleet-snaps=(map path fleet)
-          :: quickboot caching
-          ::
-          files=(axal (cask))
-          =raft:clay-types
-          park=task:clay :: TODO should be $>(%park task:clay)
-      ==
-    ::
-    +$  fleet  (map ship pier)
     +$  pier
       $:  snap=_arvo-adult
           event-log=(list unix-timed-event)
@@ -53,6 +40,19 @@
           paused=?
           scry-time=@da
       ==
+    +$  fleet  (map ship pier)          
+    +$  state-0
+      $:  %0
+          piers=fleet
+          fleet-snaps=(map path fleet)
+          :: quickboot caching
+          ::
+          files=(axal (cask))
+          park=task:clay :: TODO should be $>(%park task:clay)
+          caches=(map @tas =raft:clay-types)
+      ==
+    +$  versioned-state  $%(state-0)
+    ::
     +$  card  $+(card card:agent:gall)
     --
 ::
@@ -74,27 +74,21 @@
       ~[/scripts]
     =.  park  (park:pyro our.bowl %base %da now.bowl)
     :_  this
+    :_  ~
     :: poke-our to add base
-    [%pass / %agent [our dap]:bowl %poke %pyro-action !>([%add-desk %base])]~
+    :*  %pass  /  %agent  [our dap]:bowl
+        %poke  pyro-action+!>([%cache %default ~ ~[%base]])
+    ==
   ::
   ++  on-save  !>(state)
   ++  on-load
     |=  old-vase=vase
     ^-  (quip card _this)
-    ::  quick-boot caching
-    =.  files
-      %-  ~(gas of *(axal (cask)))
-      %+  user-files:pill
-        /(scot %p p.byk.bowl)/base/(scot %da now.bowl)
-      ~
-    =.  park  (park:pyro our.bowl %base %da now.bowl)
-    =.  fad.raft
-      .^(flow:clay %cx /(scot %p our.bowl)//(scot %da now.bowl)/flow)
     ::  state management
     =+  (mule |.(!<(versioned-state old-vase)))
     ?-  -.-
       %&  `this(state +.-)
-      %|  [[%give %fact ~[/load-failed] noun+!>(~)]~ this]
+      %|  `this
     ==
   ::
   ++  on-poke
@@ -189,17 +183,6 @@
     ^+  this
     =.  piers  (~(put by piers) who pier-data)
     this
-  ::
-  ::  Begin: load in clay state
-  ::
-  ++  apex
-    ^+  ..abet-pe
-    ?:  paused.pier-data  ..abet-pe
-    =.  van.mod.sol.snap
-      =/  cay  !<((tail clay-types) vase:(~(got by van.mod.sol.snap) %clay))
-      =.  ruf.cay  raft
-      (~(put by van.mod.sol.snap) %clay [!>(cay) *worm])
-    ..abet-pe
   ::
   ++  slap-gall
     |=  [dap=term =vase]
@@ -349,7 +332,9 @@
     =.  this  apex-pyro  =<  abet-pyro
     =.  this  abet-pe:unpause:(publish-effect:(pe who.act) [/ %kill ~])
     =/  clay  (clay-core who.act)
-    =.  ruf.clay  raft
+    =.  ruf.clay
+      ~|  "{<cache.act>} cache doesn't exist"
+      (~(got by caches) cache.act)
     =/  new  (~(got by piers) who.act)
     =.  sol.snap.new
       ^-  soul
@@ -459,18 +444,45 @@
     ~&  pyro+slap-gall+her.act
     `state
   ::
-      %add-desk
-    =.  fad.raft
-      .^(flow:clay %cx /(scot %p our.bowl)//(scot %da now.bowl)/flow)
-    =.  ran.raft
-      .^(rang:clay %cx /(scot %p our.bowl)//(scot %da now.bowl)/rang)
-    =.  dos.rom.raft :: populate domestic desks, basically just %base
-      =/  =cone:clay  .^(cone:clay %cx /(scot %p our.bowl)//(scot %da now.bowl)/domes)
-      =/  =dome:clay  (~(got by cone) our.bowl desk.act)
-      ^-  (map desk dojo:clay-types)
-      %+  ~(put by dos.rom.raft)  desk.act
-      =|  doj=dojo:clay-types
-      =.(dom.doj dome doj)
+      %cache
+    =.  caches
+      %+  ~(put by caches)  name.act
+      =|  =raft:clay-types
+      ?^  who.act
+        ::  take cache from a pyro ship
+        ::
+        =/  cay
+          !<  (tail clay-types)
+          vase:(~(got by van.mod.sol.snap:(pe u.who.act)) %clay)
+        =.  fad.raft  fad.ruf.cay
+        =.  ran.raft  ran.ruf.cay   
+        =.  dos.rom.raft
+          |-
+          ?~  desks.act  dos.rom.raft
+          =.  dos.rom.raft
+            %+  ~(put by dos.rom.raft)  i.desks.act
+            =|  doj=dojo:clay-types
+            =.  dom.doj  dom:(~(got by dos.rom.ruf.cay) i.desks.act)
+            doj
+          $(desks.act t.desks.act)
+        raft
+      ::  take cache from host ship
+      ::
+      =.  fad.raft
+        .^(flow:clay %cx /(scot %p our.bowl)//(scot %da now.bowl)/flow)
+      =.  ran.raft
+        .^(rang:clay %cx /(scot %p our.bowl)//(scot %da now.bowl)/rang)
+      =.  dos.rom.raft
+        |-
+        ?~  desks.act  dos.rom.raft
+        =+  .^(=cone:clay %cx /(scot %p our.bowl)//(scot %da now.bowl)/domes)
+        =/  =dome:clay  (~(got by cone) our.bowl i.desks.act)
+        =.  dos.rom.raft
+          %+  ~(put by dos.rom.raft)  i.desks.act
+          =|  doj=dojo:clay-types
+          =.  dom.doj  dome  doj
+        $(desks.act t.desks.act)
+      raft
     `state
   ==
 ::

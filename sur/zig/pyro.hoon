@@ -55,7 +55,7 @@
 +$  action
   $%  ::  create or delete a ship
       ::
-      [%init-ship who=ship] :: TODO should this be hers=(list ship)?
+      [%init-ship who=ship cache=@tas]
       [%kill-ships hers=(list ship)]
       ::  snapshot manipulation
       ::
@@ -72,9 +72,9 @@
       ::  inject state into a running gall app
       ::
       [%slap-gall her=ship dap=term =vase]
-      ::  adds a desk to the startup sequence. All future ships will get it
+      ::  cache a list of desks from the host or pyro ship (must be pre-built on either)
       ::
-      [%add-desk =desk]
+      [%cache name=@tas who=(unit ship) desks=(list desk)]
   ==
 ::
 +$  behn-pier  next-timer=(unit @da)
