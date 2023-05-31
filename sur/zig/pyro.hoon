@@ -72,9 +72,18 @@
       ::  inject state into a running gall app
       ::
       [%slap-gall her=ship dap=term =vase]
-      ::  cache a list of desks from the host or pyro ship (must be pre-built on either)
+      ::  quick-build/caching
       ::
-      [%cache name=@tas who=(unit ship) desks=(list desk)]
+      ::    create a new cache, update it with %rebuild
+      ::      name         : name of this cache
+      ::      who=~        : use host ship's cache
+      ::      who=[~ ship] : use pyro ship's cache
+      ::      desks        : list of desks to use for this cache
+      [%cache name=@tas who=(unit ship) desks=(list desk)] ::  for use on startup
+      ::    build ontop of a cache already in use
+      ::      name : name of this cache
+      ::      park : TODO should be $>(%park task:clay)
+      [%rebuild name=@tas desks=(list desk) park=task-arvo]
   ==
 ::
 +$  behn-pier  next-timer=(unit @da)
