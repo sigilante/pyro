@@ -729,7 +729,8 @@
   ~&  %z^%binh^%1
   ?~  commit-hash  (pure:m !>(repo-info))
   ?:  =(most-recently-seen-commit u.commit-hash)
-    (pure:m !>(repo-info))
+    ::  we are committing to master/head, so maintain it
+    (pure:m !>([repo-host repo-name branch-name ~]))
   =/  new-branch-name=@tas
     =/  repos=(set [@p path])
       %-  ~(gas in *(set [@p path]))
