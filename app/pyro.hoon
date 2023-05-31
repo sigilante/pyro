@@ -462,6 +462,7 @@
           =.  dos.rom.raft
             %+  ~(put by dos.rom.raft)  i.desks.act
             =|  doj=dojo:clay-types
+            ~|  "{<i.desks.act>} doesn't exist on {<u.who.act>}"
             =.  dom.doj  dom:(~(got by dos.rom.ruf.cay) i.desks.act)
             doj
           $(desks.act t.desks.act)
@@ -476,6 +477,7 @@
         |-
         ?~  desks.act  dos.rom.raft
         =+  .^(=cone:clay %cx /(scot %p our.bowl)//(scot %da now.bowl)/domes)
+        ~|  "{<i.desks.act>} doesn't exist on {<our.bowl>}"
         =/  =dome:clay  (~(got by cone) our.bowl i.desks.act)
         =.  dos.rom.raft
           %+  ~(put by dos.rom.raft)  i.desks.act
