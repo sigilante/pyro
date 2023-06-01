@@ -493,7 +493,7 @@
     ::  build it on one ship
     =/  all  (turn ~(tap in piers) head)
     ?~  all  ~&  pyro+%no-running-ships  `state
-    =^  cad  state  (poke-pyro-events [i.all / park.act]~)
+    =^  cad  state  (poke-pyro-events [i.all /c/rebuild park.act]~)
     ::  re-make the %cache
     =+  raf=(raft:(pe i.all) desks.act)
     =.  caches  (~(put by caches) name.act raf)
@@ -522,7 +522,7 @@
     =^  car  state
       %-  poke-pyro-events
       %+  turn  (turn ~(tap by piers) head)
-      |=(=ship [ship / park])
+      |=(=ship [ship /c/rebuild park])
     [(weld cad car) state]
   ==
 ::
