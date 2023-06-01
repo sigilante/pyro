@@ -85,6 +85,7 @@
       ::      park  : TODO should be $>(%park task:clay)
       ::      ships : ~ rebuild and put into all ships
       ::            : (list ship) put into selected ships
+      ::  TODO have an option to inject a cache from the host ship?
       [%rebuild name=@tas park=task-arvo ships=(unit (list ship))]
   ==
 ::
