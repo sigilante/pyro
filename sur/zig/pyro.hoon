@@ -75,15 +75,18 @@
       ::  quick-build/caching
       ::
       ::    create a new cache, update it with %rebuild
-      ::      name         : name of this cache
-      ::      who=~        : use host ship's cache
-      ::      who=[~ ship] : use pyro ship's cache
-      ::      desks        : list of desks to use for this cache
-      [%cache name=@tas who=(unit ship) desks=(list desk)] ::  for use on startup
+      ::      name  : name of this cache
+      ::      who   :  ~       use host ship's cache
+      ::            : [~ ship] use pyro ship's cache
+      ::      desks : list of desks to import for this cache
+      [%cache name=@tas who=(unit ship) desks=(list desk)]
       ::    build ontop of a cache already in use
-      ::      name : name of this cache
-      ::      park : TODO should be $>(%park task:clay)
-      [%rebuild name=@tas desks=(list desk) park=task-arvo]
+      ::      name  : name of this cache
+      ::      desks : desks to rebuild
+      ::      park  : TODO should be $>(%park task:clay)
+      ::      ships : ~ rebuild and put into all ships
+      ::            : (list ship) put into selected ships
+      [%rebuild name=@tas desks=(list desk) park=task-arvo ships=(unit (list ship))]
   ==
 ::
 +$  behn-pier  next-timer=(unit @da)

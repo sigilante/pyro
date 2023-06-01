@@ -353,7 +353,7 @@
     =.  this  abet-pe:unpause:(publish-effect:(pe who.act) [/ %kill ~])
     =/  clay  (clay-core who.act)
     =.  ruf.clay
-      ~|  "{<cache.act>} cache doesn't exist"
+      ~|  "{<cache.act>} cache doesn't exist, try %default cache"
       (~(got by caches) cache.act)
     =/  new  (~(got by piers) who.act)
     =.  sol.snap.new
@@ -490,9 +490,11 @@
     `state
   ::
       %rebuild
+    =/  all
+      ?^  ships.act  u.ships.act
+      (turn ~(tap in piers) head)
+    ?~  all  ~&  pyro+rebuild+%no-running-ships  `state
     ::  build it on one ship
-    =/  all  (turn ~(tap in piers) head)
-    ?~  all  ~&  pyro+%no-running-ships  `state
     =^  cad  state  (poke-pyro-events [i.all /c/rebuild park.act]~)
     ::  re-make the %cache
     =+  raf=(raft:(pe i.all) desks.act)
