@@ -200,8 +200,8 @@
   ::
   ::  return raft (containing the build cache of desks) from a pyro ship
   ::
-  ++  raft
-    |=  desks=(list desk) :: TODO could just return everything
+  ++  raft  :: TODO get rid of this, not needed +ugly
+    |=  desks=(list desk)
     =|  =raft:clay-types
     =+  !<(cay=(tail clay-types) vase:(~(got by van.mod.sol.snap) %clay))
     =.  fad.raft  fad.ruf.cay
@@ -465,6 +465,7 @@
     `state
   ::
       %cache
+    =.  desks.act  [%base desks.act]
     =.  caches
       %+  ~(put by caches)  name.act
       ?^  who.act  (raft:(pe u.who.act) desks.act)
@@ -487,6 +488,7 @@
           =.  dom.doj  dome  doj
         $(desks.act t.desks.act)
       raft
+    ~&  pyro+cache+name.act
     `state
   ::
       %rebuild
@@ -496,13 +498,19 @@
     ?~  all  ~&  pyro+rebuild+%no-running-ships  `state
     ::  build it on one ship
     =^  cad  state  (poke-pyro-events [i.all /c/rebuild park.act]~)
+    =/  desks  (cache-desks name.act)
     ::  re-make the %cache
-    =+  raf=(raft:(pe i.all) desks.act)
+    ?>  ?=(%park -.park.act)
+    =+  raf=(raft:(pe i.all) desks)
     =.  caches  (~(put by caches) name.act raf)
     ::  inject it into all ships
     =.  piers
-      %-  ~(urn by piers)
-      |=  [who=ship =pier]
+      %-  ~(gas by piers)
+      %+  turn  t.all
+      |=  who=ship
+      ^-  [ship pier]
+      =+  pier=(~(got by piers) who)
+      :-  who
       %=    pier
           van.mod.sol.snap
         =+  !<  cay=(tail clay-types)
@@ -511,22 +519,30 @@
         =.  ran.ruf.cay  ran.raf
         =.  dos.rom.ruf.cay
           |-
-          ?~  desks.act  dos.rom.ruf.cay
+          ?~  desks  dos.rom.ruf.cay
           =.  dos.rom.ruf.cay
-            %+  ~(put by dos.rom.ruf.cay)  i.desks.act
+            %+  ~(put by dos.rom.ruf.cay)  i.desks
             =|  doj=dojo:clay-types
-            ~|  "{<i.desks.act>} doesn't exist on {<who>}"
-            =.  dom.doj  dom:(~(got by dos.rom.raf) i.desks.act)
+            ~|  "{<i.desks>} doesn't exist on {<who>}"
+            =.  dom.doj  dom:(~(got by dos.rom.raf) i.desks)
             doj
-          $(desks.act t.desks.act)
+          $(desks t.desks)
         (~(put by van.mod.sol.snap.pier) %clay [!>(cay) *worm])
       == 
     =^  car  state
       %-  poke-pyro-events
-      %+  turn  (turn ~(tap by piers) head)
-      |=(=ship [ship /c/rebuild park])
+      %+  turn  t.all
+      |=  =ship
+      [ship /c/rebuild park.act]
+    ~&  pyro+rebuild+[name.act des.park.act]
     [(weld cad car) state]
   ==
+::
+++  cache-desks  :: TODO get rid of this, very ugly
+  |=  name=@tas
+  ^-  (list desk)
+  =/  cax=raft:clay-types  (~(got by caches) name)
+  (turn ~(tap by dos.rom.cax) head)
 ::
 ::  Run a callback function against a list of ships, aggregating state
 ::  and plowing all ships at the end.
