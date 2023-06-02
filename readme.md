@@ -34,6 +34,8 @@ Last updated as of Feb 07, 2023.
 :pyro|unpause ~nec                  :: resume processing events for ~nec
 :pyro|kill ~nec                     :: remove ~nec and all it's state
 :pyro|pass ~nec ...                 :: same as |pass - for experts only!
+:pyro|cache %cax ~[%desk-1 %2 ...]  :: create a cache named %cax with %desk-1 and %2 
+:pyro|rebuild %cax %desk-1          :: rebuild %cax with new %desk-1 contents and inject into all ships 
 ```
 
 ## `%pyro` Architecture
@@ -65,8 +67,8 @@ There is also a convenience scry for `%gx` cares into agents running on `%pyro` 
 ## `%pyro` Threads
 `%pyro` tests are meant to be written as threads. Common functions for using threads live in `/lib/pyro/pyro.hoon`
 ```
-;<  ~  bind:m  (reset-ship:pyro ~nec)
-;<  ~  bind:m  (reset-ship:pyro ~bud)
+;<  ~  bind:m  (init-ship:pyro ~nec)
+;<  ~  bind:m  (init-ship:pyro ~bud)
 ;<  ~  bind:m  (commit:pyro ~[~nec ~bud] our %base now)
 ;<  ~  bind:m  (snap:pyro /my-snapshot ~[~nec~bud]) :: TODO this isn't written
 ;<  ~  bind:m  (dojo:pyro ~nec "(add 2 2)")
