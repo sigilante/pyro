@@ -1649,17 +1649,19 @@
     ~&  %z^%thread-result^thread-name
     =.  status  [%ready ~]
     ?:  ?=(%| -.p.+.sign-arvo)
-      =/  =project:zig  (~(got by projects) project-name)
-      =/  =desk:zig  (got-desk:zig-lib project desk-name)
+      =/  ri=(unit repo-info:zig)
+        ?~  project=(~(get by projects) project-name)    ~
+        ?~  desk=(get-desk:zig-lib u.project desk-name)  ~
+        `repo-info.u.desk
       =*  from-compiler
         (reformat-compiler-error:zig-lib p.p.+.sign-arvo)
       =/  error-message=@t
         ?:  ?=(~ (find "cancelled" (trip from-compiler)))
           %^  cat  3  from-compiler
-          (crip "\0a{<repo-info.desk>}\0a")
+          ?~(ri '' (crip "\0a{<u.ri>}\0a"))
         %+  rap  3
         :^  from-compiler  'see dojo for error details'
-        (crip "\0a{<repo-info.desk>}\0a")  ~
+        ?~(ri '' (crip "\0a{<u.ri>}\0a"))  ~
       ~&  %thread-result^w^error-message
       =*  update-info
         [project-name desk-name %thread-result ~]
@@ -1707,7 +1709,7 @@
 ::
 ++  on-peek
   |=  p=path
-  ^-  (unit (unit cage))
+  |^  ^-  (unit (unit cage))
   ?.  =(%x -.p)  ~
   =,  format
   ?+    +.p  (on-peek:def p)
@@ -1827,17 +1829,22 @@
     =*  file-path=path  t.t.t.t.p
     =/  =project:zig  (~(got by projects) project-name)
     =/  =desk:zig  (got-desk:zig-lib project desk-name)
-    =*  repo-host    (scot %p repo-host.repo-info.desk)
-    =*  repo-name    repo-name.repo-info.desk
-    =*  branch-name  branch-name.repo-info.desk
-    =*  commit-hash  commit-hash.repo-info.desk
-    =*  commit
-      ?~  commit-hash  %head  (scot %ux u.commit-hash)
-    =*  scry-path=path
-      %-  weld  :_  (snoc file-path %noun)
-      :^  (scot %p our.bowl)  %linedb  (scot %da now.bowl)
-      /[repo-host]/[repo-name]/[branch-name]/[commit]
-    =+  .^(file-contents=(unit @t) %gx scry-path)
+    =/  file-contents=(unit @t)
+      (read-file repo-info.desk file-path)
+    ?~  file-contents  ``json+!>(~)
+    ``json+!>(s+u.file-contents)
+  ::
+      [%read-file-ri @ @ @ @ ^]
+    =*  repo-host    (slav %p i.t.t.p)
+    =*  repo-name    i.t.t.t.p
+    =*  branch-name  i.t.t.t.t.p
+    =/  commit=@ta   i.t.t.t.t.t.p
+    =*  commit-hash=(unit @ux)
+      ?:(?=(%head commit) ~ `(slav %ux commit))
+    =*  file-path    t.t.t.t.t.t.p
+    =/  file-contents=(unit @t)
+      %-  read-file  :_  file-path
+      :^  repo-host  repo-name  branch-name  commit-hash
     ?~  file-contents  ``json+!>(~)
     ``json+!>(s+u.file-contents)
   ::
@@ -1848,6 +1855,18 @@
     =/  desks  .^((set @t) %cd p)
     (set-cords:enjs:zig-lib desks)
   ==
+  ::
+  ++  read-file
+    |=  [repo-info:zig file-path=path]
+    ^-  (unit @t)
+    =*  commit
+      ?~  commit-hash  %head  (scot %ux u.commit-hash)
+    =*  scry-path=path
+      %-  weld  :_  (snoc file-path %noun)
+      :^  (scot %p our.bowl)  %linedb  (scot %da now.bowl)
+      /(scot %p repo-host)/[repo-name]/[branch-name]/[commit]
+    .^((unit @t) %gx scry-path)
+  --
 ::
 ++  on-leave  on-leave:def
 ++  on-fail   on-fail:def

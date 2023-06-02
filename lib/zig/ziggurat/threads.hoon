@@ -457,6 +457,7 @@
         /gall/use/linedb
         /gall/use/notify
         /gall/use/ping
+        /gall/use/portal-graph
         /gall/use/portal-store
         /gall/use/pyre
         /gall/use/spider
@@ -534,7 +535,7 @@
 ++  send-long-operation-update
   |=  =long-operation-info:zig
   =/  m  (strand ,vase)
-  ~&  %z^%slou^long-operation-info
+  ~&  %z^%slou^%start^long-operation-info
   ^-  form:m
   ?~  long-operation-info  (pure:m !>(~))
   ;<  ~  bind:m
@@ -564,6 +565,8 @@
     ~&  %ziggurat^%send-long-operation-update^%unexpected-content
     !!
   ;<  ~  bind:m  (leave-our /update-done %ziggurat)
+  ;<  ~  bind:m  (sleep ~s2)
+  ~&  %z^%slou^%done^long-operation-info
   (pure:m !>(~))
 ::
 ++  skip-queue
@@ -714,7 +717,7 @@
   (pure:m !>(~))
 ::
 ++  branch-if-non-head
-  |=  =repo-info:zig
+  |=  [most-recently-seen-commit=@ux =repo-info:zig]
   =/  m  (strand ,vase)
   ^-  form:m
   ~&  %z^%binh^%0
@@ -725,6 +728,9 @@
   =/  commit-hash=(unit @ux)  commit-hash.repo-info
   ~&  %z^%binh^%1
   ?~  commit-hash  (pure:m !>(repo-info))
+  ?:  =(most-recently-seen-commit u.commit-hash)
+    ::  we are committing to master/head, so maintain it
+    (pure:m !>([repo-host repo-name branch-name ~]))
   =/  new-branch-name=@tas
     =/  repos=(set [@p path])
       %-  ~(gas in *(set [@p path]))
@@ -760,7 +766,7 @@
     repo-info(branch-name new-branch-name, commit-hash ~)
   ~&  %z^%binh^%5
   ;<  empty-vase=vase  bind:m
-    (fetch-repo our.bowl repo-name branch-name ~ ~)
+    (fetch-repo our.bowl repo-name new-branch-name ~ ~)
   ~&  %z^%binh^%6
   (pure:m !>(repo-info))
 ::
@@ -771,7 +777,7 @@
       ==
   =/  m  (strand ,vase)
   ^-  form:m
-  ~&  %z^%sf^%0
+  ~&  %z^%sf^%0^[file-path ?=(^ file-contents) maybe-repo-info]
   ;<  state=state-0:zig  bind:m  get-state
   ;<  =bowl:strand  bind:m  get-bowl
   =/  old-project=project:zig
@@ -780,7 +786,7 @@
   =/  old-repo-info=repo-info:zig  repo-info.desk
   ~&  %z^%sf^%1^old-repo-info
   ;<  repo-info-vase=vase  bind:m
-    %-  branch-if-non-head
+    %+  branch-if-non-head  most-recently-seen-commit.desk
     ?~(maybe-repo-info repo-info.desk u.maybe-repo-info)
   =+  !<(=repo-info:zig repo-info-vase)
   ~&  %z^%sf^%3^repo-info
@@ -1167,6 +1173,7 @@
     :^  ~  name.u.long-operation-info
       steps.u.long-operation-info
     `%install-and-start-apps-on-pyro-ships
+  ;<  ~  bind:m  (sleep ~s1)
   ?:  ?|  =(0 ~(wyt by install))
           (~(all by install) |=(a=(list @) ?=(~ a)))
       ==
@@ -1321,12 +1328,6 @@
   ;<  =bowl:strand  bind:m  get-bowl
   ;<  empty-vase=vase  bind:m
     (iterate-over-desks repo-dependencies make-read-repo)
-  =.  repo-dependencies
-    %+  turn  repo-dependencies
-    |=  [@ rn=@tas bn=@tas ch=(unit @ux)]
-    [our.bowl rn bn ch]
-  ;<  empty-vase=vase  bind:m
-    (iterate-over-desks repo-dependencies make-watch-repo)
   ;<  empty-vase=vase  bind:m
     %-  send-long-operation-update
     ?~  long-operation-info  ~
@@ -1336,6 +1337,10 @@
   ;<  ~  bind:m  send-new-project-update
   ~&  %sp^%4
   ;<  ~  bind:m  send-state-views
+  =.  repo-dependencies
+    %+  turn  repo-dependencies
+    |=  [@ rn=@tas bn=@tas ch=(unit @ux)]
+    [our.bowl rn bn ch]
   ~&  %sp^%5^repo-dependencies
   ;<  empty-vase=vase  bind:m
     %^  commit-install-start  whos  repo-dependencies
@@ -1464,6 +1469,7 @@
       :-  %ziggurat-action
       !>  ^-  action:zig
       [project-name project-name request-id %change-focus ~]
+    ;<  ~  bind:m  (sleep ~s1)
     (pure:m state)
   ::
   ++  make-watch-repo
