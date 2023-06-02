@@ -119,6 +119,10 @@
       !>  ^-  update
       ?~  sips  ~
       [%snap-ships t.t.path (turn ~(tap by u.sips) head)]
+    ::  cache scries
+    ::
+        [%x %caches ~]   ``noun+!>((turn ~(tap by caches) head))
+        [%x %cache @ ~]  ``noun+!>((cache-desks i.t.t.path))
     ::  scry into running virtual ships
     ::  ship, care, ship, desk, time, path
     ::  NOTE: requires a double mark at the end
