@@ -1,1 +1,1 @@
-../../uqbar-core/mar/md.hoon
+../../arvo/mar/md.hoon
