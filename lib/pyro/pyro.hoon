@@ -20,13 +20,22 @@
   ?>  ?=(%pyro-effect p.cage)
   (pure:m !<([pyro-effect] q.cage))
 ::
-++  reset-ship
+++  init-ship
   |=  who=ship
   =/  m  (strand ,~)
   ^-  form:m
   ;<  ~  bind:m
     %^  poke-our  %pyro  %pyro-action
-    !>([%init-ship who])
+    !>([%init-ship who %default])
+  (pure:m ~)
+::
+++  init-ship-cache
+  |=  [who=ship cache=@tas]
+  =/  m  (strand ,~)
+  ^-  form:m
+  ;<  ~  bind:m
+    %^  poke-our  %pyro  %pyro-action
+    !>([%init-ship who cache])
   (pure:m ~)
 ::
 ++  ues-to-pe
@@ -77,18 +86,33 @@
   $
 ::
 ++  poke
-  |=  $:  who=@p
+  |=  $:  from=@p
           to=@p
           app=@tas
           mark=@tas
           payload=*
       ==
   %-  send-events
-  %+  ues-to-pe  who
+  %+  ues-to-pe  from
   ^-  (list unix-event)
   :_  ~
   :*  /g
-      %deal  [who to]  app
+      %deal  [from to]  app
+      %raw-poke  mark  payload
+  ==
+::
+++  poke-self
+  |=  $:  to=@p
+          app=@tas
+          mark=@tas
+          payload=*
+      ==
+  %-  send-events
+  %+  ues-to-pe  to
+  ^-  (list unix-event)
+  :_  ~
+  :*  /g
+      %deal  [to to]  app
       %raw-poke  mark  payload
   ==
 ::
