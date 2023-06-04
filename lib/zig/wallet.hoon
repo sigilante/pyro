@@ -1,1 +1,0 @@
-../../../uqbar-core/lib/zig/wallet.hoon

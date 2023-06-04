@@ -12,22 +12,22 @@
 ::  :pyro|unpause ~nec
 ::  :pyro|kill ~nec
 ::
-/-  *zig-pyro
-/+  pyro=pyro-pyro,
+/-  *pyro
+/+  pyro=pyro,
     default-agent,
     pill=pill,
     dbug, verb
 ::
-/=  arvo-core  /lib/pyro/arvo :: TODO this compiles it against zuse, WRONG
-/=  ames-core  /lib/pyro/vane/ames
-/=  behn-core  /lib/pyro/vane/behn
-/=  clay-core  /lib/pyro/vane/clay
-/=  dill-core  /lib/pyro/vane/dill
-/=  eyre-core  /lib/pyro/vane/eyre :: login by posting to /pyro/~nec/~/login
-/=  gall-core  /lib/pyro/vane/gall
-/=  iris-core  /lib/pyro/vane/iris
-/=  jael-core  /lib/pyro/vane/jael
-/=  khan-core  /lib/pyro/vane/khan
+/=  arvo-core  /lib/sys/arvo :: TODO this compiles it against zuse, WRONG
+/=  ames-core  /lib/sys/vane/ames
+/=  behn-core  /lib/sys/vane/behn
+/=  clay-core  /lib/sys/vane/clay
+/=  dill-core  /lib/sys/vane/dill
+/=  eyre-core  /lib/sys/vane/eyre :: login by posting to /pyro/~nec/~/login
+/=  gall-core  /lib/sys/vane/gall
+/=  iris-core  /lib/sys/vane/iris
+/=  jael-core  /lib/sys/vane/jael
+/=  khan-core  /lib/sys/vane/khan
 ::
 =>  |%
     ++  arvo-adult  ..^load:+>.arvo-core

@@ -1,1 +1,0 @@
-../../../uqbar-core/sur/zig/zink.hoon

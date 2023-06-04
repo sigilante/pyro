@@ -2,8 +2,8 @@
 ::  unix timers (behn), terminal drivers (dill), and http requests/
 ::  responses (iris/eyre).
 ::
-/-  *zig-pyro
-/+  dbug, default-agent, pyre=pyro-pyre
+/-  *pyro
+/+  dbug, default-agent, pyre
 ::
 %-  agent:dbug
 ^-  agent:gall
