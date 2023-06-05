@@ -122,7 +122,9 @@
     ::  cache scries
     ::
         [%x %caches ~]   ``noun+!>((turn ~(tap by caches) head))
-        [%x %cache @ ~]  ``noun+!>((cache-desks i.t.t.path))
+        [%x %cache @ ~]
+      =-  ``noun+!>(-)
+      ~(tap in (raft-desks (~(got by caches) i.t.t.path)))
     ::  scry into running virtual ships
     ::  ship, care, ship, desk, time, path
     ::  NOTE: requires a double mark at the end
@@ -205,22 +207,9 @@
   ::  return raft (containing the build cache of desks) from a pyro ship
   ::
   ++  raft  :: TODO get rid of this, not needed +ugly
-    |=  desks=(list desk)
-    =|  =raft:clay-types
-    =+  !<(cay=(tail clay-types) vase:(~(got by van.mod.sol.snap) %clay))
-    =.  fad.raft  fad.ruf.cay
-    =.  ran.raft  ran.ruf.cay   
-    =.  dos.rom.raft
-      |-
-      ?~  desks  dos.rom.raft
-      =.  dos.rom.raft
-        %+  ~(put by dos.rom.raft)  i.desks
-        =|  doj=dojo:clay-types
-        ~|  "{<i.desks>} doesn't exist on {<who>}"
-        =.  dom.doj  dom:(~(got by dos.rom.ruf.cay) i.desks)
-        doj
-      $(desks t.desks)
-    raft
+    ^-  raft:clay-types
+    =-  ruf.cay
+    !<(cay=(tail clay-types) vase:(~(got by van.mod.sol.snap) %clay))
   ::
   ::  Enqueue events to child arvo
   ::
@@ -472,7 +461,23 @@
     =.  desks.act  [%base desks.act]
     =.  caches
       %+  ~(put by caches)  name.act
-      ?^  who.act  (raft:(pe u.who.act) desks.act)
+      ?^  who.act
+        =|  =raft:clay-types
+        =+  ruf=raft:(pe u.who.act)
+        %=    raft
+            fad  fad.ruf
+            ran  ran.ruf
+            dos.rom
+          |-
+          ?~  desks.act  dos.rom.raft
+          =.  dos.rom.raft
+            %+  ~(put by dos.rom.raft)  i.desks.act
+            =|  doj=dojo:clay-types
+            ~|  "{<i.desks.act>} doesn't exist on {<u.who.act>}"
+            =.  dom.doj  dom:(~(got by dos.rom.ruf) i.desks.act)
+            doj
+          $(desks.act t.desks.act)
+        ==      
       ::  take cache from host ship
       ::
       =|  =raft:clay-types
@@ -496,16 +501,25 @@
     `state
   ::
       %rebuild
-    =/  all
-      ?^  ships.act  u.ships.act
-      (turn ~(tap in piers) head)
+    =/  desks
+      %-  raft-desks
+      ~|  "{<name.act>} cache doesn't exist"
+      (~(got by caches) name.act)
+    =/  all=(list ship)
+      %+  murn  ~(tap in piers)
+      |=  [=ship =pier]
+      ?:  paused.pier  ~
+      ::  can't inject desks if they haven't been installed 
+      ?.  =(desks (~(int in (raft-desks raft:(pe ship))) desks))
+        ~
+      ~&  pyro+rebuilding+ship
+      `ship
     ?~  all  ~&  pyro+rebuild+%no-running-ships  `state
     ::  build it on one ship
     =^  cad  state  (poke-pyro-events [i.all /c/rebuild park.act]~)
-    =/  desks  (cache-desks name.act)
     ::  re-make the %cache
     ?>  ?=(%park -.park.act)
-    =+  raf=(raft:(pe i.all) desks)
+    =+  raf=raft:(pe i.all) :: TODO error prone, might need to fetch particular desks
     =.  caches  (~(put by caches) name.act raf)
     ::  inject it into all ships
     =.  piers
@@ -522,6 +536,7 @@
         =.  fad.ruf.cay  fad.raf
         =.  ran.ruf.cay  ran.raf
         =.  dos.rom.ruf.cay
+          =/  desks  ~(tap in desks)
           |-
           ?~  desks  dos.rom.ruf.cay
           =.  dos.rom.ruf.cay
@@ -546,11 +561,7 @@
     [(weld cad car) state]
   ==
 ::
-++  cache-desks  :: TODO get rid of this, very ugly
-  |=  name=@tas
-  ^-  (list desk)
-  =/  cax=raft:clay-types  (~(got by caches) name)
-  (turn ~(tap by dos.rom.cax) head)
+++  raft-desks  |=(=raft:clay-types ~(key by dos.rom.raft))
 ::
 ::  Run a callback function against a list of ships, aggregating state
 ::  and plowing all ships at the end.
