@@ -52,15 +52,16 @@ NOTE: this will kill all running ships and restore *just* the ships in that snap
 ### Scries
 You can scry into a `%pyro` ship. Anything that you can scry out of a normal ship, you can scry out of a `%pyro` ship.
 ```hoon
-.^(wain %gx /=pyro=/i/~nec/cx/~nec/zig/(scot %da now)/desk/bill/bill)
+.^(my-mold %gx /=pyro=/i/~nec/gx/~nec/my-desk/0/some/path/my-mark/my-mark)
 ```
+The scry path format is like this:  `/i/<PYRO-SHIP>/<CARE>/<SHIP>/<DESK>/<CASE>/<PATH-GOES-HERE>`. Note that `<CASE>` gets automatically filled in with `now` - so if you want to put `0` or some arbitrary value there, you can.
 Note:
 1. All scries into `%pyro` ships must have a double mark at the end (e.g. `/noun/noun`, `/bill/bill`, etc.)
 2. The `%pyro` ship and the [care](https://developers.urbit.org/reference/arvo/concepts/scry) must be specified at the start of the path.
 
 There is also a convenience scry for `%gx` cares into agents running on `%pyro` ships:
 ```hoon
-.^(mold %gx /=pyro=/~nec/myapp/my/path/goes/here/mark/mark)
+.^(mold %gx /=pyro=/~nec/myapp/my-path-goes-here/mark/mark)
 ```
 
 ### Remote Scry
