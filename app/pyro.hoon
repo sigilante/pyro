@@ -528,7 +528,11 @@
             %+  ~(put by dos.rom.ruf.cay)  i.desks
             =|  doj=dojo:clay-types
             ~|  "{<i.desks>} doesn't exist on {<who>}"
-            =.  dom.doj  dom:(~(got by dos.rom.raf) i.desks)
+            =/  dom  dom:(~(got by dos.rom.raf) i.desks)
+            =.  let.dom  0
+            =.  hit.dom  *(map aeon:clay tako:clay)
+            :: TODO might have to bunt some other stuff
+            =.  dom.doj  dom
             doj
           $(desks t.desks)
         (~(put by van.mod.sol.snap.pier) %clay [!>(cay) *worm])
