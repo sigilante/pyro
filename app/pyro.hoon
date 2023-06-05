@@ -88,7 +88,7 @@
     =+  (mule |.(!<(versioned-state old-vase)))
     ?-  -.-
       %&  `this(state +.-)
-      %|  `this
+      %|  on-init
     ==
   ::
   ++  on-poke
@@ -150,13 +150,7 @@
       (scry:(pe who) (weld /gx/[her]/[dap]/0 paf))
     ==
   ::
-  ++  on-watch
-    |=  p=path
-    ^-  (quip card _this)
-    ?+  p  (on-watch:def p)
-      [%load-failed ~]  `this
-    ==
-  ::
+  ++  on-watch  on-watch:def
   ++  on-leave  on-leave:def
   ++  on-agent  on-agent:def
   ++  on-arvo   on-arvo:def
@@ -348,6 +342,8 @@
     =.  ruf.clay
       ~|  "{<cache.act>} cache doesn't exist, try %default cache"
       (~(got by caches) cache.act)
+    :: have to get rid of the kids desk otherwise boot fails
+    =.  dos.rom.ruf.clay  (~(del by dos.rom.ruf.clay) %kids)
     =/  new  (~(got by piers) who.act)
     =.  sol.snap.new
       ^-  soul
