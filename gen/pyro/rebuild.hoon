@@ -5,12 +5,10 @@
 ::    :pyro|init ~nec, =cache %my-cache
 ::
 ::  To update this cache after a commit to the host desk:
-::    :pyro|rebuild ~nec
+::    :pyro|rebuild %cax %desk-1
 ::
-/+  pyro=pyro-pyro
+/+  pyro=pyro
 :-  %say
 |=  [[* * =beak] [name=@tas =desk ~] ~]
 :-  %pyro-action
-:^  %rebuild  name
-  (park:pyro p.beak desk r.beak)
-~
+[%rebuild name (park:pyro p.beak desk r.beak)]

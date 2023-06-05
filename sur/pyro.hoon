@@ -83,10 +83,7 @@
       ::    build ontop of a cache already in use
       ::      name  : name of this cache
       ::      park  : TODO should be $>(%park task:clay)
-      ::      ships : ~ rebuild and put into all ships
-      ::            : (list ship) put into selected ships
-      ::  TODO have an option to inject a cache from the host ship?
-      [%rebuild name=@tas park=task-arvo ships=(unit (list ship))]
+      [%rebuild name=@tas park=task-arvo]
   ==
 ::
 +$  behn-pier  next-timer=(unit @da)
