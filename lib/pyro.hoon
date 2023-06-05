@@ -12,14 +12,16 @@
   ^-  form:m
   (poke-our %pyro %pyro-events !>(events))
 ::
-++  take-unix-effect
-  =/  m  (strand ,[ship unix-effect])
-  ^-  form:m
-  ;<  [=path =cage]  bind:m  (take-fact-prefix /effect)
-  ?>  ?=(%pyro-effect p.cage)
-  (pure:m !<([pyro-effect] q.cage))
+::  TODO this no longer works
 ::
-++  init-ship
+:: ++  take-unix-effect
+::   =/  m  (strand ,[ship unix-effect])
+::   ^-  form:m
+::   ;<  [=path =cage]  bind:m  (take-fact-prefix /effect)
+::   ?>  ?=(%pyro-effect p.cage)
+::   (pure:m !<([pyro-effect] q.cage))
+::
+++  init
   |=  who=ship
   =/  m  (strand ,~)
   ^-  form:m
@@ -28,7 +30,7 @@
     !>([%init-ship who %default])
   (pure:m ~)
 ::
-++  init-ship-cache
+++  init-cache
   |=  [who=ship cache=@tas]
   =/  m  (strand ,~)
   ^-  form:m
@@ -65,24 +67,26 @@
       [/d/term/1 %belt %ret ~]
   ==
 ::
-++  wait-for-output
-  |=  [=ship =tape]
-  =/  m  (strand ,~)
-  ^-  form:m
-  ~&  >  "waiting for output: {tape}"
-  |-  ^-  form:m
-  ;<  [her=^ship uf=unix-effect]  bind:m  take-unix-effect
-  ?:  ?&  =(ship her)
-          ?=(%blit -.q.uf)
-        ::
-          %+  lien  p.q.uf
-          |=  =blit:dill
-          ?.  ?=(%put -.blit)
-            |
-          !=(~ (find tape p.blit))
-      ==
-    (pure:m ~)
-  $
+::  TODO this no longer works
+::
+:: ++  wait-for-output
+::   |=  [=ship =tape]
+::   =/  m  (strand ,~)
+::   ^-  form:m
+::   ~&  >  "waiting for output: {tape}"
+::   |-  ^-  form:m
+::   ;<  [her=^ship uf=unix-effect]  bind:m  take-unix-effect
+::   ?:  ?&  =(ship her)
+::           ?=(%blit -.q.uf)
+::         ::
+::           %+  lien  p.q.uf
+::           |=  =blit:dill
+::           ?.  ?=(%put -.blit)
+::             |
+::           !=(~ (find tape p.blit))
+::       ==
+::     (pure:m ~)
+::   $
 ::
 ++  poke
   |=  $:  from=@p
@@ -122,10 +126,6 @@
   %+  ues-to-pe  who
   ^-  (list unix-event)
   [/[v] task-arvo]~ 
-::
-++  subscribe
-  |=  [who=@p to=@p app=@tas =path]
-  (poke who who %subscriber %subscriber-action [%sub to app path])
 ::
 ++  park
   |=  [our=ship =desk =case]
