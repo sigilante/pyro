@@ -1,4 +1,4 @@
-/-  *zig-pyro,
+/-  *pyro,
     spider
 /+  *strandio,
     dill
