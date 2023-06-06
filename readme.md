@@ -8,9 +8,20 @@
 * [`%pyro` Threads](#pyro-threads)
 
 # `%pyro` Documentation
-Last updated as of June 05, 2023.
+Last updated as of June 05, 2023. For a video version of this documentation, watch [this](https://www.youtube.com/watch?v=-zD3xbCROQ8) video
 
 ## `%pyro` Quick Start
+`%pyro` is not currently `|install`able over the network. To use it in your development flow, copy the code into the ship you are developing on (I would *not* reccomend putting this on a ship you do not want to breach - use a moon, comet, or fake ship).
+
+Basic installation should be familiar to most - 
+```
+|new-desk %pyro
+|mount %pyro
+:: make sure to cp -RL urbit/pkg/pyro <PIER>/pyro (urbit/pkg to preserve symlinks)
+|commit %pyro
+|install our %pyro
+```
+Using `%pyro`:
 ```
 :pyro|init ~nec                     :: initialize fake ~nec
 :pyro|init ~bud                     :: initialize fake ~bud
