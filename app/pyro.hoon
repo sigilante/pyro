@@ -18,16 +18,16 @@
     pill=pill,
     dbug, verb
 ::
-/=  arvo-core  /lib/sys/arvo :: TODO this compiles it against zuse, WRONG
-/=  ames-core  /lib/sys/vane/ames
-/=  behn-core  /lib/sys/vane/behn
-/=  clay-core  /lib/sys/vane/clay
-/=  dill-core  /lib/sys/vane/dill
-/=  eyre-core  /lib/sys/vane/eyre :: login by posting to /pyro/~nec/~/login
-/=  gall-core  /lib/sys/vane/gall
-/=  iris-core  /lib/sys/vane/iris
-/=  jael-core  /lib/sys/vane/jael
-/=  khan-core  /lib/sys/vane/khan
+/=  arvo-core  /sys/arvo :: TODO this compiles it against zuse, WRONG
+/=  ames-core  /sys/vane/ames
+/=  behn-core  /sys/vane/behn
+/=  clay-core  /sys/vane/clay
+/=  dill-core  /sys/vane/dill
+/=  eyre-core  /sys/vane/eyre :: login by posting to /pyro/~nec/~/login
+/=  gall-core  /sys/vane/gall
+/=  iris-core  /sys/vane/iris
+/=  jael-core  /sys/vane/jael
+/=  khan-core  /sys/vane/khan
 ::
 =>  |%
     ++  arvo-adult  ..^load:+>.arvo-core
