@@ -1,5 +1,5 @@
-/-  pyro=zig-pyro
-/+  pyro-lib=pyro-pyro
+/-  pyro
+/+  pyro-lib=pyro
 ::
 =,  dejs:format
 |_  =action:pyro
