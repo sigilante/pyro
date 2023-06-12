@@ -1,5 +1,5 @@
-/-  pyro=zig-pyro
-/+  pyro-lib=pyro-pyro
+/-  pyro
+/+  pyro-lib=pyro
 |_  =update:pyro
 ::
 ++  grab
