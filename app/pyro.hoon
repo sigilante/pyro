@@ -508,52 +508,27 @@
       ::  can't inject desks if they haven't been installed 
       ?.  =(desks (~(int in (raft-desks raft:(pe ship))) desks))
         ~
-      ~&  pyro+rebuilding+ship
       `ship
     ?~  all  ~&  pyro+rebuild+%no-running-ships  `state
     ::  build it on one ship
-    =^  cad  state  (poke-pyro-events [i.all /c/rebuild park.act]~)
+    =^  cad  state
+      ~&  pyro+rebuild+i.all
+      (poke-pyro-events [i.all /c/rebuild park.act]~)
     ::  re-make the %cache
     ?>  ?=(%park -.park.act)
-    =+  raf=raft:(pe i.all) :: TODO error prone, might need to fetch particular desks
+    =+  raf=raft:(pe i.all)
     =.  caches  (~(put by caches) name.act raf)
-    ::  inject it into all ships
-    =.  piers
-      %-  ~(gas by piers)
-      %+  turn  t.all
-      |=  who=ship
-      ^-  [ship pier]
-      =+  pier=(~(got by piers) who)
-      :-  who
-      %=    pier
-          van.mod.sol.snap
-        =+  !<  cay=(tail clay-types)
-            vase:(~(got by van.mod.sol.snap.pier) %clay)
-        =.  fad.ruf.cay  fad.raf
-        =.  ran.ruf.cay  ran.raf
-        =.  dos.rom.ruf.cay
-          =/  desks  ~(tap in desks)
-          |-
-          ?~  desks  dos.rom.ruf.cay
-          =.  dos.rom.ruf.cay
-            %+  ~(put by dos.rom.ruf.cay)  i.desks
-            =|  doj=dojo:clay-types
-            ~|  "{<i.desks>} doesn't exist on {<who>}"
-            =/  dom  dom:(~(got by dos.rom.raf) i.desks)
-            =.  let.dom  0
-            =.  hit.dom  *(map aeon:clay tako:clay)
-            :: TODO might have to bunt some other stuff
-            =.  dom.doj  dom
-            doj
-          $(desks t.desks)
-        (~(put by van.mod.sol.snap.pier) %clay [!>(cay) *worm])
-      == 
+    =/  perk
+      :*  %perk  des.park.act  yok.park.act  ran.park.act
+          sprig.fod.dom:(~(got by dos.rom.raf) des.park.act)
+      ==
     =^  car  state
       %-  poke-pyro-events
       %+  turn  t.all
       |=  =ship
-      [ship /c/rebuild park.act]
-    ~&  pyro+rebuild+[name.act des.park.act]
+      ~&  pyro+rebuild+ship
+      [ship /c/rebuild perk]
+    ~&  pyro+finished-rebuild+[name.act des.park.act]
     [(weld cad car) state]
   ==
 ::
