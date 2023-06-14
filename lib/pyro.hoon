@@ -149,24 +149,12 @@
 ++  perk
   |=  [our=ship =desk =case]
   ^-  $>(%perk task:clay)
+  =/  park  (park our desk case)    
+  :*  %perk  desk  yok.park  ran.park
   ::
-  =/  desk-path=path  /(scot %p our)/[desk]/(scot case)
-  =/  =domo:clay  .^(domo:clay %cv desk-path)
-  =*  tako=tako:clay  (~(got by hit.domo) let.domo)
-  =*  path-to-lobe
-    q:.^(yaki:clay %cs (weld desk-path /yaki/(scot %uv tako)))
-  ::
-  =*  yoki=yoki:clay
-    :+  %&  *(list tako:clay)
-    %-  ~(urn by path-to-lobe)
-    |=([=path =lobe:clay] %|^lobe)
-  =*  rang
-    .^(rang:clay %cx /(scot %p our)//(scot case)/rang)
-  ::
-  =/  sprig
-    =+  .^(=cone:clay %cx /(scot %p our)//(scot case)/domes)
-    sprig.fod:(~(got by cone) [our desk])
-  [%perk desk yoki rang sprig]
+      =+  .^(=cone:clay %cx /(scot %p our)//(scot case)/domes)
+      sprig.fod:(~(got by cone) [our desk])
+  ==
 ::
 ++  commit
   |=  [hers=(list ship) our=ship =desk =case]
