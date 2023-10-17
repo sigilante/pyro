@@ -100,8 +100,10 @@
   ^-  (list unix-event)
   :_  ~
   :*  /g
-      %deal  [from to]  app
-      %raw-poke  mark  payload
+      %deal
+      `sack`[from to /pyro]
+      app
+      `deal:gall`[%raw-poke mark payload]
   ==
 ::
 ++  poke-self
@@ -115,13 +117,15 @@
   ^-  (list unix-event)
   :_  ~
   :*  /g
-      %deal  [to to]  app
-      %raw-poke  mark  payload
+      %deal
+      `sack`[to to /pyro]
+      app
+      `deal:gall`[%raw-poke mark payload]
   ==
 ::
 ++  task
   ::  TODO move to note-arvo?
-  |=  [who=@p v=?(%a %b %c %d %e %g %i %j %k) =task-arvo]
+  |=  [who=@p v=?(%a %b %c %d %e %g %i %j %k %l) =task-arvo]
   %-  send-events
   %+  ues-to-pe  who
   ^-  (list unix-event)

@@ -28,6 +28,7 @@
 /=  iris-core  /sys/vane/iris
 /=  jael-core  /sys/vane/jael
 /=  khan-core  /sys/vane/khan
+/=  lull-core  /sys/vane/lull
 ::
 =>  |%
     ++  arvo-adult  ..^load:+>.arvo-core
@@ -368,6 +369,7 @@
               [%iris [!>((iris-core who.act)) *worm]]
               [%jael [!>((jael-core who.act)) *worm]]
               [%khan [!>((khan-core who.act)) *worm]]
+              [%lull [!>((lull-core who.act)) *worm]]
       ==  ==
     =.  piers  (~(put by piers) who.act new)
     =.  this
