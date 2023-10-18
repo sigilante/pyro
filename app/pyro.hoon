@@ -28,7 +28,7 @@
 /=  iris-core  /sys/vane/iris
 /=  jael-core  /sys/vane/jael
 /=  khan-core  /sys/vane/khan
-/=  lull-core  /sys/vane/lull
+/=  lull-core  /sys/lull
 ::
 =>  |%
     ++  arvo-adult  ..^load:+>.arvo-core
